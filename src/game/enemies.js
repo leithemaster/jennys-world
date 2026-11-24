@@ -21,8 +21,8 @@ export const ENEMIES = {
   adswarm: { name: 'Ad Swarm', hp: [36, 40], art: 'swarm', color: '#f2c94c', ai: 'cycle', elite: true,
     moves: [{ t: 'status', card: 'spam', count: 2 }, { t: 'atk', n: 3, times: 3 }, { t: 'buff', n: 1 }, { t: 'atk', n: 3, times: 3 }] },
   // boss
-  firewall: { name: 'The Firewall', hp: [86, 86], art: 'wall', color: '#d2493f', ai: 'cycle', boss: true,
-    moves: [{ t: 'block', n: 14 }, { t: 'atk', n: 13 }, { t: 'atk', n: 5, times: 3 }, { t: 'scramble' }, { t: 'buff', n: 3 }] },
+  firewall: { name: 'The Firewall', hp: [74, 74], art: 'wall', color: '#d2493f', ai: 'cycle', boss: true,
+    moves: [{ t: 'block', n: 12 }, { t: 'atk', n: 12 }, { t: 'atk', n: 4, times: 3 }, { t: 'scramble' }, { t: 'buff', n: 2 }] },
 
   // ----- Floor 2 -----
   moth: { name: 'Troll Moth', hp: [38, 42], art: 'moth', color: '#b8a3d9', ai: 'random',
