@@ -1,0 +1,18 @@
+{
+  "name": "jennyworld",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A tiny toon-shaded planet for Jenny to walk around.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.6"
+  }
+}
