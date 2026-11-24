@@ -315,6 +315,8 @@ small { font-weight: 800; }
 .pip { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2.5px solid var(--ink); background: #3a3a2c; color: #6a6550; box-shadow: 0 3px 0 var(--ink); transition: background-color 200ms, transform 200ms var(--ease-out), color 200ms; }
 .pip svg { width: 18px; height: 18px; }
 .pip.on { background: var(--yellow); color: var(--ink); }
+.pip.using { background: #8a7a3c; color: #fff3c4; animation: using 1s ease-in-out infinite; }
+@keyframes using { 50% { background: #b49c46; } }
 .pip-count { margin-left: 2px; }
 .energy-bar.gain .pips { animation: energyPop 380ms var(--ease-out); }
 .energy-bar.spend .pip:not(.on) { animation: pipOut 300ms var(--ease-out); }

@@ -426,16 +426,23 @@ function battleScreen(enemyId, kind) {
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
     const en = $('[data-energy]');
-    const slots = Math.max(b.turnEnergy, b.energy);
-    const pips = slots <= 8 ? Array.from({ length: slots }, (_, i) => `<i class="pip${i < b.energy ? ' on' : ''}">${icon('bolt')}</i>`).join('') : '';
-    const label = b.energy === 0 && !b.over ? '<span class="en-empty">Out of energy · enemy turn</span>' : `<span><b>${b.energy}</b> energy left · each pair costs 1</span>`;
-    if (en.dataset.last !== String(b.energy)) {
-      const up = Number(en.dataset.last || 0) < b.energy;
+    // While the first card of a pair is face up, its energy is "in use", not spent:
+    // the pip glows and nothing says "out of energy" until the pair is finished.
+    const pending = b.first ? 1 : 0;
+    const shown = b.energy + pending;
+    const slots = Math.max(b.turnEnergy, shown);
+    const pips = slots <= 8 ? Array.from({ length: slots }, (_, i) => `<i class="pip${i < b.energy ? ' on' : i < shown ? ' using' : ''}">${icon('bolt')}</i>`).join('') : '';
+    const out = shown === 0 && !b.over;
+    const label = out ? '<span class="en-empty">Out of energy · enemy turn</span>'
+      : pending ? `<span><b>${b.energy}</b> energy left · pick a second card</span>`
+      : `<span><b>${b.energy}</b> energy left · each pair costs 1</span>`;
+    if (en.dataset.last !== String(shown)) {
+      const up = Number(en.dataset.last || 0) < shown;
       en.classList.remove('gain', 'spend'); void en.offsetWidth; en.classList.add(up ? 'gain' : 'spend');
-      en.dataset.last = b.energy;
+      en.dataset.last = shown;
     }
     en.innerHTML = `<div class="pips">${pips}${slots > 8 ? `<i class="pip on">${icon('bolt')}</i><b class="pip-count">×${b.energy}</b>` : ''}</div>${label}`;
-    en.classList.toggle('empty', b.energy === 0);
+    en.classList.toggle('empty', out);
     $('[data-combo]').innerHTML = b.combo > 1 ? `Combo ×${b.combo} <small>+${(b.combo - 1) * b.comboStep()} dmg</small>` : b.combo === 1 ? 'Combo ×1' : '';
     $('[data-draw]').textContent = b.draw.length;
     $('[data-discard]').textContent = b.discard.length;
