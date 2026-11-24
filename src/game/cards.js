@@ -227,7 +227,7 @@ export const CARDS = {
     arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'rare', icon: 'film',
     text: (u) => `Reveal every card on the board.${u ? ' +1 energy.' : ''} Exhaust.`,
     exhaust: true,
-    fx: (b, u) => { b.reveal(99); if (u) b.gainEnergy(1); },
+    fx: (b, u) => { b.reveal(99, false, true); if (u) b.gainEnergy(1); },
   },
 
   // ---------- status (added by enemies, gone after the fight) ----------

@@ -163,6 +163,7 @@ function help() {
     <p><b>Every card in your deck shows up twice</b> on the board, face down. Flip two cards: if they match, that card is played.</p>
     <p><b>Flipping a pair costs 1 energy.</b> You get 3 energy a turn. When it runs out, the enemy does what its bubble says.</p>
     <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 energy and a fresh board.</p>
+    <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
     <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo or Memory build a style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
@@ -421,6 +422,7 @@ function battleScreen(enemyId, kind) {
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
     $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy}⚡</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} Glitch each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} Block each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
+    if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">👁 ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
     const en = $('[data-energy]');

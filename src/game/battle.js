@@ -49,8 +49,6 @@ export class Battle {
     if (this.has('neon')) this.enemy.vuln += 2;
     this.chooseIntent();
     this.dealBoard();
-    if (this.has('moonPin')) this.reveal(2, true);
-    if (this.has('luckyCat')) this.flash(1400);
     this.startTurn();
     this.log(`${this.enemy.name} blocks the way!`);
   }
@@ -75,6 +73,15 @@ export class Battle {
     this.board = slots.map((s, i) => ({ i, card: s.card, state: 'down', seen: false }));
     this.first = null;
     this.emit('board');
+    // Every new board: saved-up reveals carry over, and "new board" charms trigger.
+    const saved = this.pendingReveal || 0;
+    this.pendingReveal = 0;
+    const charmReveal = this.has('moonPin') ? 2 : 0;
+    if (saved + charmReveal > 0) {
+      this.reveal(saved + charmReveal, true, true);
+      if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);
+    }
+    if (this.has('luckyCat')) this.flash(1400);
   }
 
   keyOf(card) { return card.id + (card.up ? '+' : ''); }
@@ -168,10 +175,17 @@ export class Battle {
     }
   }
 
-  reveal(n, quiet) {
+  // Reveal n hidden cards. Any reveals that don't fit on this board (because
+  // it's nearly cleared) are saved and used on the next board.
+  reveal(n, quiet, noCarry) {
     const hidden = shuffle(this.board.filter((s) => s.state === 'down'));
-    hidden.slice(0, n).forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
-    if (!quiet) this.log(`Revealed ${Math.min(n, hidden.length)} cards.`);
+    const used = Math.min(n, hidden.length);
+    hidden.slice(0, used).forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
+    const left = n - used;
+    if (left > 0 && !noCarry) {
+      this.pendingReveal = Math.min(16, (this.pendingReveal || 0) + left);
+      this.log(`${used ? `Revealed ${used}. ` : ''}${left > 15 ? 'The whole next board' : `${left} more`} will be revealed on the next board.`);
+    } else if (!quiet) this.log(`Revealed ${used} card${used === 1 ? '' : 's'}.`);
     this.emit('update');
   }
 

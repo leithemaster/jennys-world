@@ -8,7 +8,7 @@
 
 export const CHARMS = {
   // ----- Haru's Gift: pick 1 of 3 at the start of a run -----
-  moonPin: { name: 'Moon Pin', icon: '🌙', pool: 'haru', style: 'memory', desc: 'At the start of each fight, reveal 2 cards.' },
+  moonPin: { name: 'Moon Pin', icon: '🌙', pool: 'haru', style: 'memory', desc: 'Reveal 2 cards on every new board.' },
   scarf: { name: 'Knitted Scarf', icon: '🧣', pool: 'haru', desc: '+12 max HP.' },
   luckyCoin: { name: 'Lucky Coin', icon: '🪙', pool: 'haru', desc: 'Start with 100 extra coins.' },
   glitchPen: { name: 'Glitch Pen', icon: '🖊️', pool: 'haru', style: 'glitch', desc: 'Start with 2 Stingers. Glitch cards show up more.' },
@@ -22,7 +22,7 @@ export const CHARMS = {
   giftCard: { name: 'Gift Card', icon: '🎁', pool: 'haru', desc: 'Your first purchase in each shop is half price.' },
 
   // ----- drops -----
-  luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'The first board of each fight is shown for a moment.' },
+  luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'Every new board is shown for a moment.' },
   americano: { name: 'Iced Americano', icon: '🧋', pool: 'drop', desc: '+1 energy on your first turn.' },
   bandage: { name: 'Plaster Pack', icon: '🩹', pool: 'drop', desc: 'Heal 5 after each fight.' },
   keychain: { name: 'Spiked Keychain', icon: '🔑', pool: 'drop', desc: 'Your first match each turn deals 3 damage.' },
