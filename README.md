@@ -1,17 +1,20 @@
-# Jenny's World
+# Spire Match
 
-A tiny toon-shaded planet to walk around. Made for my sister.
+A memory card battler made for my sister. Part of Jenny's World.
 
-- **Mochi Moon** – a kawaii shop with a fitting room: swap hats, tops, bottoms, shoes and bags (Tokyo / Seoul street style). Your outfit is saved.
-- **Net Café 24** – sit down and play **Spire Match**, a memory game with a roguelike card-battle twist: match pairs to Slash, Guard, Snack, Zap or Boba, beat four floors, pick an upgrade after each fight.
-- **Spots 1–4** – "coming soon" lots waiting for new places.
+**Play:** https://leithemaster.github.io/jennys-world/
 
-## Controls
+## How it works
 
-- Move: `W A S D` / arrow keys, or drag on the screen on a phone
-- Enter a place: walk to its door and press `E` (or tap the prompt)
-- Outfits: the shirt button, or visit Mochi Moon
-- `Esc` closes the shop or the card game
+- Every card in your deck shows up **twice**, face down. Flip two: if they match, that card is played.
+- Flipping a pair costs **1 energy**. You get 3 a turn; when you run out, the enemy acts on the intent shown in its bubble.
+- Unmatched cards **stay where they are** between turns, so memory pays off. Clearing the whole board gives +1 energy and a fresh board.
+- **Combo:** matches in a row add +2 damage to attacks. A miss resets it.
+- Some enemies **scramble** the board or slip junk cards (Bug, Lag, Spam) into your deck.
+
+## The run
+
+Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 25+ cards, collect 19 charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later.
 
 ## Run it locally
 
@@ -20,14 +23,16 @@ npm install
 npm run dev
 ```
 
-## Adding a new place
+## Where things live
 
-1. Pick a placeholder in `src/config.js` and change its `kind`, `name`, `prompt` and add a `door`.
-2. Write a builder for the building in `src/world/places.js` and use it in `src/world/world.js`.
-3. Hook up what happens at the door in `interact()` in `src/main.js`.
+- `src/game/cards.js` – every card and what it does
+- `src/game/enemies.js` – enemies, their move patterns, and which floor they're on
+- `src/game/charms.js` – charms (passive items)
+- `src/game/events.js` – "?" room events
+- `src/game/battle.js` – the fight rules
+- `src/game/run.js` – map generation, rewards, shop stock, saving
+- `src/ui/` – screens and art (all original SVG drawings)
 
-## How it looks the way it does
-
-Everything is built from simple shapes in [Three.js](https://threejs.org): banded toon shading, inked outlines (inverted hulls), a teal sky with painted clouds, and a small planet you walk around. The look is inspired by hand-painted anime backgrounds; all characters, mascots and places are original.
+The earlier 3D tiny-planet version of Jenny's World is in the git history (commit `c650673`).
 
 Deployed to GitHub Pages by `.github/workflows/deploy.yml` on every push to `main`.
