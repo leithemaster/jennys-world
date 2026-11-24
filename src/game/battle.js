@@ -9,6 +9,8 @@ import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
 
 const BOARD_PAIRS = 8;
+// Tunable rules. freeReveal = cards revealed for free on every new board.
+export const RULES = { freeReveal: 2 };
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 let uidSeq = 1;
@@ -76,7 +78,7 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = this.has('moonPin') ? 2 : 0;
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + RULES.freeReveal;
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);

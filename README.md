@@ -9,6 +9,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 - Every card in your deck shows up **twice**, face down. Flip two: if they match, that card is played.
 - Flipping a pair costs **1 energy**. You get 3 a turn; when you run out, the enemy acts on the intent shown in its bubble.
 - Unmatched cards **stay where they are** between turns, so memory pays off. Clearing the whole board gives +1 energy and a fresh board.
+- Every new board starts with **2 cards revealed** for free.
 - **Combo:** matches in a row add +2 damage to attacks. A miss resets it.
 - Some enemies **scramble** the board or slip junk cards (Bug, Lag, Spam) into your deck.
 
@@ -47,6 +48,10 @@ Fixed rows: fights at the start, a treasure in the middle, a rest booth right be
 ## Sound
 
 Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in code with the Web Audio API (default 40%). Both can be changed or muted from the ♪ button; settings are remembered.
+
+## Playtest simulator
+
+`node tools/sim.mjs 200` plays 200 full runs per setting with a bot that has human-like memory (a casual and a sharp version) and prints win rates, turns per fight, HP lost and miss rate. Change `RULES` in `src/game/battle.js` to try other rules. `node tools/sim.mjs 200 deaths` shows where runs end.
 
 ## Run it locally
 
