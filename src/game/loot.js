@@ -77,10 +77,33 @@ export function drawCard(run, rarity, exclude = []) {
     || drawFrom(run, 'card:common', () => cardIds('common'), (id) => !exclude.includes(id));
 }
 
+// ---------- play styles ----------
+// Your deck's style is whichever style tag (Glitch / Guard / Combo / Memory)
+// you own the most cards of. Once you have one, rewards and shops pull extra
+// cards from that style's own deck, so a Glitch run keeps finding Glitch cards.
+export function deckStyle(run) {
+  const counts = {};
+  for (const c of run.deck) { const a = CARDS[c.id].arch; if (a) counts[a] = (counts[a] || 0) + 1; }
+  const gift = run.charms.map((k) => CHARMS[k].style).find(Boolean);
+  if (gift) counts[gift] = (counts[gift] || 0) + 1.5;
+  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return best && best[1] >= 1 ? { arch: best[0], count: Math.floor(best[1]) } : null;
+}
+
+export function drawStyleCard(run, arch, rarity, exclude = []) {
+  const ok = (id) => !exclude.includes(id) && cardAllowed(run, id);
+  const ids = (r) => Object.keys(CARDS).filter((id) => CARDS[id].arch === arch && (!r || CARDS[id].rarity === r));
+  return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || drawFrom(run, `card:${arch}:any`, () => ids(), ok);
+}
+
 export function cardReward(run, kind, n = 3) {
   const out = [];
+  const style = deckStyle(run);
+  // 1 style card once you lean into a style, 2 once you're committed (4+ cards)
+  const styleSlots = style ? (style.count >= 4 ? 2 : 1) : 0;
   for (let i = 0; i < n; i++) {
-    const id = drawCard(run, rollRarity(run, kind), out);
+    const rarity = rollRarity(run, kind);
+    const id = (i < styleSlots && drawStyleCard(run, style.arch, rarity, out)) || drawCard(run, rarity, out);
     if (id) out.push(id);
   }
   return out.map((id) => ({ id }));

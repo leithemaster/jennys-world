@@ -3,10 +3,23 @@
 //   drop – treasure lockers, elites and events
 //   shop – only sold at the Konbini Corner
 //   boss – only offered after beating a boss
+//   haru – Haru's Gift, pick 1 of 3 at the start of a run
 // requires(run, h): optional; the charm stays hidden until this is true.
 
 export const CHARMS = {
-  moonPin: { name: 'Moon Pin', icon: '🌙', pool: 'starter', desc: 'At the start of each fight, reveal 2 cards.' },
+  // ----- Haru's Gift: pick 1 of 3 at the start of a run -----
+  moonPin: { name: 'Moon Pin', icon: '🌙', pool: 'haru', style: 'memory', desc: 'At the start of each fight, reveal 2 cards.' },
+  scarf: { name: 'Knitted Scarf', icon: '🧣', pool: 'haru', desc: '+12 max HP.' },
+  luckyCoin: { name: 'Lucky Coin', icon: '🪙', pool: 'haru', desc: 'Start with 100 extra coins.' },
+  glitchPen: { name: 'Glitch Pen', icon: '🖊️', pool: 'haru', style: 'glitch', desc: 'Start with 2 Stingers. Glitch cards show up more.' },
+  puffyJacket: { name: 'Puffy Jacket', icon: '🧥', pool: 'haru', style: 'guard', desc: 'Start with Hoodie Up. Start each fight with 4 Block.' },
+  rhythmBracelet: { name: 'Rhythm Bracelet', icon: '📿', pool: 'haru', style: 'combo', desc: 'Start with Combo Kick. Each combo step adds +3 damage instead of +2.' },
+  thermos: { name: 'Warm Thermos', icon: '🍵', pool: 'haru', desc: 'Heal 7 after each fight.' },
+  spareBattery: { name: 'Spare Battery', icon: '🪫', pool: 'haru', desc: 'The first time you run out of energy in each fight, gain 2.' },
+  sketchbook: { name: 'Sketchbook', icon: '📓', pool: 'haru', desc: 'Upgrade 2 random cards in your starting deck.' },
+  pillowPet: { name: 'Pillow Pet', icon: '🐑', pool: 'haru', desc: 'Naps at rest booths heal 15% more and give +2 max HP.' },
+  shibaCharm: { name: 'Shiba Keychain', icon: '🐶', pool: 'haru', desc: 'Once per run, survive a knockout with 25% HP.' },
+  giftCard: { name: 'Gift Card', icon: '🎁', pool: 'haru', desc: 'Your first purchase in each shop is half price.' },
 
   // ----- drops -----
   luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'The first board of each fight is shown for a moment.' },

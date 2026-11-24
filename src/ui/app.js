@@ -1,4 +1,4 @@
-import { CARDS, cardName, cardText, canUpgrade } from '../game/cards.js';
+import { CARDS, ARCHES, cardName, cardText, canUpgrade } from '../game/cards.js';
 import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP } from '../game/battle.js';
@@ -6,7 +6,7 @@ import {
   newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
-import { drawCard, drawCharm, drawEvent } from '../game/loot.js';
+import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
 
@@ -24,7 +24,7 @@ export function cardHTML(c, extra = '') {
     <div class="card-art">${icon(def.icon)}</div>
     <div class="card-name">${esc(cardName(c))}</div>
     <div class="card-text">${esc(cardText(c))}</div>
-    <div class="card-type">${TYPE_LABEL[def.type]}${def.rarity === 'curse' ? ' · Curse' : ''}</div>
+    <div class="card-type">${TYPE_LABEL[def.type]}${def.arch ? ` · <span class="arch a-${def.arch}">${ARCHES[def.arch].name}</span>` : ''}${def.rarity === 'curse' ? ' · Curse' : ''}</div>
   </div>`;
 }
 
@@ -51,7 +51,7 @@ function header() {
 }
 
 function bindHeader(root) {
-  root.querySelector('[data-deck]')?.addEventListener('click', () => showDeck(run.deck, 'Your deck'));
+  root.querySelector('[data-deck]')?.addEventListener('click', () => { const s = deckStyle(run); showDeck(run.deck, 'Your deck', s ? `Play style: <b class="arch a-${s.arch}">${ARCHES[s.arch].name}</b> · ${esc(ARCHES[s.arch].desc)} Rewards will offer more ${ARCHES[s.arch].name} cards.` : 'No play style yet. Pick up Glitch, Guard, Combo or Memory cards and rewards will start offering more of that style.'); });
   root.querySelector('[data-menu]')?.addEventListener('click', menu);
   root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
 }
@@ -127,9 +127,9 @@ function modal(html, { onClose, wide } = {}) {
   return { el: wrap, close };
 }
 
-function showDeck(cards, title) {
+function showDeck(cards, title, note = '') {
   const sorted = [...cards].sort((a, b) => (CARDS[a.id].type + a.id).localeCompare(CARDS[b.id].type + b.id));
-  modal(`<h2>${esc(title)}</h2><div class="card-grid">${sorted.map((c) => cardHTML(c)).join('') || '<p>Empty.</p>'}</div><button class="btn" data-close>Close</button>`, { wide: true });
+  modal(`<h2>${esc(title)}</h2>${note ? `<p class="deck-note">${note}</p>` : ''}<div class="card-grid">${sorted.map((c) => cardHTML(c)).join('') || '<p>Empty.</p>'}</div><button class="btn" data-close>Close</button>`, { wide: true });
 }
 
 // Pick a card from the deck; resolves to deck index or null.
@@ -165,6 +165,7 @@ function help() {
     <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 energy and a fresh board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
+    <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo or Memory build a style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
     <p><b>Between fights:</b> add new cards, collect charms, shop, rest or try your luck at "?" rooms. A smaller, sharper deck is often stronger.</p>
     <p class="muted">Keys: Space ends your turn · Esc closes windows</p>
   </div><button class="btn" data-close>Got it</button>`);
@@ -194,15 +195,35 @@ export function title() {
   </main>`;
   app.querySelector('[data-help]').addEventListener('click', help);
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
-  app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; mapScreen(); });
+  app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) harusGift(); else mapScreen(); });
   app.querySelector('[data-new]').addEventListener('click', () => {
     if (saved && !confirm('Start over? Your current run will be lost.')) return;
     run = newRun();
     saveRun(run);
-    if (!localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
-    mapScreen();
+    harusGift();
   });
 }
+
+// ---------- Haru's Gift ----------
+function harusGift() {
+  battle = null;
+  const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru').sort(() => Math.random() - 0.5).slice(0, 3);
+  app.innerHTML = `<main class="room gift">
+    <div class="gift-art">${jennySVG()}</div>
+    <h1>Haru's Gift</h1>
+    <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
+    <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${CHARMS[k].icon}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
+  </main>`;
+  app.querySelectorAll('[data-gift]').forEach((b) => b.addEventListener('click', () => {
+    gainCharm(run, b.dataset.gift);
+    run.giftPending = false;
+    saveRun(run);
+    if (!localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
+    mapScreen();
+  }));
+  app.querySelector('[data-gift]').focus();
+}
+
 
 // ---------- map ----------
 function mapScreen() {
@@ -217,19 +238,31 @@ function mapScreen() {
   const avail = availableRooms(run);
   const isAvail = (r, c) => avail.some((a) => a.row === r && (r === 'boss' || a.col === c));
   const visited = (r, c) => run.path.some((p) => p.row === r && p.col === c);
+  // rooms you can still reach from where you are; everything else is greyed out
+  const reach = new Set();
+  const walk = (r, c) => {
+    const key = `${r},${c}`;
+    if (reach.has(key)) return;
+    reach.add(key);
+    if (r < rows.length - 1) rows[r].find((n) => n.col === c).next.forEach((nc) => walk(r + 1, nc));
+  };
+  if (!run.pos) rows[0].forEach((n) => walk(0, n.col));
+  else if (run.pos.row !== 'boss') walk(run.pos.row, run.pos.col);
+  const live = (r, c) => reach.has(`${r},${c}`);
 
   let lines = '';
   rows.forEach((row, r) => row.forEach((n) => {
     const targets = r === rows.length - 1 ? [{ x: W / 2, y: yOf('boss') }] : n.next.map((c) => ({ x: xOf(c), y: yOf(r + 1), c }));
     targets.forEach((t) => {
       const on = visited(r, n.col) && (t.c === undefined ? run.pos?.row === 'boss' : visited(r + 1, t.c));
-      lines += `<line x1="${xOf(n.col)}" y1="${yOf(r)}" x2="${t.x}" y2="${t.y}" class="${on ? 'on' : ''}"/>`;
+      const open = live(r, n.col) && (t.c === undefined || live(r + 1, t.c));
+      lines += `<line x1="${xOf(n.col)}" y1="${yOf(r)}" x2="${t.x}" y2="${t.y}" class="${on ? 'on' : open ? '' : 'skip'}"/>`;
     });
   }));
   let nodes = '';
   rows.forEach((row, r) => row.forEach((n) => {
-    const a = isAvail(r, n.col), v = visited(r, n.col);
-    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}" transform="translate(${xOf(n.col)} ${yOf(r)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
+    const a = isAvail(r, n.col), v = visited(r, n.col), gone = !v && !live(r, n.col);
+    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}${gone ? ' skipped' : ''}" transform="translate(${xOf(n.col)} ${yOf(r)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
       <circle r="19"/><g transform="translate(-12 -12) scale(.75)">${roomIcon(n.type).replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
   }));
   const bossA = isAvail('boss');
@@ -299,9 +332,9 @@ function battleScreen(enemyId, kind) {
         <div class="statuses" data-estat></div>
       </div>
     </section>
+    <section class="energy-bar" data-energy aria-live="polite"></section>
     <section class="board" data-board aria-label="Card board"></section>
     <footer class="controls">
-      <div class="energy" data-energy aria-live="polite"></div>
       <div class="mid">
         <div class="combo" data-combo></div>
         <div class="log" data-log aria-live="polite"></div>
@@ -387,12 +420,21 @@ function battleScreen(enemyId, kind) {
     $('[data-ehptext]').textContent = `${e.hp}/${e.maxHp}`;
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
-    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy}⚡</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '');
+    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy}⚡</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} Glitch each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} Block each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
-    $('[data-energy]').innerHTML = `<b>${b.energy}</b><span>energy</span>`;
-    $('[data-energy]').classList.toggle('empty', b.energy === 0);
-    $('[data-combo]').innerHTML = b.combo > 1 ? `Combo ×${b.combo} <small>+${(b.combo - 1) * 2} dmg</small>` : b.combo === 1 ? 'Combo ×1' : '';
+    const en = $('[data-energy]');
+    const slots = Math.max(b.turnEnergy, b.energy);
+    const pips = slots <= 8 ? Array.from({ length: slots }, (_, i) => `<i class="pip${i < b.energy ? ' on' : ''}">${icon('bolt')}</i>`).join('') : '';
+    const label = b.energy === 0 && !b.over ? '<span class="en-empty">Out of energy · enemy turn</span>' : `<span><b>${b.energy}</b> energy left · each pair costs 1</span>`;
+    if (en.dataset.last !== String(b.energy)) {
+      const up = Number(en.dataset.last || 0) < b.energy;
+      en.classList.remove('gain', 'spend'); void en.offsetWidth; en.classList.add(up ? 'gain' : 'spend');
+      en.dataset.last = b.energy;
+    }
+    en.innerHTML = `<div class="pips">${pips}${slots > 8 ? `<i class="pip on">${icon('bolt')}</i><b class="pip-count">×${b.energy}</b>` : ''}</div>${label}`;
+    en.classList.toggle('empty', b.energy === 0);
+    $('[data-combo]').innerHTML = b.combo > 1 ? `Combo ×${b.combo} <small>+${(b.combo - 1) * b.comboStep()} dmg</small>` : b.combo === 1 ? 'Combo ×1' : '';
     $('[data-draw]').textContent = b.draw.length;
     $('[data-discard]').textContent = b.discard.length;
     $('[data-end]').disabled = b.busy || b.over;
@@ -506,7 +548,7 @@ function gameOver(won, abandoned) {
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
-  app.querySelector('[data-again]').addEventListener('click', () => { run = newRun(); saveRun(run); mapScreen(); });
+  app.querySelector('[data-again]').addEventListener('click', () => { run = newRun(); saveRun(run); harusGift(); });
   app.querySelector('[data-title]').addEventListener('click', title);
 }
 
@@ -538,7 +580,7 @@ function eventScreen() {
 }
 
 function restScreen() {
-  const heal = Math.round(run.maxHp * (run.charms.includes('neckPillow') ? 0.45 : 0.3));
+  const heal = Math.round(run.maxHp * (0.3 + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
   app.innerHTML = `${header()}<main class="room rest">
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
@@ -547,7 +589,7 @@ function restScreen() {
       <button class="btn option" data-up ${run.deck.some(canUpgrade) ? '' : 'disabled'}>Practice <small>Upgrade a card</small></button>
     </div></main>`;
   bindHeader(app);
-  app.querySelector('[data-heal]').addEventListener('click', () => { run.hp = Math.min(run.maxHp, run.hp + heal); completeRoom(); });
+  app.querySelector('[data-heal]').addEventListener('click', () => { if (run.charms.includes('pillowPet')) { run.maxHp += 2; run.hp += 2; } run.hp = Math.min(run.maxHp, run.hp + heal); completeRoom(); });
   app.querySelector('[data-up]').addEventListener('click', async () => {
     const i = await pickFromDeck('Upgrade a card', canUpgrade);
     if (i === null) return;
@@ -570,13 +612,14 @@ function treasureScreen() {
 
 function shopScreen() {
   const stock = shopStock(run);
+  const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
-      <h1>Konbini Corner</h1><p class="room-text">Snacks, cards and shiny charms.</p>
+      <h1>Konbini Corner</h1><p class="room-text">Snacks, cards and shiny charms.${run.charms.includes('giftCard') && !stock.giftUsed ? ' <b class="gift-note">🎁 Gift Card: your first item is half price!</b>' : ''}</p>
       <h2>Cards</h2>
-      <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < c.price ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < c.price ? ' poor' : ''}">● ${c.price}</span></div>`).join('')}</div>
+      <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">● ${priceOf(c)}</span></div>`).join('')}</div>
       <h2>Charms</h2>
-      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < c.price ? 'disabled' : ''}><span class="big-icon">${CHARMS[c.id].icon}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < c.price ? ' poor' : ''}">● ${c.price}</span></div>`).join('')}</div>
+      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${CHARMS[c.id].icon}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">● ${priceOf(c)}</span></div>`).join('')}</div>
       <div class="shop-row">
         <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>● ${removeCost(run)}</small></button>
         <button class="btn yellow" data-go>Leave shop</button>
@@ -584,11 +627,11 @@ function shopScreen() {
     bindHeader(app);
     app.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.cards[Number(b.dataset.card)];
-      run.coins -= c.price; c.sold = true; run.deck.push({ id: c.id }); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; run.deck.push({ id: c.id }); sfx('coin'); render();
     }));
     app.querySelectorAll('[data-charm]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.charms[Number(b.dataset.charm)];
-      run.coins -= c.price; c.sold = true; gainCharm(run, c.id); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; gainCharm(run, c.id); sfx('coin'); render();
     }));
     app.querySelector('[data-remove]').addEventListener('click', async () => {
       const i = await pickFromDeck('Remove a card');

@@ -22,7 +22,8 @@ export class Battle {
     const hp = randInt(def.hp[0], def.hp[1]);
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
-    this.powers = { energy: 0, fortress: false, freeMiss: false };
+    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0 };
+    this.turnEnergy = 3;
     this.flags = {};
     this.turn = 0;
     this.energy = 0;
@@ -43,6 +44,7 @@ export class Battle {
 
   start() {
     if (this.has('hairclip')) this.player.block += 6;
+    if (this.has('puffyJacket')) this.player.block += 4;
     if (this.has('glowstick')) this.player.strength += 1;
     if (this.has('neon')) this.enemy.vuln += 2;
     this.chooseIntent();
@@ -113,6 +115,7 @@ export class Battle {
   miss() {
     this.emit('sfx', 'miss');
     if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log('Miss! Momentum keeps your combo.'); }
+    else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log('Miss! Groove keeps half your combo.'); }
     else { this.combo = 0; this.log('No match…'); }
     if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
       this.flags.missRefunded = true;
@@ -133,6 +136,7 @@ export class Battle {
     if (def.type === 'power' && this.has('powerBank')) this.gainEnergy(1);
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
     def.fx(this, !!card.up);
+    if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.busy = false;
     if (this.checkEnd()) return;
     if (this.board.every((s) => s.state === 'gone')) {
@@ -152,6 +156,13 @@ export class Battle {
   }
 
   checkAutoEnd() {
+    if (!this.over && !this.busy && !this.first && this.energy <= 0 && this.has('spareBattery') && !this.batteryUsed) {
+      this.batteryUsed = true;
+      this.gainEnergy(2);
+      this.log('Spare Battery! +2 energy.');
+      this.emit('update');
+      return;
+    }
     if (!this.over && !this.busy && !this.first && this.energy <= 0) {
       setTimeout(() => { if (!this.over && !this.busy && !this.first && this.energy <= 0) this.endTurn(); }, 500);
     }
@@ -182,7 +193,7 @@ export class Battle {
     let dmg;
     if (opts.raw) dmg = base;
     else {
-      const comboBonus = Math.max(0, this.combo - 1) * 2;
+      const comboBonus = Math.max(0, this.combo - 1) * this.comboStep();
       dmg = this.calcDamage(base + comboBonus, this.player, e);
     }
     const absorbed = Math.min(e.block, dmg);
@@ -190,6 +201,8 @@ export class Battle {
     e.hp = Math.max(0, e.hp - (dmg - absorbed));
     this.emit('hit', 'enemy', dmg - absorbed, absorbed);
   }
+
+  comboStep() { return this.has('rhythmBracelet') ? 3 : 2; }
 
   gainBlock(n) {
     let b = n;
@@ -221,7 +234,10 @@ export class Battle {
     this.combo = this.has('stickers') ? 1 : 0;
     this.matchesThisTurn = 0;
     this.flags = {};
+    this.turnEnergy = this.energy;
     if (this.has('headset')) this.reveal(1, true);
+    if (this.powers.armor) this.gainBlock(this.powers.armor);
+    if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
     // Glitch (poison) ticks on the player at the start of their turn
     if (this.player.poison > 0) { this.selfDamage(this.player.poison); this.player.poison -= 1; }
     this.emit('turn');
@@ -315,6 +331,13 @@ export class Battle {
 
   checkEnd() {
     if (this.over) return true;
+    if (this.run.hp <= 0 && this.has('shibaCharm') && !this.run.shibaUsed) {
+      this.run.shibaUsed = true;
+      this.run.hp = Math.max(1, Math.round(this.run.maxHp * 0.25));
+      this.log('Shiba Keychain! Back up with 25% HP.');
+      this.emit('float', 'player', 'Saved!', 'heal');
+      this.emit('update');
+    }
     if (this.run.hp <= 0 && this.has('shibaPlush') && !this.savedByShiba) {
       this.savedByShiba = true;
       this.run.hp = 1;

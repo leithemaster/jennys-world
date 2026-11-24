@@ -2,7 +2,7 @@
 // whenever you're on the map, so a run can be continued later.
 import { STARTER_DECK, CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
-import { cardReward, drawCard, drawCharm, drawEnemy } from './loot.js';
+import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard } from './loot.js';
 
 const SAVE_KEY = 'sm.run.v3';
 const STATS_KEY = 'sm.stats.v2';
@@ -15,7 +15,8 @@ export function newRun() {
   const run = {
     hp: 55, maxHp: 55, coins: 99,
     deck: STARTER_DECK.map((id) => ({ id })),
-    charms: ['moonPin'],
+    charms: [],
+    giftPending: true,
     act: 0,
     map: null,
     pos: null, // { row, col } of the last room cleared
@@ -170,6 +171,15 @@ export function gainCharm(run, id) {
   run.charms.push(id);
   if (id === 'kimbap') { run.maxHp += 10; run.hp += 10; }
   if (id === 'plush') { run.maxHp += 8; run.hp += 8; }
+  if (id === 'scarf') { run.maxHp += 12; run.hp += 12; }
+  if (id === 'luckyCoin') run.coins += 100;
+  if (id === 'glitchPen') run.deck.push({ id: 'stinger' }, { id: 'stinger' });
+  if (id === 'puffyJacket') run.deck.push({ id: 'hoodieUp' });
+  if (id === 'rhythmBracelet') run.deck.push({ id: 'comboKick' });
+  if (id === 'sketchbook') {
+    const ups = run.deck.filter((c) => !c.up && CARDS[c.id].rarity !== 'status' && CARDS[c.id].rarity !== 'curse');
+    for (let i = 0; i < 2 && ups.length; i++) ups.splice(Math.floor(Math.random() * ups.length), 1)[0].up = true;
+  }
 }
 
 export function gainCoins(run, n) {
@@ -182,6 +192,7 @@ export function afterFightHealing(run) {
   let h = 0;
   if (run.charms.includes('bandage')) h += 5;
   if (run.charms.includes('plush')) h += 12;
+  if (run.charms.includes('thermos')) h += 7;
   const before = run.hp;
   run.hp = Math.min(run.maxHp, run.hp + h);
   return run.hp - before;
@@ -196,8 +207,10 @@ export function shopStock(run) {
   const off = run.charms.includes('memberCard') ? 0.8 : 1;
   const price = (n) => Math.round(n * off);
   const cards = [];
-  for (const rar of ['common', 'common', 'uncommon', 'uncommon', 'rare']) {
-    const id = drawCard(run, rar, cards.map((c) => c.id));
+  const style = deckStyle(run);
+  for (const [i, rar] of ['common', 'common', 'uncommon', 'uncommon', 'rare'].entries()) {
+    const ex = cards.map((c) => c.id);
+    const id = (style && (i === 1 || i === 3) && drawStyleCard(run, style.arch, rar, ex)) || drawCard(run, rar, ex);
     if (id) cards.push({ id, price: price({ common: 50, uncommon: 75, rare: 145 }[rar] + Math.floor(Math.random() * 15) - 5) });
   }
   const charms = [];

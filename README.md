@@ -16,6 +16,14 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 25+ cards, collect 19 charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later.
 
+## Haru's Gift
+
+Every run starts by picking 1 of 3 starter charms from Haru (12 in total): Moon Pin, Knitted Scarf, Lucky Coin, Glitch Pen, Puffy Jacket, Rhythm Bracelet, Warm Thermos, Spare Battery, Sketchbook, Pillow Pet, Shiba Keychain and Gift Card. Some of them push you toward a play style.
+
+## Play styles
+
+Cards can be tagged **Glitch** (damage over time), **Guard** (Block), **Combo** (chain matches) or **Memory** (reveal cards). Your deck's style is the tag you own the most of. Once you have one, card rewards and shops pull extra cards from that style's own deck: 1 style card per reward at first, 2 once you're committed (4+ style cards). The Deck button shows your current style.
+
 ## Loot decks (less swingy RNG)
 
 Rewards don't come from pure dice rolls. Each source draws from its own shuffled deck that's saved with the run, so nothing repeats until that deck is used up:
@@ -28,6 +36,8 @@ Rewards don't come from pure dice rolls. Each source draws from its own shuffled
 
 ## Map rules
 
+Rooms you can no longer reach are greyed out so the paths still open to you stand out.
+
 Fixed rows: fights at the start, a treasure in the middle, a rest booth right before the boss. The rest of the map is dealt from a room deck, then fixed up so that **every path** has:
 
 - at least **2 rest booths** (one mid-floor + the one before the boss)
@@ -36,7 +46,7 @@ Fixed rows: fights at the start, a treasure in the middle, a rest booth right be
 
 ## Sound
 
-Music: "Her Shiba Are Her Knights" (default 40%). Sound effects are generated in code with the Web Audio API (default 50%). Both can be changed or muted from the ♪ button; settings are remembered.
+Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in code with the Web Audio API (default 40%). Both can be changed or muted from the ♪ button; settings are remembered.
 
 ## Run it locally
 
