@@ -9,7 +9,8 @@ import {
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
-import { LOOKS, getLook, setLook } from './chibi.js';
+import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
+import { charmIcon, uiIcon } from './charmIcons.js';
 
 const app = document.getElementById('app');
 let run = null;
@@ -31,22 +32,22 @@ export function cardHTML(c, extra = '') {
 
 function charmBadge(id, cls = '') {
   const c = CHARMS[id];
-  return `<button class="charm ${cls}" data-tip="${esc(`${c.name}: ${c.desc}`)}" aria-label="${esc(`${c.name}: ${c.desc}`)}"><span>${c.icon}</span></button>`;
+  return `<button class="charm ${cls}" data-tip="${esc(`${c.name}: ${c.desc}`)}" aria-label="${esc(`${c.name}: ${c.desc}`)}">${charmIcon(id)}</button>`;
 }
 
 function header() {
   const roomNo = run.pos ? (run.pos.row === 'boss' ? 10 : run.pos.row + 1) : 0;
   return `<header class="bar">
     <div class="bar-left">
-      <span class="pill hp" aria-label="Health">♥ <b>${run.hp}</b>/${run.maxHp}</span>
-      <span class="pill coins" aria-label="Coins">● <b>${run.coins}</b></span>
+      <span class="pill hp" aria-label="Health">${uiIcon('heart')}<b>${run.hp}</b>/${run.maxHp}</span>
+      <span class="pill coins" aria-label="Coins">${uiIcon('coin')}<b>${run.coins}</b></span>
       <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/10</small></span>
     </div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="bar-right">
-      <button class="btn small ghost" data-sound aria-label="Settings">⚙</button>
+      <button class="btn small icon-only" data-sound aria-label="Settings" title="Settings">${uiIcon('gear')}</button>
       <button class="btn small" data-deck>Deck <b>${run.deck.length}</b></button>
-      <button class="btn small ghost" data-menu aria-label="Menu">☰</button>
+      <button class="btn small icon-only" data-menu aria-label="Menu" title="Menu">${uiIcon('menu')}</button>
     </div>
   </header>`;
 }
@@ -186,13 +187,13 @@ export function title() {
   const saved = loadRun();
   const stats = loadStats();
   app.innerHTML = `<main class="title">
-    <div class="title-art">${jennySVG()}</div>
+    <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
     <h1 class="logo"><span>SPIRE</span><span>MATCH</span></h1>
     <p class="tagline">A memory card battler · climb the Net Café Tower</p>
     <div class="stack narrow">
-      ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ♥ ${saved.hp}</small></button>` : ''}
+      ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ${uiIcon('heart')} ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
-      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>⚙ Settings</button></div>
+      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>Settings</button></div>
     </div>
     <dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
@@ -218,10 +219,10 @@ function harusGift() {
   battle = null;
   const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru').sort(() => Math.random() - 0.5).slice(0, 3);
   app.innerHTML = `<main class="room gift">
-    <div class="gift-art">${jennySVG()}</div>
+    <div class="gift-art">${blobBackdrop()}${jennySVG()}</div>
     <h1>Haru's Gift</h1>
     <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
-    <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${CHARMS[k].icon}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
+    <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
   </main>`;
   app.querySelectorAll('[data-gift]').forEach((b) => b.addEventListener('click', () => {
     gainCharm(run, b.dataset.gift);
@@ -429,8 +430,8 @@ function battleScreen(enemyId, kind) {
     $('[data-ehptext]').textContent = `${e.hp}/${e.maxHp}`;
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
-    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy}⚡</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} Glitch each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} Block each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
-    if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">👁 ${b.pendingReveal} saved</span>`);
+    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy} energy</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} Glitch each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} Block each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
+    if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
     const en = $('[data-energy]');
@@ -472,7 +473,7 @@ function battleScreen(enemyId, kind) {
     hit: (who, dmg, blocked, why) => {
       if (dmg > 0) sfx(who === 'enemy' ? 'hit' : 'hurt'); else if (blocked > 0) sfx('block');
       if (dmg > 0) { float(who, `-${dmg}`, why || 'dmg'); shake(who); }
-      if (blocked > 0) float(who, `⛨${blocked}`, 'block');
+      if (blocked > 0) float(who, `${blocked} blocked`, 'block');
     },
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
     scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
@@ -512,11 +513,11 @@ function battleWon(kind, enemyId) {
     app.innerHTML = `${header()}<main class="reward">
       <h1>${esc(ENEMIES[enemyId].name)} defeated!</h1>
       <ul class="loot">
-        <li>● ${coins} coins</li>
-        ${healed ? `<li>♥ healed ${healed}</li>` : ''}
-        ${charm ? `<li>${CHARMS[charm].icon} ${esc(CHARMS[charm].name)} <small>${esc(CHARMS[charm].desc)}</small></li>` : ''}
+        <li>${uiIcon('coin')} ${coins} coins</li>
+        ${healed ? `<li>${uiIcon('heart')} healed ${healed}</li>` : ''}
+        ${charm ? `<li>${charmIcon(charm)} ${esc(CHARMS[charm].name)} <small>${esc(CHARMS[charm].desc)}</small></li>` : ''}
       </ul>
-      ${bossCharms.length && !pickedBoss ? `<h2>Choose a boss charm</h2><div class="charm-choices">${bossCharms.map((k) => `<button class="charm-card" data-boss="${k}"><span class="big-icon">${CHARMS[k].icon}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></button>`).join('')}</div>` : ''}
+      ${bossCharms.length && !pickedBoss ? `<h2>Choose a boss charm</h2><div class="charm-choices">${bossCharms.map((k) => `<button class="charm-card" data-boss="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></button>`).join('')}</div>` : ''}
       ${!pickedCard ? `<h2>Add a card to your deck</h2><div class="choices">${choices.map((c, i) => `<button class="card-btn" data-pick="${i}" aria-label="${esc(cardName(c))}: ${esc(cardText(c))}">${cardHTML(c)}</button>`).join('')}</div>
       <button class="btn ghost" data-skip>Skip card</button>` : ''}
       ${pickedCard && pickedBoss ? '<button class="btn big yellow" data-go>Continue</button>' : ''}
@@ -553,7 +554,7 @@ function gameOver(won, abandoned) {
   clearRun();
   const stats = recordRun(run, won);
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
-    <div class="title-art">${jennySVG()}</div>
+    <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
     <h1>${won ? 'The Tower is cleared!' : abandoned ? 'Run abandoned' : 'Knocked out!'}</h1>
     <p>${won ? 'Jenny beat The Blue Screen. Legendary.' : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
@@ -575,7 +576,7 @@ function eventScreen() {
   const api = {
     addCard: (id) => { run.deck.push({ id }); return CARDS[id].name; },
     randomCard: (rar) => drawCard(run, rar || 'common'),
-    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return '50 coins (you have every charm!)'; } gainCharm(run, k); return `${CHARMS[k].icon} ${CHARMS[k].name}`; },
+    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return '50 coins (you have every charm!)'; } gainCharm(run, k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
@@ -621,7 +622,7 @@ function treasureScreen() {
   app.innerHTML = `${header()}<main class="room treasure">
     <div class="room-icon">${roomIcon('treasure')}</div>
     <h1>Prize Locker</h1>
-    ${k ? `<div class="charm-card solo"><span class="big-icon">${CHARMS[k].icon}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></div>` : '<p>60 coins inside!</p>'}
+    ${k ? `<div class="charm-card solo"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></div>` : '<p>60 coins inside!</p>'}
     <button class="btn big yellow" data-go>Continue</button></main>`;
   bindHeader(app);
   app.querySelector('[data-go]').addEventListener('click', completeRoom);
@@ -632,13 +633,13 @@ function shopScreen() {
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
-      <h1>Konbini Corner</h1><p class="room-text">Snacks, cards and shiny charms.${run.charms.includes('giftCard') && !stock.giftUsed ? ' <b class="gift-note">🎁 Gift Card: your first item is half price!</b>' : ''}</p>
+      <h1>Konbini Corner</h1><p class="room-text">Snacks, cards and shiny charms.${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
       <h2>Cards</h2>
-      <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">● ${priceOf(c)}</span></div>`).join('')}</div>
+      <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
       <h2>Charms</h2>
-      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${CHARMS[c.id].icon}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">● ${priceOf(c)}</span></div>`).join('')}</div>
+      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${charmIcon(c.id)}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
       <div class="shop-row">
-        <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>● ${removeCost(run)}</small></button>
+        <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>${uiIcon('coin')} ${removeCost(run)}</small></button>
         <button class="btn yellow" data-go>Leave shop</button>
       </div></main>`;
     bindHeader(app);

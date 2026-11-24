@@ -227,7 +227,7 @@ export class Battle {
   }
   gainEnergy(n, quiet) {
     this.energy = Math.max(0, this.energy + n);
-    if (!quiet) this.emit('float', 'player', `${n > 0 ? '+' : ''}${n} ⚡`, 'energy');
+    if (!quiet) this.emit('float', 'player', `${n > 0 ? '+' : ''}${n} energy`, 'energy');
   }
   heal(n) {
     const before = this.run.hp;

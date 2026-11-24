@@ -78,6 +78,16 @@ export function jennyChibi(lookKey = getLook(), opts = {}) {
   </svg>`;
 }
 
+export function blobBackdrop(a = '#e0485f', b = '#ff8fb0') {
+  return `<svg class="backdrop" viewBox="0 0 160 160" aria-hidden="true">
+    <path d="M30 70 C24 40 50 22 76 28 C92 14 128 20 134 48 C150 60 146 94 128 104 C126 128 98 140 78 130 C58 142 26 130 28 106 C14 96 16 78 30 70 Z" fill="${a}"/>
+    <circle cx="36" cy="34" r="7" fill="none" stroke="${b}" stroke-width="3"/>
+    <circle cx="134" cy="124" r="5" fill="none" stroke="${b}" stroke-width="2.5"/>
+    <path d="M128 24 q1.4 7.6 9 9 q-7.6 1.4 -9 9 q-1.4 -7.6 -9 -9 q7.6 -1.4 9 -9 z" fill="${b}"/>
+    <path d="M24 112 q1 5 6 6 q-5 1 -6 6 q-1 -5 -6 -6 q5 -1 6 -6 z" fill="${b}"/>
+  </svg>`;
+}
+
 // ---------------- enemies ----------------
 // face helpers: eyes 'cute' | 'angry' | 'sly' | 'dot' | 'x'; mouth 'smile' | 'frown' | 'fang' | 'flat' | 'o' | 'grin'
 function face(cx, cy, { eyes = 'cute', mouth = 'smile', gap = 12, blush = true, size = 1 } = {}) {
