@@ -44,6 +44,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- sound effects ----------
+// Effects are scaled well below the music so 50% on the slider sits under it.
+const SFX_HEADROOM = 0.35;
 let ac = null;
 let master = null;
 function ctx() {
@@ -52,7 +54,15 @@ function ctx() {
     if (!AC) return null;
     ac = new AC();
     master = ac.createGain();
-    master.connect(ac.destination);
+    // Limiter so overlapping effects (hit + block + float) don't spike.
+    const limiter = ac.createDynamicsCompressor();
+    limiter.threshold.value = -24;
+    limiter.knee.value = 12;
+    limiter.ratio.value = 8;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.15;
+    master.connect(limiter);
+    limiter.connect(ac.destination);
   }
   if (ac.state === 'suspended') ac.resume();
   return ac;
@@ -125,6 +135,6 @@ const SFX = {
 export function sfx(name, ...args) {
   if (!settings.sfxOn || settings.sfx <= 0) return;
   const a = ctx(); if (!a) return;
-  master.gain.value = settings.sfx;
+  master.gain.value = settings.sfx * SFX_HEADROOM;
   SFX[name]?.(...args);
 }
