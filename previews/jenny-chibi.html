@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jenny – chibi vector style options</title>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #1f2126; --bg: #20303a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #efe9dc; color: var(--ink); font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; padding: 32px 20px 48px; }
+  h1 { font-family: 'Dela Gothic One', sans-serif; font-weight: 400; text-align: center; margin: 0 0 6px; font-size: 30px; }
+  h2.section { font-family: 'Dela Gothic One', sans-serif; font-weight: 400; text-align: center; margin: 40px 0 6px; font-size: 22px; }
+  .sub { text-align: center; margin: 0 0 24px; color: #5a6470; font-weight: 800; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; max-width: 1080px; margin: 0 auto; }
+  .opt { background: #fffdf7; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 6px 0 var(--ink); padding: 18px; display: grid; gap: 12px; }
+  .opt h3 { margin: 0; font-family: 'Dela Gothic One', sans-serif; font-weight: 400; font-size: 21px; }
+  .opt h3 span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #f2c94c; border: 2.5px solid var(--ink); margin-right: 8px; font-size: 18px; }
+  .opt p { margin: 0; line-height: 1.5; color: #3d4450; }
+  .big { width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
+  .big svg { width: 100%; height: 100%; display: block; }
+  .ingame { display: flex; align-items: center; gap: 14px; background: var(--bg); border-radius: 10px; padding: 12px 14px; color: #e9efe9; font-weight: 800; font-size: 13px; }
+  .ingame .chip { width: 96px; height: 96px; flex: none; }
+  .ingame .chip svg { width: 100%; height: 100%; display: block; }
+  .ingame small { display: block; color: #a9bdb9; font-weight: 800; }
+  .enemies { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 1080px; margin: 0 auto; }
+  .enemy { background: var(--bg); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 6px 0 var(--ink); padding: 16px; display: grid; justify-items: center; gap: 8px; color: #e9efe9; font-weight: 800; }
+  .enemy svg { width: 150px; height: 150px; }
+</style>
+</head>
+<body>
+  <h1>Jenny · chibi vector options</h1>
+  <p class="sub">Flat colors, thick outlines, one shiny highlight, big head and tiny body. Pick 1, 2 or 3.</p>
+  <div class="grid" id="grid"></div>
+  <h2 class="section">Enemies in the same style</h2>
+  <p class="sub">So you can see the whole game in this look.</p>
+  <div class="enemies" id="enemies"></div>
+
+<script>
+const INK = '#1a1420';
+const SW = 3.6; // outline width
+const o = (fill, extra = '') => `fill="${fill}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round" stroke-linecap="round" ${extra}`;
+
+function sparkle(x, y, r, c) {
+  return `<path d="M${x} ${y - r} Q${x + r * 0.18} ${y - r * 0.18} ${x + r} ${y} Q${x + r * 0.18} ${y + r * 0.18} ${x} ${y + r} Q${x - r * 0.18} ${y + r * 0.18} ${x - r} ${y} Q${x - r * 0.18} ${y - r * 0.18} ${x} ${y - r} Z" fill="${c}"/>`;
+}
+
+function backdrop(p) {
+  return `
+    <rect width="160" height="160" fill="${p.bg}"/>
+    <path d="M30 70 C24 40 50 22 76 28 C92 14 128 20 134 48 C150 60 146 94 128 104 C126 128 98 140 78 130 C58 142 26 130 28 106 C14 96 16 78 30 70 Z" fill="${p.blob}"/>
+    <circle cx="40" cy="36" r="7" fill="none" stroke="${p.blob2}" stroke-width="3"/>
+    <circle cx="128" cy="122" r="5" fill="none" stroke="${p.blob2}" stroke-width="2.5"/>
+    <circle cx="26" cy="122" r="3.5" fill="none" stroke="${p.blob2}" stroke-width="2"/>
+    ${sparkle(122, 30, 7, p.blob2)}${sparkle(34, 100, 4, p.blob2)}`;
+}
+
+function eyes(kind) {
+  const closed = (x) => `<path d="M${x - 8} 82 Q${x} 73 ${x + 8} 82" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M${x + (x < 80 ? -8 : 8)} 82 l${x < 80 ? -3 : 3} -2.5 M${x + (x < 80 ? -6.5 : 6.5)} 79 l${x < 80 ? -3 : 3} -3" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+  const open = (x) => `<ellipse cx="${x}" cy="80" rx="6.4" ry="8.4" fill="${INK}"/>
+    <ellipse cx="${x}" cy="83.5" rx="4.6" ry="3.6" fill="#7b5bb8"/>
+    <circle cx="${x - 2.2}" cy="76.6" r="2.6" fill="#fff"/><circle cx="${x + 2.4}" cy="84" r="1.2" fill="#fff"/>
+    <path d="M${x + (x < 80 ? -6 : 6)} 74 l${x < 80 ? -3 : 3} -2.4" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+  if (kind === 'closed') return closed(64) + closed(96);
+  if (kind === 'open') return open(64) + open(96);
+  return closed(64) + open(96); // wink
+}
+
+function jenny(p) {
+  return `<svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+    ${p.noBg ? '' : backdrop(p)}
+    <ellipse cx="80" cy="150" rx="32" ry="5" fill="#000" opacity=".18"/>
+    <!-- side locks (behind the body) -->
+    <path d="M42 64 C38 84 40 100 46 110 C52 112 56 108 56 104 C52 94 52 78 54 66 Z" ${o(p.hair)}/>
+    <path d="M118 64 C122 84 120 100 114 110 C108 112 104 108 104 104 C108 94 108 78 106 66 Z" ${o(p.hair)}/>
+    <path d="M44 104 C46 110 52 112 56 104 C55 100 53 98 50 98 C47 98 45 100 44 104 Z" ${o(p.tips)}/>
+    <path d="M116 104 C114 110 108 112 104 104 C105 100 107 98 110 98 C113 98 115 100 116 104 Z" ${o(p.tips)}/>
+    <!-- stubby legs + shoes -->
+    <rect x="69" y="130" width="8" height="12" rx="2" ${o(p.skin)}/>
+    <rect x="83" y="130" width="8" height="12" rx="2" ${o(p.skin)}/>
+    <path d="M66 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
+    <path d="M81.5 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
+    <!-- boxy hoodie dress: a simple trapezoid -->
+    <path d="M62 101 H98 L104 133 H56 Z" ${o(p.hoodie)}/>
+    <path d="M57.3 126 H102.7 L103.6 130.6 H56.4 Z" fill="${p.skirtStripe}"/>
+    <!-- collar tie -->
+    <path d="M80 104 C76 100 70 101 71 105 C72 108 77 107 80 104 C83 107 88 108 89 105 C90 101 84 100 80 104 Z" ${o(p.string)} stroke-width="2.4"/>
+    <path d="M79 105 L76 114 M81 105 L84 114" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M95 112 a4.6 4.6 0 1 0 4.1 6.9 a3.6 3.6 0 1 1 -4.1 -6.9z" fill="${p.pin}" stroke="${INK}" stroke-width="1.6"/>
+    <!-- short arms hanging straight down beside the body, tiny hands -->
+    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(p.hoodie)}/>
+    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(p.hoodie)}/>
+    <circle cx="54.4" cy="124" r="3.8" ${o(p.skin)} stroke-width="2.8"/>
+    <circle cx="105.6" cy="124" r="3.8" ${o(p.skin)} stroke-width="2.8"/>
+    <!-- hood -->
+    <path d="M38 34 L32 6 L62 22 Z" ${o(p.hood)}/>
+    <path d="M122 34 L128 6 L98 22 Z" ${o(p.hood)}/>
+    <path d="M40 27 L37 14 L52 22 Z" fill="${p.earIn}"/>
+    <path d="M120 27 L123 14 L108 22 Z" fill="${p.earIn}"/>
+    <path d="M28 70 C26 36 50 15 80 15 C110 15 134 36 132 70 C132 80 128 86 122 88 C120 60 104 44 80 44 C56 44 40 60 38 88 C32 86 28 80 28 70 Z" ${o(p.hood)}/>
+    <path d="M42 46 C50 30 64 22 80 21" fill="none" stroke="${p.hoodLight}" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="104" cy="28" rx="8" ry="4.4" transform="rotate(25 104 28)" fill="#fff" opacity=".9"/>
+    <!-- face -->
+    <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
+    <!-- blunt bangs -->
+    <path d="M42 72 C42 52 58 40 80 40 C102 40 118 52 118 72 L108 72 L104 60 L98 70 L84 70 L80 58 L74 70 L60 70 L57 62 L53 72 Z" ${o(p.hair)}/>
+    <path d="M60 48 C66 44 74 43 80 43" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>
+    <!-- moon pin on hood -->
+    <path d="M116 26 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z" fill="${p.pin}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>
+    <!-- face details -->
+    ${eyes(p.eyes)}
+    <ellipse cx="55" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
+    <ellipse cx="105" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
+    <path d="M74 92 Q80 98 86 92" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  </svg>`;
+}
+
+const BASE = {
+  skin: '#fde6da', hair: '#2b2142', hairShine: '#5b4a85', tips: '#c9b3f0',
+  hood: '#262338', hoodLight: '#3c3758', earIn: '#f49ab6', hoodie: '#262338', string: '#e8e2f2',
+  skirt: '#2d2b36', skirtStripe: '#f06a95', shoe: '#1a1420', pin: '#f49ab6', blush: '#f59ab0',
+};
+
+const STYLES = [
+  { title: 'Happy Classic', blurb: 'Closest to your reference: closed happy eyes, dark hood and a warm pink blob behind her. Cozy and cute.',
+    p: { ...BASE, eyes: 'closed', bg: '#8f1d2c', blob: '#e0485f', blob2: '#ff8a9b' } },
+  { title: 'Sparkle Eyes', blurb: 'Same look with big shiny open eyes, which give more expression during fights. Teal background to match the game.',
+    p: { ...BASE, eyes: 'open', bg: '#1f4a4f', blob: '#3f9e98', blob2: '#7de0d3' } },
+  { title: 'Lilac Wink', blurb: 'A softer lilac hood and a playful wink. A brighter, sweeter palette with a purple background.',
+    p: { ...BASE, eyes: 'wink', hood: '#7a5fb0', hoodLight: '#9d84cc', hoodie: '#7a5fb0', hair: '#2b2142', tips: '#ffc3e0',
+      bg: '#3b2a5a', blob: '#7a5ab3', blob2: '#c7a6ff' } },
+];
+
+document.getElementById('grid').innerHTML = STYLES.map((s, i) => `
+  <section class="opt">
+    <h3><span>${i + 1}</span>${s.title}</h3>
+    <div class="big">${jenny(s.p)}</div>
+    <p>${s.blurb}</p>
+    <div class="ingame"><div class="chip">${jenny({ ...s.p, noBg: true })}</div><div>In-game size<small>no background, next to the health bar</small></div></div>
+  </section>`).join('');
+
+// ---------- enemies in the same style ----------
+const E = {
+  slime: `<svg viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="40" ry="5" fill="#000" opacity=".2"/>
+    <!-- glitch pixels float off its head, away from the face -->
+    <rect x="84" y="14" width="9" height="9" rx="1.5" ${o('#c7a6ff')} stroke-width="2.6"/>
+    <rect x="97" y="24" width="6" height="6" rx="1" ${o('#f49ab6')} stroke-width="2.2"/>
+    <rect x="76" y="4" width="5" height="5" rx="1" ${o('#7de0d3')} stroke-width="2"/>
+    <!-- round jelly body with a little drip -->
+    <path d="M12 102 C8 70 26 36 60 36 C94 36 112 70 108 102 C108 108 102 110 96 108 C90 106 86 110 80 110 H40 C34 110 30 106 24 108 C18 110 12 108 12 102 Z" ${o('#7de0d3')}/>
+    <path d="M92 106 C92 112 94 116 97 116 C100 116 101 112 99 107" ${o('#7de0d3')} stroke-width="3"/>
+    <path d="M26 74 C28 58 38 46 52 42" fill="none" stroke="#c4f5ee" stroke-width="6" stroke-linecap="round"/>
+    <ellipse cx="82" cy="50" rx="8" ry="4.5" transform="rotate(28 82 50)" fill="#fff"/>
+    <!-- face -->
+    <ellipse cx="46" cy="76" rx="6" ry="7.5" fill="${INK}"/><ellipse cx="74" cy="76" rx="6" ry="7.5" fill="${INK}"/>
+    <circle cx="44" cy="73" r="2.4" fill="#fff"/><circle cx="72" cy="73" r="2.4" fill="#fff"/>
+    <ellipse cx="34" cy="88" rx="6" ry="3.6" fill="#ff9fb4"/><ellipse cx="86" cy="88" rx="6" ry="3.6" fill="#ff9fb4"/>
+    <path d="M53 88 Q60 95 67 88" fill="none" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>
+  </svg>`,
+  golem: `<svg viewBox="0 0 120 120">
+    <ellipse cx="60" cy="112" rx="42" ry="5" fill="#000" opacity=".2"/>
+    <rect x="6" y="60" width="18" height="34" rx="8" ${o('#b9bdb3')}/><rect x="96" y="60" width="18" height="34" rx="8" ${o('#b9bdb3')}/>
+    <rect x="20" y="24" width="80" height="84" rx="16" ${o('#c9ccc3')}/>
+    <path d="M30 36 C30 32 33 30 38 30" fill="none" stroke="#eef0ea" stroke-width="5" stroke-linecap="round"/>
+    <rect x="32" y="38" width="56" height="24" rx="4" ${o('#ffffff')} stroke-width="3"/>
+    <path d="M38 54 C44 40 50 58 56 46 S68 56 72 44 S80 52 84 46" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M38 76 L50 80 M82 76 L70 80" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>
+    <ellipse cx="46" cy="86" rx="4.5" ry="5.5" fill="${INK}"/><ellipse cx="74" cy="86" rx="4.5" ry="5.5" fill="${INK}"/>
+    <path d="M52 98 h16" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>
+  </svg>`,
+  wall: `<svg viewBox="0 0 120 120">
+    <ellipse cx="60" cy="113" rx="48" ry="5" fill="#000" opacity=".2"/>
+    <path d="M30 22 C26 10 34 4 36 2 C36 10 42 12 42 20 Z M60 18 C56 6 64 0 66 -2 C66 6 72 8 72 16 Z M88 22 C84 10 92 4 94 2 C94 10 100 12 100 20 Z" ${o('#f2c94c')} stroke-width="2.6"/>
+    <rect x="10" y="20" width="100" height="88" rx="12" ${o('#e0485f')}/>
+    <!-- bricks only around the edge -->
+    <path d="M10 42 H24 M96 42 H110 M10 64 H24 M96 64 H110 M10 86 H24 M96 86 H110 M36 20 V30 M60 20 V30 M84 20 V30 M40 100 V108 M60 100 V108 M80 100 V108" stroke="${INK}" stroke-width="2.8"/>
+    <path d="M20 30 C22 26 26 24 30 24" fill="none" stroke="#ff8a9b" stroke-width="4" stroke-linecap="round"/>
+    <!-- a clear face panel -->
+    <rect x="24" y="30" width="72" height="70" rx="14" ${o('#ffd9d2')} stroke-width="3"/>
+    <path d="M32 46 L48 52 M88 46 L72 52" stroke="${INK}" stroke-width="4.2" stroke-linecap="round"/>
+    <ellipse cx="45" cy="64" rx="7.5" ry="9" fill="#fff" stroke="${INK}" stroke-width="3.2"/><ellipse cx="75" cy="64" rx="7.5" ry="9" fill="#fff" stroke="${INK}" stroke-width="3.2"/>
+    <circle cx="46.5" cy="66" r="4" fill="${INK}"/><circle cx="73.5" cy="66" r="4" fill="${INK}"/>
+    <circle cx="45" cy="64" r="1.4" fill="#fff"/><circle cx="72" cy="64" r="1.4" fill="#fff"/>
+    <ellipse cx="34" cy="80" rx="5" ry="3" fill="#f27a8f"/><ellipse cx="86" cy="80" rx="5" ry="3" fill="#f27a8f"/>
+    <path d="M47 90 Q60 82 73 90" fill="none" stroke="${INK}" stroke-width="3.8" stroke-linecap="round"/>
+  </svg>`,
+};
+document.getElementById('enemies').innerHTML = [['Glitch Slime', 'slime'], ['Captcha Golem', 'golem'], ['The Firewall', 'wall']]
+  .map(([n, k]) => `<div class="enemy">${E[k]}<div>${n}</div></div>`).join('');
+</script>
+</body>
+</html>

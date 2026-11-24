@@ -9,6 +9,7 @@ import {
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
+import { LOOKS, getLook, setLook } from './chibi.js';
 
 const app = document.getElementById('app');
 let run = null;
@@ -43,7 +44,7 @@ function header() {
     </div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="bar-right">
-      <button class="btn small ghost" data-sound aria-label="Sound settings">♪</button>
+      <button class="btn small ghost" data-sound aria-label="Settings">⚙</button>
       <button class="btn small" data-deck>Deck <b>${run.deck.length}</b></button>
       <button class="btn small ghost" data-menu aria-label="Menu">☰</button>
     </div>
@@ -58,7 +59,8 @@ function bindHeader(root) {
 
 function soundSettings() {
   const pct = (v) => Math.round(v * 100);
-  const m = modal(`<h2>Sound</h2>
+  const m = modal(`<h2>Settings</h2>
+    <div class="look-pick"><span class="look-label">Jenny's look</span><div class="looks">${Object.entries(LOOKS).map(([k, l]) => `<button class="look${k === getLook() ? ' on' : ''}" data-look="${k}" aria-pressed="${k === getLook()}">${jennySVG({ look: k, crop: true })}<b>${esc(l.name)}</b></button>`).join('')}</div></div>
     <label class="slider"><span>Music <b data-mv>${pct(settings.music)}%</b></span>
       <input type="range" min="0" max="100" step="5" value="${pct(settings.music)}" data-music aria-label="Music volume"></label>
     <label class="slider"><span>Effects <b data-sv>${pct(settings.sfx)}%</b></span>
@@ -70,6 +72,11 @@ function soundSettings() {
     <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
     <button class="btn" data-close>Done</button>`);
   const el = m.el;
+  el.querySelectorAll('[data-look]').forEach((btn) => btn.addEventListener('click', () => {
+    setLook(btn.dataset.look);
+    el.querySelectorAll('[data-look]').forEach((x) => { x.classList.toggle('on', x === btn); x.setAttribute('aria-pressed', x === btn); });
+    document.querySelectorAll('.title-art, .portrait-jenny').forEach((n) => { n.innerHTML = jennySVG(n.classList.contains('portrait-jenny') ? { crop: true } : {}); });
+  }));
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
@@ -185,7 +192,7 @@ export function title() {
     <div class="stack narrow">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ♥ ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
-      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>♪ Sound</button></div>
+      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>⚙ Settings</button></div>
     </div>
     <dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
@@ -320,7 +327,7 @@ function battleScreen(enemyId, kind) {
   app.innerHTML = `${header()}<main class="battle">
     <section class="arena">
       <div class="fighter you" data-who="player">
-        <div class="portrait">${jennySVG()}</div>
+        <div class="portrait portrait-jenny">${jennySVG({ crop: true })}</div>
         <div class="f-name">Jenny</div>
         <div class="hpbar"><i data-hpbar></i><span data-hptext></span><em class="blk" data-blk hidden></em></div>
         <div class="statuses" data-pstat></div>

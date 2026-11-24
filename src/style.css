@@ -345,6 +345,15 @@ small { font-weight: 800; }
 .node.skipped { opacity: 0.22; }
 .map line.skip { opacity: 0.25; stroke-dasharray: 2 8; }
 
+/* settings: Jenny's look */
+.look-pick { display: grid; gap: var(--s2); }
+.look-label { font-weight: 800; }
+.looks { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
+.look { display: grid; justify-items: center; gap: 4px; padding: 8px 4px 6px; background: #fff; border: 2.5px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 var(--ink); font-size: 12px; transition: transform 140ms var(--ease-out); }
+.look svg { width: 64px; height: 64px; }
+.look.on { background: #fff3c4; outline: 3px solid var(--yellow-dark); outline-offset: 1px; }
+.look:active { transform: translateY(2px); }
+
 /* ---------- small screens ---------- */
 @media (max-width: 560px) {
   .bar { padding: var(--s2) var(--s3); gap: var(--s2); }

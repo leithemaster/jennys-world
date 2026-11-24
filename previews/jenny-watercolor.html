@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jenny – watercolor style options</title>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #1f2126; --bg: #20303a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #efe9dc; color: var(--ink); font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; padding: 32px 20px 48px; }
+  h1 { font-family: 'Dela Gothic One', sans-serif; font-weight: 400; text-align: center; margin: 0 0 6px; font-size: 30px; }
+  .sub { text-align: center; margin: 0 0 28px; color: #5a6470; font-weight: 800; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; max-width: 1080px; margin: 0 auto; }
+  .opt { background: #fffdf7; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 6px 0 var(--ink); padding: 18px; display: grid; gap: 12px; }
+  .opt h2 { margin: 0; font-family: 'Dela Gothic One', sans-serif; font-weight: 400; font-size: 22px; }
+  .opt h2 span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #f2c94c; border: 2.5px solid var(--ink); margin-right: 8px; font-size: 18px; }
+  .opt p { margin: 0; line-height: 1.5; color: #3d4450; }
+  .big { width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid #d8cfbd; }
+  .big svg { width: 100%; height: 100%; display: block; }
+  .ingame { display: flex; align-items: center; gap: 14px; background: var(--bg); border-radius: 10px; padding: 12px 14px; color: #e9efe9; font-weight: 800; font-size: 13px; }
+  .ingame .chip { width: 96px; height: 96px; border-radius: 50%; overflow: hidden; border: 3px solid var(--ink); flex: none; }
+  .ingame .chip svg { width: 100%; height: 100%; display: block; }
+  .ingame small { display: block; color: #a9bdb9; font-weight: 800; }
+</style>
+</head>
+<body>
+  <h1>Jenny · watercolor options</h1>
+  <p class="sub">Same Jenny, three ways to paint her. Pick 1, 2 or 3.</p>
+  <div class="grid" id="grid"></div>
+
+<script>
+// ---------- shared drawing ----------
+// All three styles share one original character design; only the paint changes.
+const SHAPES = {
+  body: 'M18 120 C18 92 34 81 60 81 C86 81 102 92 102 120 Z',
+  hood: 'M21 63 C19 28 36 11 60 11 C84 11 101 28 99 63 C99 84 84 94 60 94 C36 94 21 84 21 63 Z',
+  earL: 'M28 31 L22 4 L46 19 Z',
+  earR: 'M92 31 L98 4 L74 19 Z',
+  earInL: 'M30 25 L27 11 L39 19 Z',
+  earInR: 'M90 25 L93 11 L81 19 Z',
+  face: 'M31 62 C31 44 44 35 60 35 C76 35 89 44 89 62 C89 79 76 89 60 89 C44 89 31 79 31 62 Z',
+  hairBack: 'M30 58 C29 40 42 30 60 30 C78 30 91 40 90 58 L90 86 C86 88 83 86 82 82 L82 60 L38 60 L38 82 C37 86 34 88 30 86 Z',
+  bangs: 'M30 58 C31 42 44 32 60 32 C76 32 90 42 90 58 C85 52 80 49 74 46 C73 51 70 54 66 55 C66 50 64 46 61 44 C58 50 53 54 46 56 C47 51 46 48 45 46 C40 50 35 54 30 58 Z',
+  tipL: 'M29 80 C29 86 31 91 35 92 C38 89 38 84 37 80 Z',
+  tipR: 'M91 80 C91 86 89 91 85 92 C82 89 82 84 83 80 Z',
+  pin: 'M88 27 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z',
+  pocket: 'M44 104 Q60 100 76 104 L74 114 Q60 111 46 114 Z',
+};
+
+function eyes(o) {
+  const one = (cx, flip) => `
+    <ellipse cx="${cx}" cy="65" rx="6.8" ry="8.6" fill="#fff" opacity=".9"/>
+    <ellipse cx="${cx}" cy="65.6" rx="5.6" ry="7.6" fill="url(#iris${o.id})"/>
+    <ellipse cx="${cx}" cy="66.4" rx="2.7" ry="3.8" fill="${o.pupil}"/>
+    <path d="M${cx - 7.6} ${62 - 0} Q${cx} ${54.6} ${cx + 7.6} ${61.4}" stroke="${o.lash}" stroke-width="${o.lashW}" fill="none" stroke-linecap="round"/>
+    <path d="M${cx + (flip ? -7.4 : 7.4)} ${61.6} l${flip ? -2.2 : 2.2} -1.6" stroke="${o.lash}" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="${cx - 2.2}" cy="61.8" r="2.3" fill="#fff"/>
+    <circle cx="${cx + 2.4}" cy="69.4" r="1.1" fill="#fff" opacity=".9"/>`;
+  return one(47.5, true) + one(72.5, false) +
+    `<path d="M41 52.5 q5 -2.4 10 -0.6 M69 51.9 q5 -1.8 10 0.6" stroke="${o.brow}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".75"/>
+     <path d="M56.5 77.5 q1.8 1.7 3.5 0 q1.7 1.7 3.5 0" stroke="${o.lash}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+}
+
+function defs(o) {
+  return `
+  <filter id="wash${o.id}" x="-15%" y="-15%" width="130%" height="130%">
+    <feTurbulence type="fractalNoise" baseFrequency="${o.wobbleFreq}" numOctaves="3" seed="${o.seed}" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="${o.wobble}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="${o.soft}" result="b"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="${o.seed + 7}" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${o.grain} ${1 - o.grain * 0.45}" result="ga"/>
+    <feComposite in="b" in2="ga" operator="in" result="grainy"/>
+    <feMorphology in="b" operator="erode" radius="${o.edge}" result="er"/>
+    <feComposite in="b" in2="er" operator="out" result="ring"/>
+    <feGaussianBlur in="ring" stdDeviation="0.7" result="ringSoft"/>
+    <feMerge><feMergeNode in="grainy"/><feMergeNode in="ringSoft"/>${o.edgeTwice ? '<feMergeNode in="ringSoft"/>' : ''}</feMerge>
+  </filter>
+  <filter id="line${o.id}" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="${o.seed + 3}" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="${o.lineWobble}" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="paper${o.id}">
+    <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" seed="4" result="t"/>
+    <feColorMatrix in="t" type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.3  0 0 0 -0.9 0.5"/>
+  </filter>
+  <radialGradient id="iris${o.id}" cx="50%" cy="72%" r="70%">
+    <stop offset="0" stop-color="${o.irisLow}"/><stop offset="1" stop-color="${o.irisTop}"/>
+  </radialGradient>
+  <linearGradient id="hair${o.id}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${o.hairTop}"/><stop offset="1" stop-color="${o.hairLow}"/>
+  </linearGradient>
+  <linearGradient id="hood${o.id}" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${o.hoodA}"/><stop offset="1" stop-color="${o.hoodB}"/>
+  </linearGradient>`;
+}
+
+function jenny(o) {
+  const W = (d, fill, op = o.op, extra = '') => `<path d="${d}" fill="${fill}" opacity="${op}" filter="url(#wash${o.id})" ${extra}/>`;
+  const L = (d) => `<path d="${d}"/>`;
+  // Painted back to front. Each shape = solid base coat + watercolor wash on top
+  // (the wash may slip a little past the base, like real paint).
+  const B = (d, fill) => `<path d="${d}" fill="${fill}" filter="url(#line${o.id})"/>`;
+  const sh = (d) => `<g transform="translate(${o.shift[0]} ${o.shift[1]})">${d}</g>`;
+  const ink = (paths, w = o.lineW) => (o.lines ? `<g fill="none" stroke="${o.lineColor}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round" opacity="${o.lineOp}" filter="url(#line${o.id})">${paths.map(L).join('')}</g>` : '');
+  const layers = [
+    // 1. hoodie body + hood + ears
+    B(SHAPES.body, o.hoodBase), B(SHAPES.hood, o.hoodBase), B(SHAPES.earL, o.hoodBase), B(SHAPES.earR, o.hoodBase),
+    sh(W(SHAPES.body, `url(#hood${o.id})`) + W(SHAPES.pocket, o.pocket, o.op * 0.8) + W(SHAPES.hood, `url(#hood${o.id})`)
+      + W(SHAPES.earL, o.hoodA) + W(SHAPES.earR, o.hoodA) + W(SHAPES.earInL, o.earIn, 0.75) + W(SHAPES.earInR, o.earIn, 0.75)),
+    ink([SHAPES.body, SHAPES.hood, SHAPES.earL, SHAPES.earR]),
+    ink(['M53 86 L51 99', 'M67 86 L69 99'], o.lineW * 0.7),
+    // 2. hair behind the face
+    B(SHAPES.hairBack, o.hairBase),
+    sh(W(SHAPES.hairBack, `url(#hair${o.id})`)),
+    // 3. face
+    B(SHAPES.face, o.skin),
+    sh(W(SHAPES.face, o.skin, 0.5)),
+    sh(W('M36 60 C38 50 48 46 60 46 C72 46 82 50 84 60 C76 56 68 55 60 55 C52 55 44 56 36 60 Z', o.skinShade, 0.4)),
+    `<ellipse cx="41" cy="74.5" rx="6" ry="3.4" fill="${o.blush}" opacity="${o.blushOp}" filter="url(#wash${o.id})"/>`,
+    `<ellipse cx="79" cy="74.5" rx="6" ry="3.4" fill="${o.blush}" opacity="${o.blushOp}" filter="url(#wash${o.id})"/>`,
+    ink([SHAPES.face]),
+    // 4. bangs, tips, pin
+    B(SHAPES.bangs, o.hairBase),
+    sh(W(SHAPES.bangs, `url(#hair${o.id})`) + W(SHAPES.tipL, o.tips) + W(SHAPES.tipR, o.tips) + W(SHAPES.pin, o.pin, 0.95)),
+    ink([SHAPES.bangs, SHAPES.tipL, SHAPES.tipR, SHAPES.pin]),
+  ].join('');
+
+  const blooms = (o.blooms || []).map(([x, y, r, c, op]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity="${op}" filter="url(#wash${o.id})"/>`).join('');
+  const splats = (o.splats || []).map(([x, y, r, c]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity=".7"/>`).join('');
+  const sparkles = (o.sparkles || []).map(([x, y, r]) => `<path d="M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3} Z" fill="#fff" opacity=".9"/>`).join('');
+
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>${defs(o)}</defs>
+    ${o.paper ? `<rect width="120" height="120" fill="${o.paper}"/><rect width="120" height="120" filter="url(#paper${o.id})" opacity=".55"/>` : ''}
+    ${blooms}
+    ${layers}
+    <g filter="url(#line${o.id})">${eyes(o)}</g>
+    ${o.highlights ? `<path d="M44 38 q6 -4 12 -3" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".75"/><path d="M33 40 q2 -4 5 -6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>` : ''}
+    ${splats}${sparkles}
+  </svg>`;
+}
+
+// ---------- the three styles ----------
+const STYLES = [
+  {
+    title: 'Soft Wash',
+    blurb: 'Pale, airy pastels with light pencil lines. Gentle and dreamy, like a sketchbook page.',
+    o: {
+      id: 'A', seed: 3, wobble: 5, wobbleFreq: 0.045, soft: 0.5, grain: 0.35, edge: 1.4, op: 0.72,
+      shift: [0, 0], paper: '#fbf6ea',
+      hoodBase: '#8a86a8', hairBase: '#b6a3dc', hoodA: '#5c5a7e', hoodB: '#7d6f9e', pocket: '#8f84b0', earIn: '#f4b6c6',
+      hairTop: '#7a64a8', hairLow: '#a58bd0', tips: '#d9c9f2', skin: '#fbe5d6', skinShade: '#e9b9a8',
+      blush: '#f29aae', blushOp: 0.5, pin: '#f3a6bd',
+      irisTop: '#5b4a8f', irisLow: '#cfb3f2', pupil: '#3a2f55', lash: '#4a3d5e', lashW: 2, brow: '#7a64a8',
+      lines: true, lineColor: '#6d5b7e', lineW: 0.9, lineOp: 0.55, lineWobble: 1.6,
+      blooms: [[20, 22, 16, '#cfe6e2', 0.55], [100, 100, 20, '#f6d3dc', 0.45]],
+      sparkles: [[100, 16, 3.2], [16, 98, 2.4]], highlights: true,
+    },
+  },
+  {
+    title: 'Ink & Wash',
+    blurb: 'Crisp dark ink outlines over loose watercolor that slips past the lines. Bold and readable, closest to the current game look.',
+    o: {
+      id: 'B', seed: 11, wobble: 7, wobbleFreq: 0.035, soft: 0.35, grain: 0.4, edge: 1.2, op: 0.82, edgeTwice: true,
+      shift: [1.6, 1.2], paper: '#f8f1e3',
+      hoodBase: '#5a5272', hairBase: '#8f76bf', hoodA: '#2e2a40', hoodB: '#4a3e66', pocket: '#55497a', earIn: '#f3a6bd',
+      hairTop: '#3d2d5e', hairLow: '#6b4f9a', tips: '#b8a3d9', skin: '#f8dccb', skinShade: '#e3a993',
+      blush: '#ee8fa3', blushOp: 0.55, pin: '#f08bb0',
+      irisTop: '#2f2550', irisLow: '#a77fe0', pupil: '#1c1626', lash: '#1f1a26', lashW: 2.4, brow: '#2f2440',
+      lines: true, lineColor: '#1f1a26', lineW: 1.9, lineOp: 0.95, lineWobble: 1.2,
+      blooms: [[18, 100, 18, '#bfe3dd', 0.5]],
+      splats: [[104, 22, 1.6, '#7de0d3'], [99, 30, 0.9, '#7de0d3'], [14, 30, 1.2, '#f3a6bd']],
+      highlights: true,
+    },
+  },
+  {
+    title: 'Wet Bloom',
+    blurb: 'Rich, saturated color that bleeds wet-into-wet: purple melting into pink, paint splatters and sparkles. No outlines, all paint.',
+    o: {
+      id: 'C', seed: 21, wobble: 10, wobbleFreq: 0.03, soft: 0.9, grain: 0.5, edge: 1.8, op: 0.8, edgeTwice: true,
+      shift: [0, 0], paper: '#fdf7ef',
+      hoodBase: '#5a6aa8', hairBase: '#a47ad0', hoodA: '#2c3a72', hoodB: '#6a3f96', pocket: '#7d55b0', earIn: '#ff9ec0',
+      hairTop: '#4b2f86', hairLow: '#d16fae', tips: '#ffc3e0', skin: '#ffe2d2', skinShade: '#f0a99a',
+      blush: '#ff7f9d', blushOp: 0.6, pin: '#ff8fbf',
+      irisTop: '#3a2a8a', irisLow: '#ff9fd0', pupil: '#24164a', lash: '#2a1f45', lashW: 2.2, brow: '#4b2f86',
+      lines: false, lineWobble: 1.4,
+      blooms: [[22, 24, 22, '#9fd8f0', 0.55], [98, 96, 24, '#ffc3e0', 0.55], [100, 26, 12, '#c7a6ff', 0.45]],
+      splats: [[108, 60, 2.2, '#c7a6ff'], [104, 66, 1.1, '#c7a6ff'], [12, 70, 1.8, '#7dd3f0'], [18, 112, 1.4, '#ff8fbf'], [96, 112, 1, '#4b2f86']],
+      sparkles: [[104, 14, 3.6], [14, 92, 2.6], [96, 44, 2]],
+      highlights: true,
+    },
+  },
+];
+
+document.getElementById('grid').innerHTML = STYLES.map((s, i) => `
+  <section class="opt">
+    <h2><span>${i + 1}</span>${s.title}</h2>
+    <div class="big">${jenny(s.o)}</div>
+    <p>${s.blurb}</p>
+    <div class="ingame"><div class="chip">${jenny({ ...s.o, id: s.o.id + 'm' })}</div><div>In-game size<small>how she'd look next to the health bar</small></div></div>
+  </section>`).join('');
+</script>
+</body>
+</html>
