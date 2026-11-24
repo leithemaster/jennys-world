@@ -85,12 +85,14 @@ export class Battle {
       if (this.energy <= 0) { this.log('Out of energy. End your turn.'); return; }
       this.energy -= 1;
       s.state = 'up'; s.seen = true;
+      this.emit('sfx', 'flip');
       this.first = s;
       this.emit('update');
       return;
     }
     const a = this.first, b = s;
     b.state = 'up'; b.seen = true;
+    this.emit('sfx', 'flip');
     this.first = null;
     this.busy = true;
     this.emit('update');
@@ -109,6 +111,7 @@ export class Battle {
   }
 
   miss() {
+    this.emit('sfx', 'miss');
     if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log('Miss! Momentum keeps your combo.'); }
     else { this.combo = 0; this.log('No match…'); }
     if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
@@ -124,8 +127,10 @@ export class Battle {
     const def = CARDS[card.id];
     this.combo += this.has('keyboard') ? 2 : 1;
     this.matchesThisTurn += 1;
+    this.emit('sfx', 'match', this.combo);
     if (def.exhaust || def.type === 'power') { card._exhaust = true; if (b.card !== a.card) b.card._exhaust = true; }
     this.emit('play', card);
+    if (def.type === 'power' && this.has('powerBank')) this.gainEnergy(1);
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
     def.fx(this, !!card.up);
     this.busy = false;
@@ -134,7 +139,9 @@ export class Battle {
       this.gainEnergy(1, true);
       if (this.has('strap')) this.gainBlock(6);
       if (this.has('lipTint')) this.heal(3);
+      if (this.has('snackBag')) this.heal(2);
       this.log('Board cleared! +1 energy.');
+      this.emit('sfx', 'clear');
       this.emit('cleared');
       setTimeout(() => { this.dealBoard(); this.emit('update'); this.checkAutoEnd(); }, 450);
       this.emit('update');
@@ -203,7 +210,7 @@ export class Battle {
     this.emit('hit', 'player', n, 0);
     this.checkEnd();
   }
-  applyEnemy(k, n) { if (n > 0) { this.enemy[k] += n; this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k); } }
+  applyEnemy(k, n) { if (n > 0 && k === 'poison' && this.has('venomVial')) n += 2; if (n > 0) { this.enemy[k] += n; this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k); } }
   applyPlayer(k, n) { if (n > 0) { this.player[k] += n; this.emit('float', 'player', `+${n} ${STATUS_NAMES[k]}`, k); } }
 
   // ---------- turns ----------
@@ -268,6 +275,7 @@ export class Battle {
       case 'atkStatus':
         if (it.t === 'atkStatus') hitPlayer(it.n);
         for (let k = 0; k < it.count; k++) this.draw.splice(Math.floor(Math.random() * (this.draw.length + 1)), 0, { id: it.card, uid: uidSeq++ });
+        this.emit('sfx', 'junk');
         this.log(`${e.name} slips ${it.count} ${CARDS[it.card].name} into your deck.`);
         break;
       case 'scramble': {
@@ -307,6 +315,13 @@ export class Battle {
 
   checkEnd() {
     if (this.over) return true;
+    if (this.run.hp <= 0 && this.has('shibaPlush') && !this.savedByShiba) {
+      this.savedByShiba = true;
+      this.run.hp = 1;
+      this.log('Shiba Plush saves you! (1 HP)');
+      this.emit('float', 'player', 'Saved!', 'heal');
+      this.emit('update');
+    }
     if (this.enemy.hp <= 0) { this.over = true; this.emit('end', 'win'); return true; }
     if (this.run.hp <= 0) { this.over = true; this.emit('end', 'lose'); return true; }
     return false;

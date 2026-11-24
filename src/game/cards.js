@@ -15,7 +15,7 @@ export const CARDS = {
   guard: {
     name: 'Guard', type: 'skill', rarity: 'starter', icon: 'shield',
     text: (u) => `Block ${u ? 8 : 5}.`,
-    fx: (b, u) => b.gainBlock(u ? 8 : 5),
+    fx: (b, u) => b.gainBlock((u ? 8 : 5) + (b.has('fuzzySocks') ? 3 : 0)),
   },
   zap: {
     name: 'Zap', type: 'attack', rarity: 'starter', icon: 'bolt',
@@ -47,7 +47,7 @@ export const CARDS = {
   hoodieUp: {
     name: 'Hoodie Up', type: 'skill', rarity: 'common', icon: 'hood',
     text: (u) => `Block ${u ? 13 : 9}.`,
-    fx: (b, u) => b.gainBlock(u ? 13 : 9),
+    fx: (b, u) => b.gainBlock((u ? 13 : 9) + (b.has('fuzzySocks') ? 3 : 0)),
   },
   peek: {
     name: 'Peek', type: 'skill', rarity: 'common', icon: 'eye',
@@ -80,11 +80,13 @@ export const CARDS = {
   shieldBash: {
     name: 'Shield Bash', type: 'attack', rarity: 'uncommon', icon: 'shieldHit',
     text: (u) => `Deal damage equal to your Block${u ? ' +5' : ''}.`,
+    requires: (r, h) => h.deckCount(['guard', 'hoodieUp', 'trip', 'peek', 'memoryLane']) >= 3,
     fx: (b, u) => b.attack(b.player.block + (u ? 5 : 0), { raw: true }),
   },
   catalyst: {
     name: 'Catalyst', type: 'skill', rarity: 'uncommon', icon: 'flask',
     text: (u) => `${u ? 'Triple' : 'Double'} the enemy's Glitch.`,
+    requires: (r, h) => h.deckHas(['stinger']),
     fx: (b, u) => b.applyEnemy('poison', b.enemy.poison * (u ? 2 : 1)),
   },
   memoryLane: {
@@ -128,6 +130,7 @@ export const CARDS = {
   fortress: {
     name: 'Blanket Fort', type: 'power', rarity: 'rare', icon: 'fort',
     text: (u) => `Power: Block no longer resets.${u ? ' Block 10.' : ''}`,
+    requires: (r, h) => h.deckCount(['guard', 'hoodieUp', 'trip', 'peek', 'memoryLane']) >= 3,
     fx: (b, u) => { b.powers.fortress = true; if (u) b.gainBlock(10); },
   },
   photographic: {
@@ -174,9 +177,6 @@ export function cardText(c) {
   return CARDS[c.id].text(!!c.up);
 }
 
-export function pool(rarity) {
-  return Object.keys(CARDS).filter((id) => CARDS[id].rarity === rarity);
-}
 
 export function canUpgrade(c) {
   const r = CARDS[c.id].rarity;

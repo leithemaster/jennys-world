@@ -1,15 +1,15 @@
 // Run state: deck, HP, coins, charms, map position. Saved to localStorage
 // whenever you're on the map, so a run can be continued later.
-import { STARTER_DECK, CARDS, pool } from './cards.js';
-import { CHARMS, charmPool } from './charms.js';
-import { ACTS } from './enemies.js';
+import { STARTER_DECK, CARDS } from './cards.js';
+import { CHARMS } from './charms.js';
+import { cardReward, drawCard, drawCharm, drawEnemy } from './loot.js';
 
-const SAVE_KEY = 'sm.run.v2';
+const SAVE_KEY = 'sm.run.v3';
 const STATS_KEY = 'sm.stats.v2';
-const ROWS = 9; // rows of rooms before the boss
+export const ROWS = 9; // rows of rooms before the boss
 const COLS = 5;
 
-const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 export function newRun() {
   const run = {
@@ -19,30 +19,47 @@ export function newRun() {
     act: 0,
     map: null,
     pos: null, // { row, col } of the last room cleared
+    path: [],
     removeCost: 75,
     floorsCleared: 0,
     kills: 0,
-    seen: [],
+    loot: { decks: {}, rarePity: -5 },
   };
   run.map = generateMap(0);
   return run;
 }
 
-// A small branching map: rows of rooms, each linked to 1–2 rooms above it.
+// ---------- map ----------
+// Fixed rows: 0 = fights, 4 = treasure, 8 = rest (right before the boss).
+// Other rows draw room types from a shuffled "room deck" sized to the map,
+// then the map is repaired so EVERY path has:
+//   • a rest booth somewhere in rows 3–6 (so 2 rests per floor at minimum)
+//   • a shop somewhere in rows 2–7
+//   • at most 2 elites
+const FIXED = { 0: 'fight', 4: 'treasure', 8: 'rest' };
+const MIX = { fight: 0.46, event: 0.28, elite: 0.12, shop: 0.06, rest: 0.08 };
+const ALLOWED = {
+  fight: () => true,
+  event: () => true,
+  elite: (r) => r >= 2,
+  shop: (r) => r >= 2,
+  rest: (r) => r >= 3 && r <= 6,
+};
+
 export function generateMap(act) {
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
-    const count = r === 0 ? 3 : 2 + Math.floor(Math.random() * 3); // 2–4
-    const cols = [...Array(COLS).keys()].sort(() => Math.random() - 0.5).slice(0, count).sort((a, b) => a - b);
-    rows.push(cols.map((col) => ({ row: r, col, type: roomType(r), next: [] })));
+    const count = r === 0 ? 3 : 2 + Math.floor(Math.random() * 3); // 2–4 rooms
+    const cols = shuffle([...Array(COLS).keys()]).slice(0, count).sort((a, b) => a - b);
+    rows.push(cols.map((col) => ({ row: r, col, type: FIXED[r] || null, next: [] })));
   }
-  // connect each room to the nearest rooms in the next row; make sure every room has a parent
+  // links: each room connects to the nearest 1–2 rooms above; every room gets a parent
   for (let r = 0; r < ROWS - 1; r++) {
     const cur = rows[r], nxt = rows[r + 1];
     for (const n of cur) {
       const sorted = [...nxt].sort((a, b) => Math.abs(a.col - n.col) - Math.abs(b.col - n.col));
       n.next.push(sorted[0].col);
-      if (sorted[1] && Math.abs(sorted[1].col - n.col) <= 1 && Math.random() < 0.5) n.next.push(sorted[1].col);
+      if (sorted[1] && Math.abs(sorted[1].col - n.col) <= 1 && Math.random() < 0.55) n.next.push(sorted[1].col);
     }
     for (const m of nxt) {
       if (!cur.some((n) => n.next.includes(m.col))) {
@@ -52,19 +69,80 @@ export function generateMap(act) {
     }
   }
   rows.forEach((row) => row.forEach((n) => (n.next = [...new Set(n.next)].sort((a, b) => a - b))));
-  return { act, rows, boss: ACTS[act].boss };
+
+  // room deck for the free rows
+  const free = rows.flat().filter((n) => !n.type);
+  const deck = [];
+  for (const [type, share] of Object.entries(MIX)) for (let i = 0; i < Math.round(free.length * share); i++) deck.push(type);
+  while (deck.length < free.length) deck.push('fight');
+  let pile = shuffle(deck);
+  for (const n of free.sort((a, b) => a.row - b.row)) {
+    const idx = pile.findIndex((t) => ALLOWED[t](n.row));
+    n.type = idx >= 0 ? pile.splice(idx, 1)[0] : 'fight';
+  }
+  // no back-to-back rests or elites on a link
+  for (const n of rows.flat()) {
+    for (const c of n.next) {
+      const m = rows[n.row + 1]?.find((x) => x.col === c);
+      if (m && !FIXED[m.row] && m.type === n.type && (m.type === 'rest' || m.type === 'elite' || m.type === 'shop')) m.type = 'event';
+    }
+  }
+  repair(rows);
+  return { act, rows };
 }
 
-function roomType(r) {
-  if (r === 0) return 'fight';
-  if (r === ROWS - 1) return 'rest';
-  if (r === 4) return 'treasure';
-  const roll = Math.random();
-  if (r >= 2 && roll < 0.14) return 'elite';
-  if (r >= 2 && roll < 0.26) return 'shop';
-  if (r >= 3 && roll < 0.36) return 'rest';
-  if (roll < 0.6) return 'event';
-  return 'fight';
+function allPaths(rows) {
+  const out = [];
+  const walk = (node, acc) => {
+    const path = [...acc, node];
+    if (node.row === ROWS - 1) { out.push(path); return; }
+    for (const c of node.next) walk(rows[node.row + 1].find((x) => x.col === c), path);
+  };
+  rows[0].forEach((n) => walk(n, []));
+  return out;
+}
+
+function repair(rows) {
+  const need = [
+    { type: 'rest', rows: [5, 3, 6], ok: (p) => p.some((n) => n.type === 'rest' && n.row >= 3 && n.row <= 6) },
+    { type: 'shop', rows: [6, 3, 5, 7, 2], ok: (p) => p.some((n) => n.type === 'shop' && n.row >= 2 && n.row <= 7) },
+  ];
+  // Greedy fix: convert the single room that sits on the MOST failing paths,
+  // repeat until every path passes. This changes as few rooms as possible.
+  for (const rule of need) {
+    for (let guard = 0; guard < 30; guard++) {
+      const failing = allPaths(rows).filter((p) => !rule.ok(p));
+      if (!failing.length) break;
+      const score = new Map();
+      for (const p of failing) {
+        for (const n of p) {
+          if (!rule.rows.includes(n.row) || FIXED[n.row]) continue;
+          if (n.type === 'rest' || n.type === 'shop') continue;
+          const pref = n.type === 'fight' || n.type === 'event' ? 1 : 0.5; // keep elites if we can
+          score.set(n, (score.get(n) || 0) + pref);
+        }
+      }
+      const best = [...score.entries()].sort((a, b) => b[1] - a[1])[0];
+      if (!best) break;
+      best[0].type = rule.type;
+    }
+  }
+  // cap elites at 2 per path
+  for (const p of allPaths(rows)) {
+    const elites = p.filter((n) => n.type === 'elite');
+    if (elites.length > 2) elites.slice(2).forEach((n) => (n.type = 'fight'));
+  }
+}
+
+export function mapGuarantees(map) {
+  const paths = allPaths(map.rows);
+  const count = (p, t) => p.filter((n) => n.type === t).length;
+  return {
+    paths: paths.length,
+    minRests: Math.min(...paths.map((p) => count(p, 'rest'))),
+    minShops: Math.min(...paths.map((p) => count(p, 'shop'))),
+    maxElites: Math.max(...paths.map((p) => count(p, 'elite'))),
+  };
 }
 
 export function availableRooms(run) {
@@ -81,41 +159,11 @@ export function roomAt(run, row, col) {
   return run.map.rows[row].find((n) => n.col === col);
 }
 
-export function enemyFor(run, type) {
-  const act = ACTS[run.act];
-  if (type === 'boss') return act.boss;
-  const list = type === 'elite' ? act.elites : act.normals;
-  // early fights in act 1 use the gentler enemies
-  const options = list.filter((id) => !run.seen.slice(-2).includes(id));
-  const chosen = pick(options.length ? options : list);
-  run.seen.push(chosen);
-  return chosen;
-}
+export const enemyFor = (run, type) => drawEnemy(run, type);
 
 // ---------- rewards ----------
-export function rollCardRarity(kind) {
-  const r = Math.random();
-  if (kind === 'boss') return 'rare';
-  if (kind === 'elite') return r < 0.12 ? 'rare' : r < 0.55 ? 'uncommon' : 'common';
-  return r < 0.05 ? 'rare' : r < 0.38 ? 'uncommon' : 'common';
-}
-
-export function cardChoices(kind, n = 3) {
-  const out = [];
-  let guard = 0;
-  while (out.length < n && guard++ < 50) {
-    const id = pick(pool(rollCardRarity(kind)));
-    if (!out.includes(id)) out.push(id);
-  }
-  return out.map((id) => ({ id }));
-}
-
-export function randomCharm(run, rarity) {
-  const r = rarity || (Math.random() < 0.65 ? 'common' : 'uncommon');
-  let options = charmPool(r).filter((k) => !run.charms.includes(k));
-  if (!options.length) options = [...charmPool('common'), ...charmPool('uncommon')].filter((k) => !run.charms.includes(k));
-  return options.length ? pick(options) : null;
-}
+export const cardChoices = (run, kind) => cardReward(run, kind);
+export const randomCharm = (run, pool = 'drop') => drawCharm(run, pool);
 
 export function gainCharm(run, id) {
   if (!id || run.charms.includes(id)) return;
@@ -139,18 +187,23 @@ export function afterFightHealing(run) {
   return run.hp - before;
 }
 
+export function removeCost(run) {
+  return run.charms.includes('stampCard') ? 50 : run.removeCost;
+}
+
+// Shop shelves: 5 cards from the card decks, 2 shop-only charms + 1 regular charm.
 export function shopStock(run) {
+  const off = run.charms.includes('memberCard') ? 0.8 : 1;
+  const price = (n) => Math.round(n * off);
   const cards = [];
   for (const rar of ['common', 'common', 'uncommon', 'uncommon', 'rare']) {
-    let id; let g = 0;
-    do { id = pick(pool(rar)); } while (cards.some((c) => c.id === id) && g++ < 20);
-    const base = { common: 50, uncommon: 75, rare: 145 }[rar];
-    cards.push({ id, price: base + Math.floor(Math.random() * 15) - 5 });
+    const id = drawCard(run, rar, cards.map((c) => c.id));
+    if (id) cards.push({ id, price: price({ common: 50, uncommon: 75, rare: 145 }[rar] + Math.floor(Math.random() * 15) - 5) });
   }
   const charms = [];
-  for (const rar of ['common', 'common', 'uncommon']) {
-    const id = randomCharm({ charms: [...run.charms, ...charms.map((c) => c.id)] }, rar);
-    if (id) charms.push({ id, price: (rar === 'common' ? 140 : 190) + Math.floor(Math.random() * 20) });
+  for (const pool of ['shop', 'shop', 'drop']) {
+    const id = drawCharm(run, pool, charms.map((c) => c.id));
+    if (id) charms.push({ id, price: price((pool === 'shop' ? 150 : 175) + Math.floor(Math.random() * 20)), shopOnly: pool === 'shop' });
   }
   return { cards, charms, removed: false };
 }
@@ -179,4 +232,4 @@ export function recordRun(run, won) {
   return s;
 }
 
-export const TOTAL_FLOORS = (ROWS + 1) * ACTS.length;
+export const TOTAL_FLOORS = (ROWS + 1) * 3;

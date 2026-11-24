@@ -16,6 +16,28 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 25+ cards, collect 19 charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later.
 
+## Loot decks (less swingy RNG)
+
+Rewards don't come from pure dice rolls. Each source draws from its own shuffled deck that's saved with the run, so nothing repeats until that deck is used up:
+
+- **Cards** – one deck per rarity. Your chance of a rare goes up a little each time you see commons, and resets when a rare appears.
+- **Charms** – three separate decks: *drops* (treasure, elites, events), *shop only* (Member Card, Stamp Card, Shiba Plush, …) and *boss only*.
+- **Conditional items** stay hidden until your deck can use them. Catalyst only shows up once you own Stinger, Glitch Vial needs a Glitch card, Fuzzy Socks needs 3+ Guard/Hoodie Up, and so on.
+- **Events** – every "?" event shows up once before any repeats.
+- **Enemies** – you won't meet the same enemy twice until you've seen the rest of that floor's lineup.
+
+## Map rules
+
+Fixed rows: fights at the start, a treasure in the middle, a rest booth right before the boss. The rest of the map is dealt from a room deck, then fixed up so that **every path** has:
+
+- at least **2 rest booths** (one mid-floor + the one before the boss)
+- at least **1 shop**
+- no more than **2 elites**
+
+## Sound
+
+Music: "Her Shiba Are Her Knights" (default 40%). Sound effects are generated in code with the Web Audio API (default 50%). Both can be changed or muted from the ♪ button; settings are remembered.
+
 ## Run it locally
 
 ```
@@ -30,7 +52,9 @@ npm run dev
 - `src/game/charms.js` – charms (passive items)
 - `src/game/events.js` – "?" room events
 - `src/game/battle.js` – the fight rules
-- `src/game/run.js` – map generation, rewards, shop stock, saving
+- `src/game/run.js` – map generation and guarantees, rewards, shop stock, saving
+- `src/game/loot.js` – loot decks and item conditions
+- `src/audio.js` – music and generated sound effects
 - `src/ui/` – screens and art (all original SVG drawings)
 
 The earlier 3D tiny-planet version of Jenny's World is in the git history (commit `c650673`).

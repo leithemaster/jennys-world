@@ -1,12 +1,13 @@
 import { CARDS, cardName, cardText, canUpgrade } from '../game/cards.js';
-import { CHARMS, charmPool } from '../game/charms.js';
+import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
-import { EVENTS } from '../game/events.js';
 import { Battle, STATUS_NAMES, STATUS_HELP } from '../game/battle.js';
 import {
   newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
-  afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS,
+  afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
+import { drawCard, drawCharm, drawEvent } from '../game/loot.js';
+import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
 
 const app = document.getElementById('app');
@@ -42,6 +43,7 @@ function header() {
     </div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="bar-right">
+      <button class="btn small ghost" data-sound aria-label="Sound settings">♪</button>
       <button class="btn small" data-deck>Deck <b>${run.deck.length}</b></button>
       <button class="btn small ghost" data-menu aria-label="Menu">☰</button>
     </div>
@@ -51,7 +53,40 @@ function header() {
 function bindHeader(root) {
   root.querySelector('[data-deck]')?.addEventListener('click', () => showDeck(run.deck, 'Your deck'));
   root.querySelector('[data-menu]')?.addEventListener('click', menu);
+  root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
 }
+
+function soundSettings() {
+  const pct = (v) => Math.round(v * 100);
+  const m = modal(`<h2>Sound</h2>
+    <label class="slider"><span>Music <b data-mv>${pct(settings.music)}%</b></span>
+      <input type="range" min="0" max="100" step="5" value="${pct(settings.music)}" data-music aria-label="Music volume"></label>
+    <label class="slider"><span>Effects <b data-sv>${pct(settings.sfx)}%</b></span>
+      <input type="range" min="0" max="100" step="5" value="${pct(settings.sfx)}" data-sfx aria-label="Sound effects volume"></label>
+    <div class="row2">
+      <button class="btn ghost" data-mute-music>${settings.musicOn ? 'Mute music' : 'Unmute music'}</button>
+      <button class="btn ghost" data-mute-sfx>${settings.sfxOn ? 'Mute effects' : 'Unmute effects'}</button>
+    </div>
+    <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
+    <button class="btn" data-close>Done</button>`);
+  const el = m.el;
+  el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
+  el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
+  el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
+  el.querySelector('[data-mute-music]').addEventListener('click', (e) => { settings.musicOn = !settings.musicOn; e.target.textContent = settings.musicOn ? 'Mute music' : 'Unmute music'; saveSettings(); });
+  el.querySelector('[data-mute-sfx]').addEventListener('click', (e) => { settings.sfxOn = !settings.sfxOn; e.target.textContent = settings.sfxOn ? 'Mute effects' : 'Unmute effects'; saveSettings(); sfx('click'); });
+}
+
+// UI click sounds
+document.addEventListener('click', (e) => {
+  const t = e.target.closest?.('button, .node.avail');
+  if (!t || t.disabled) return;
+  if (t.matches('.slot, [data-sound], [data-mute-sfx]')) return;
+  if (t.matches('.card-btn, .charm-card, [data-pick], [data-boss]')) sfx('pick');
+  else if (t.matches('.node')) sfx('enter');
+  else sfx('click');
+}, true);
+
 
 // tooltips for anything with data-tip (hover on desktop, tap on phone)
 const tip = document.createElement('div');
@@ -147,7 +182,7 @@ export function title() {
     <div class="stack narrow">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ♥ ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
-      <button class="btn ghost" data-help>How to play</button>
+      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>♪ Sound</button></div>
     </div>
     <dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
@@ -158,11 +193,11 @@ export function title() {
     <p class="footnote">Jenny's World</p>
   </main>`;
   app.querySelector('[data-help]').addEventListener('click', help);
+  app.querySelector('[data-sound]').addEventListener('click', soundSettings);
   app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; mapScreen(); });
   app.querySelector('[data-new]').addEventListener('click', () => {
     if (saved && !confirm('Start over? Your current run will be lost.')) return;
     run = newRun();
-    run.path = [];
     saveRun(run);
     if (!localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
     mapScreen();
@@ -201,9 +236,9 @@ function mapScreen() {
   nodes += `<g class="node t-boss${bossA ? ' avail' : ''}" transform="translate(${W / 2} ${yOf('boss')})" ${bossA ? 'tabindex="0" role="button" data-room="boss" aria-label="Boss room"' : ''}>
     <circle r="30"/><g transform="translate(-18 -18) scale(1.125)">${roomIcon('boss').replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
 
-  const boss = ENEMIES[run.map.boss];
+  const boss = ENEMIES[ACTS[run.act].boss];
   app.innerHTML = `${header()}<main class="map-screen">
-    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p></div>
+    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two rest booths.</p></div>
     <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
     <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${{ fight: 'Fight', elite: 'Elite', event: 'Unknown', shop: 'Shop', rest: 'Rest', treasure: 'Treasure' }[t]}</span></li>`).join('')}</ul>
   </main>`;
@@ -367,17 +402,23 @@ function battleScreen(enemyId, kind) {
 
   battle = new Battle(run, enemyId, {
     log: (m) => { const l = $('[data-log]'); if (l) l.textContent = m; },
+    sfx: (n, a) => sfx(n, a),
     board: () => renderBoard(),
     update: () => update(),
-    float: (who, text, k) => float(who, text, k),
+    float: (who, text, k) => {
+      float(who, text, k);
+      const map = { block: 'shield', heal: 'heal', energy: 'energy', weak: 'debuff', vuln: 'debuff', poison: 'debuff', strength: 'buff', thorns: 'buff' };
+      if (map[k] && !(k === 'energy' && text.startsWith('-'))) sfx(map[k]);
+    },
     hit: (who, dmg, blocked, why) => {
+      if (dmg > 0) sfx(who === 'enemy' ? 'hit' : 'hurt'); else if (blocked > 0) sfx('block');
       if (dmg > 0) { float(who, `-${dmg}`, why || 'dmg'); shake(who); }
       if (blocked > 0) float(who, `⛨${blocked}`, 'block');
     },
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
-    scramble: () => { boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
-    turn: () => { if (battle && battle.turn > 1) { const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
-    end: (result) => setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false)), 700),
+    scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
+    turn: () => { if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
+    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false)), 900); },
   });
   $('[data-end]').addEventListener('click', () => battle.endTurn());
   app.querySelectorAll('[data-pile]').forEach((p) => p.addEventListener('click', () => {
@@ -400,10 +441,12 @@ function battleWon(kind, enemyId) {
   run.kills += 1;
   const healed = afterFightHealing(run);
   const coins = gainCoins(run, kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9));
-  const choices = cardChoices(kind);
-  const charm = kind === 'elite' ? randomCharm(run) : null;
+  const choices = cardChoices(run, kind);
+  const charm = kind === 'elite' ? randomCharm(run, 'drop') : null;
   if (charm) gainCharm(run, charm);
-  const bossCharms = kind === 'boss' ? charmPool('boss').filter((k) => !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3) : [];
+  const bossCharms = [];
+  if (kind === 'boss') for (let i = 0; i < 3; i++) { const k = drawCharm(run, 'boss', bossCharms); if (k) bossCharms.push(k); }
+  setTimeout(() => sfx('coin'), 250);
   let pickedCard = false, pickedBoss = !bossCharms.length;
 
   const render = () => {
@@ -463,17 +506,17 @@ function gameOver(won, abandoned) {
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
-  app.querySelector('[data-again]').addEventListener('click', () => { run = newRun(); run.path = []; saveRun(run); mapScreen(); });
+  app.querySelector('[data-again]').addEventListener('click', () => { run = newRun(); saveRun(run); mapScreen(); });
   app.querySelector('[data-title]').addEventListener('click', title);
 }
 
 // ---------- rooms ----------
 function eventScreen() {
-  const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  const ev = drawEvent(run);
   const api = {
     addCard: (id) => { run.deck.push({ id }); return CARDS[id].name; },
-    randomCard: (rar) => { const ids = Object.keys(CARDS).filter((k) => CARDS[k].rarity === (rar || 'common')); return ids[Math.floor(Math.random() * ids.length)]; },
-    addCharm: () => { const k = randomCharm(run); if (!k) { run.coins += 50; return '50 coins (you have every charm!)'; } gainCharm(run, k); return `${CHARMS[k].icon} ${CHARMS[k].name}`; },
+    randomCard: (rar) => drawCard(run, rar || 'common'),
+    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return '50 coins (you have every charm!)'; } gainCharm(run, k); return `${CHARMS[k].icon} ${CHARMS[k].name}`; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
@@ -495,7 +538,7 @@ function eventScreen() {
 }
 
 function restScreen() {
-  const heal = Math.round(run.maxHp * 0.3);
+  const heal = Math.round(run.maxHp * (run.charms.includes('neckPillow') ? 0.45 : 0.3));
   app.innerHTML = `${header()}<main class="room rest">
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
@@ -514,7 +557,7 @@ function restScreen() {
 }
 
 function treasureScreen() {
-  const k = randomCharm(run, Math.random() < 0.5 ? 'uncommon' : 'common');
+  const k = randomCharm(run, 'drop');
   if (k) gainCharm(run, k); else run.coins += 60;
   app.innerHTML = `${header()}<main class="room treasure">
     <div class="room-icon">${roomIcon('treasure')}</div>
@@ -533,24 +576,25 @@ function shopScreen() {
       <h2>Cards</h2>
       <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < c.price ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < c.price ? ' poor' : ''}">● ${c.price}</span></div>`).join('')}</div>
       <h2>Charms</h2>
-      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < c.price ? 'disabled' : ''}><span class="big-icon">${CHARMS[c.id].icon}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small></button><span class="price${run.coins < c.price ? ' poor' : ''}">● ${c.price}</span></div>`).join('')}</div>
+      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < c.price ? 'disabled' : ''}><span class="big-icon">${CHARMS[c.id].icon}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < c.price ? ' poor' : ''}">● ${c.price}</span></div>`).join('')}</div>
       <div class="shop-row">
-        <button class="btn" data-remove ${stock.removed || run.coins < run.removeCost ? 'disabled' : ''}>Remove a card <small>● ${run.removeCost}</small></button>
+        <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>● ${removeCost(run)}</small></button>
         <button class="btn yellow" data-go>Leave shop</button>
       </div></main>`;
     bindHeader(app);
     app.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.cards[Number(b.dataset.card)];
-      run.coins -= c.price; c.sold = true; run.deck.push({ id: c.id }); render();
+      run.coins -= c.price; c.sold = true; run.deck.push({ id: c.id }); sfx('coin'); render();
     }));
     app.querySelectorAll('[data-charm]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.charms[Number(b.dataset.charm)];
-      run.coins -= c.price; c.sold = true; gainCharm(run, c.id); render();
+      run.coins -= c.price; c.sold = true; gainCharm(run, c.id); sfx('coin'); render();
     }));
     app.querySelector('[data-remove]').addEventListener('click', async () => {
       const i = await pickFromDeck('Remove a card');
       if (i === null) return;
-      run.deck.splice(i, 1); run.coins -= run.removeCost; run.removeCost += 25; stock.removed = true; render();
+      const cost = removeCost(run);
+      run.deck.splice(i, 1); run.coins -= cost; if (!run.charms.includes('stampCard')) run.removeCost += 25; stock.removed = true; sfx('coin'); render();
     });
     app.querySelector('[data-go]').addEventListener('click', completeRoom);
   };
@@ -558,4 +602,4 @@ function shopScreen() {
 }
 
 // debugging handle
-window.__sm = { get run() { return run; }, get battle() { return battle; } };
+window.__sm = { get run() { return run; }, get battle() { return battle; }, music };
