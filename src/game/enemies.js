@@ -16,10 +16,10 @@ export const ENEMIES = {
   cookie: { name: 'Cookie Crumbler', hp: [28, 32], art: 'cookie', color: '#d6ab7b', ai: 'random',
     moves: [{ t: 'atk', n: 10 }, { t: 'heal', n: 6 }, { t: 'atk', n: 5, times: 2 }] },
   // elites
-  captcha: { name: 'Captcha Golem', hp: [48, 52], art: 'golem', color: '#b9bdb3', ai: 'cycle', elite: true,
-    moves: [{ t: 'scramble' }, { t: 'atk', n: 14 }, { t: 'block', n: 12 }, { t: 'atk', n: 6, times: 2 }] },
-  adswarm: { name: 'Ad Swarm', hp: [42, 46], art: 'swarm', color: '#f2c94c', ai: 'cycle', elite: true,
-    moves: [{ t: 'status', card: 'spam', count: 3 }, { t: 'atk', n: 3, times: 4 }, { t: 'buff', n: 2 }, { t: 'atk', n: 3, times: 4 }] },
+  captcha: { name: 'Captcha Golem', hp: [40, 44], art: 'golem', color: '#b9bdb3', ai: 'cycle', elite: true,
+    moves: [{ t: 'atk', n: 11 }, { t: 'scramble' }, { t: 'block', n: 9 }, { t: 'atk', n: 5, times: 2 }] },
+  adswarm: { name: 'Ad Swarm', hp: [36, 40], art: 'swarm', color: '#f2c94c', ai: 'cycle', elite: true,
+    moves: [{ t: 'status', card: 'spam', count: 2 }, { t: 'atk', n: 3, times: 3 }, { t: 'buff', n: 1 }, { t: 'atk', n: 3, times: 3 }] },
   // boss
   firewall: { name: 'The Firewall', hp: [86, 86], art: 'wall', color: '#d2493f', ai: 'cycle', boss: true,
     moves: [{ t: 'block', n: 14 }, { t: 'atk', n: 13 }, { t: 'atk', n: 5, times: 3 }, { t: 'scramble' }, { t: 'buff', n: 3 }] },
@@ -34,10 +34,10 @@ export const ENEMIES = {
   crab: { name: 'Clickbait Crab', hp: [42, 46], art: 'crab', color: '#ec8a3b', ai: 'random',
     moves: [{ t: 'atk', n: 7, times: 2 }, { t: 'atkBlock', n: 9, b: 8 }, { t: 'status', card: 'bug', count: 2 }] },
   // elites
-  ransom: { name: 'Ransom Knight', hp: [72, 76], art: 'knight', color: '#6b4f9a', ai: 'cycle', elite: true,
-    moves: [{ t: 'atkBlock', n: 12, b: 10 }, { t: 'status', card: 'lag', count: 2 }, { t: 'atk', n: 20 }, { t: 'buff', n: 3 }] },
-  popstorm: { name: 'Notification Storm', hp: [64, 68], art: 'swarm', color: '#e5658f', ai: 'random', elite: true,
-    moves: [{ t: 'atk', n: 3, times: 6 }, { t: 'scramble' }, { t: 'debuff', weak: 2, vuln: 2 }, { t: 'atkStatus', n: 8, card: 'spam', count: 2 }] },
+  ransom: { name: 'Ransom Knight', hp: [62, 66], art: 'knight', color: '#6b4f9a', ai: 'cycle', elite: true,
+    moves: [{ t: 'atkBlock', n: 12, b: 10 }, { t: 'status', card: 'lag', count: 2 }, { t: 'atk', n: 16 }, { t: 'buff', n: 2 }] },
+  popstorm: { name: 'Notification Storm', hp: [56, 60], art: 'swarm', color: '#e5658f', ai: 'random', elite: true,
+    moves: [{ t: 'atk', n: 3, times: 5 }, { t: 'scramble' }, { t: 'debuff', weak: 2, vuln: 2 }, { t: 'atkStatus', n: 8, card: 'spam', count: 2 }] },
   // boss
   hydra: { name: 'Server Hydra', hp: [150, 150], art: 'hydra', color: '#55834f', ai: 'cycle', boss: true,
     moves: [{ t: 'atk', n: 6, times: 3 }, { t: 'scramble' }, { t: 'atkStatus', n: 14, card: 'bug', count: 2 }, { t: 'block', n: 20 }, { t: 'buff', n: 4 }] },
