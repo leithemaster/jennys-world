@@ -8,6 +8,7 @@
 // type: attack | skill | power | status
 // rarity: starter | common | uncommon | rare | status
 // fx(b, up) runs the effect inside a Battle (b); `up` is true when upgraded.
+// requires(run, h): card stays out of rewards until true; needs: the same rule in plain words (catalog).
 
 import { T } from './terms.js';
 
@@ -115,6 +116,7 @@ export const CARDS = {
     name: 'Shield Bash', type: 'attack', rarity: 'uncommon', icon: 'shieldHit',
     text: (u) => `Deal damage equal to your ${T.block}${u ? ' +5' : ''}.`,
     requires: (r, h) => h.deckCount(['guard', 'hoodieUp', 'trip', 'peek', 'memoryLane']) >= 3,
+    needs: '3+ Block cards (Guard, Hoodie Up, Trip, Peek, Memory Lane)',
     fx: (b, u) => b.attack(b.player.block + (u ? 5 : 0), { raw: true }),
   },
   catalyst: {
@@ -122,6 +124,7 @@ export const CARDS = {
     name: 'Catalyst', type: 'skill', rarity: 'uncommon', icon: 'flask',
     text: (u) => `${u ? 'Triple' : 'Double'} the enemy's ${T.glitch}.`,
     requires: (r, h) => h.deckHas(['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak']),
+    needs: 'a Glitch card (Stinger, Virus Upload, Lag Spike, Malware, Data Leak)',
     fx: (b, u) => b.applyEnemy('poison', b.enemy.poison * (u ? 2 : 1)),
   },
   memoryLane: {
@@ -170,6 +173,7 @@ export const CARDS = {
     name: 'Blanket Fort', type: 'power', rarity: 'rare', icon: 'fort',
     text: (u) => `${T.power}: ${T.block} no longer resets.${u ? ` ${T.block} 10.` : ''}`,
     requires: (r, h) => h.deckCount(['guard', 'hoodieUp', 'trip', 'peek', 'memoryLane']) >= 3,
+    needs: '3+ Block cards (Guard, Hoodie Up, Trip, Peek, Memory Lane)',
     fx: (b, u) => { b.powers.fortress = true; if (u) b.gainBlock(10); },
   },
   photographic: {
@@ -200,6 +204,7 @@ export const CARDS = {
     arch: 'glitch', name: 'Corrupt', type: 'attack', rarity: 'uncommon', icon: 'skull',
     text: (u) => `Deal damage equal to the enemy's ${T.glitch}${u ? ' +6' : ''}.`,
     requires: (r, h) => h.deckCount(['stinger', 'virusUpload', 'lagSpike', 'catalyst', 'malware', 'leak']) >= 1,
+    needs: 'a Glitch card (Stinger, Virus Upload, Lag Spike, Catalyst, Malware, Data Leak)',
     fx: (b, u) => b.attack(b.enemy.poison + (u ? 6 : 0), { raw: true }),
   },
   malware: {
@@ -277,6 +282,7 @@ export const CARDS = {
     arch: 'dreamy', name: 'Pillow Fight', type: 'attack', rarity: 'uncommon', icon: 'pillow',
     text: (u) => `Deal ${u ? 10 : 7}. Double damage if the enemy is ${T.asleep}.`,
     requires: (r, h) => h.deckHas(SLEEPY_CARDS),
+    needs: 'a Sleepy card',
     fx: (b, u) => b.attack((u ? 10 : 7) * (b.enemy.asleep ? 2 : 1)),
   },
   bedtimeStory: {
@@ -288,6 +294,7 @@ export const CARDS = {
     arch: 'dreamy', name: 'Deep Sleep', type: 'power', rarity: 'rare', icon: 'bed',
     text: (u) => `${T.power}: enemies stay ${T.asleep} 1 turn longer.${u ? ` Apply 2 ${T.sleepy}.` : ''}`,
     requires: (r, h) => h.deckCount(SLEEPY_CARDS) >= 2,
+    needs: '2+ Sleepy cards',
     fx: (b, u) => { b.powers.deepSleep += 1; if (u) b.applyEnemy('weak', 2); },
   },
   // Cozy: heal, and turn extra healing into damage
@@ -310,12 +317,14 @@ export const CARDS = {
     arch: 'cozy', name: 'Second Helping', type: 'attack', rarity: 'uncommon', icon: 'bowl',
     text: (u) => `Deal damage equal to the ${T.hp} you have healed this fight (max 30)${u ? ' +6' : ''}.`,
     requires: (r, h) => h.deckCount(HEAL_CARDS) >= 2,
+    needs: '2+ healing cards',
     fx: (b, u) => b.attack(Math.min(30, b.healedThisFight) + (u ? 6 : 0), { raw: true }),
   },
   sweetDreams: {
     arch: 'cozy', name: 'Sweet Dreams', type: 'power', rarity: 'rare', icon: 'moonStar',
     text: (u) => `${T.power}: whenever you heal, deal that much damage.${u ? ' Heal 4.' : ''}`,
     requires: (r, h) => h.deckHas(HEAL_CARDS),
+    needs: 'a healing card',
     fx: (b, u) => { b.powers.sweetDreams = true; if (u) b.heal(4); },
   },
   // Exposed: stack Exposed and hit hard
@@ -338,12 +347,14 @@ export const CARDS = {
     arch: 'exposed', name: 'Roast', type: 'attack', rarity: 'uncommon', icon: 'chili',
     text: (u) => `Deal ${u ? 7 : 5}, +${u ? 4 : 3} for each ${T.exposed} on the enemy.`,
     requires: (r, h) => h.deckHas(EXPOSED_CARDS),
+    needs: 'an Exposed card (Zap counts)',
     fx: (b, u) => b.attack((u ? 7 : 5) + (u ? 4 : 3) * b.enemy.vuln),
   },
   roastBattle: {
     arch: 'exposed', name: 'Roast Battle', type: 'power', rarity: 'rare', icon: 'crown',
     text: (u) => `${T.power}: ${T.exposed} on enemies no longer wears off.${u ? ` Apply 2 ${T.exposed}.` : ''}`,
     requires: (r, h) => h.deckHas(EXPOSED_CARDS),
+    needs: 'an Exposed card (Zap counts)',
     fx: (b, u) => { b.powers.roast = true; if (u) b.applyEnemy('vuln', 2); },
   },
 

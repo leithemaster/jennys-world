@@ -39,11 +39,11 @@ export const CHARMS = {
   glowstick: { name: 'Glow Stick', icon: '✨', pool: 'drop', desc: `Start each fight with 1 ${T.spirit}.` },
   lipTint: { name: 'Lip Tint', icon: '💄', pool: 'drop', desc: 'Clearing a board heals 3.' },
   venomVial: { name: 'Glitch Vial', icon: '🧪', pool: 'drop', desc: `Whenever you apply ${T.glitch}, apply 2 more.`,
-    requires: (r, h) => h.deckHas(['stinger', 'catalyst', 'virusUpload', 'lagSpike', 'leak']) },
+    requires: (r, h) => h.deckHas(['stinger', 'catalyst', 'virusUpload', 'lagSpike', 'leak']), needs: 'a Glitch card' },
   fuzzySocks: { name: 'Fuzzy Socks', icon: '🧦', pool: 'drop', desc: `Guard and Hoodie Up give 3 more ${T.block}.`,
-    requires: (r, h) => h.deckCount(['guard', 'hoodieUp']) >= 3 },
+    requires: (r, h) => h.deckCount(['guard', 'hoodieUp']) >= 3, needs: '3+ Guard / Hoodie Up' },
   powerBank: { name: 'Power Bank', icon: '🔋', pool: 'drop', desc: `Matching a ${T.types.power} card gives +1 ${T.energy}.`,
-    requires: (r, h) => h.deckHas(['spikyJacket', 'energyDrink', 'hype', 'fortress', 'photographic']) },
+    requires: (r, h) => h.deckHas(['spikyJacket', 'energyDrink', 'hype', 'fortress', 'photographic']), needs: 'a Power card (Spiky Jacket, Energy Drink, Hype, Blanket Fort, Photo Memory)' },
 
   // ----- shop only -----
   memberCard: { name: 'Member Card', icon: '💳', pool: 'shop', desc: 'Everything in shops costs 20% less.' },

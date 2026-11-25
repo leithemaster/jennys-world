@@ -42,6 +42,7 @@ export const EVENTS = [
   {
     id: 'booth',
     requires: (r) => r.deck.length >= 6,
+    needs: 'a deck of 6+ cards',
     title: 'Photo Booth',
     text: 'A sticker photo booth. Strike a pose and change something about yourself.',
     options: [
@@ -86,6 +87,7 @@ export const EVENTS = [
   {
     id: 'stranger',
     requires: (r) => r.deck.length >= 8,
+    needs: 'a deck of 8+ cards',
     title: 'Mysterious Gamer',
     text: '"Wanna trade?" A gamer in a mask offers to swap one of your cards for something rare.',
     options: [
