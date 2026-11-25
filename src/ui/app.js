@@ -23,10 +23,13 @@ const TYPE_LABEL = T.types;
 // ---------- shared pieces ----------
 export function cardHTML(c, extra = '') {
   const def = CARDS[c.id];
-  return `<div class="card t-${def.type} r-${def.rarity}${c.up ? ' up' : ''} ${extra}">
+  const text = cardText(c);
+  // long rules text gets a smaller font and a smaller picture so it never clips
+  const len = text.length > 58 ? 'xlong' : text.length > 40 ? 'long' : '';
+  return `<div class="card t-${def.type} r-${def.rarity}${c.up ? ' up' : ''}${len ? ` text-${len}` : ''} ${extra}">
     <div class="card-art">${icon(def.icon)}</div>
     <div class="card-name">${esc(cardName(c))}</div>
-    <div class="card-text">${esc(cardText(c))}</div>
+    <div class="card-text${len ? ` ${len}` : ''}">${esc(text)}</div>
     <div class="card-type">${TYPE_LABEL[def.type]}${def.arch ? ` · <span class="arch a-${def.arch}">${ARCHES[def.arch].name}</span>` : ''}${def.rarity === 'curse' ? ' · Curse' : ''}</div>
   </div>`;
 }
@@ -475,6 +478,7 @@ function battleScreen(enemyId, kind) {
     boardEl.classList.remove('deal'); void boardEl.offsetWidth; boardEl.classList.add('deal');
     updateSlots();
     if (hadFocus) boardEl.querySelector('.slot')?.focus();
+    fitBoard();
   };
   const updateSlots = () => {
     battle.board.forEach((s, i) => {
@@ -595,6 +599,37 @@ document.addEventListener('keydown', (e) => {
     else if (key === 'Enter' || key === ' ') { e.preventDefault(); map.pick.enter(); }
   }
 });
+
+// Wide PC layout: pick the column count that gives the biggest cards for the
+// space in the middle column, then size the board to match.
+const WIDE = matchMedia('(min-width: 1000px)');
+const CARD_RATIO = 6.2 / 5; // slot height / width
+function fitBoard() {
+  const battleEl = app.querySelector('main.battle');
+  const board = battleEl?.querySelector('[data-board]');
+  if (!board) return;
+  if (!WIDE.matches) { board.style.width = ''; board.style.removeProperty('--cw'); return; }
+  const cs = getComputedStyle(battleEl), bs = getComputedStyle(board);
+  const W = parseFloat(cs.gridTemplateColumns.split(' ')[1]);
+  const top = battleEl.getBoundingClientRect().top;
+  const energy = battleEl.querySelector('[data-energy]').offsetHeight;
+  const controls = battleEl.querySelector('.controls').offsetHeight;
+  const H = window.innerHeight - top - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - energy - controls - 2 * parseFloat(cs.rowGap);
+  const pad = 2 * (parseFloat(bs.paddingLeft) + parseFloat(bs.borderLeftWidth));
+  const gap = parseFloat(bs.columnGap);
+  const n = board.children.length;
+  let best = { c: 4, w: 0 };
+  for (let c = 3; c <= 8; c++) {
+    const r = Math.ceil(n / c);
+    const w = Math.min((W - pad - gap * (c - 1)) / c, (H - pad - gap * (r - 1)) / r / CARD_RATIO);
+    if (w > best.w) best = { c, w };
+  }
+  const cw = Math.floor(best.w);
+  board.style.setProperty('--cols', best.c);
+  board.style.setProperty('--cw', cw);
+  board.style.width = `${best.c * cw + gap * (best.c - 1) + pad}px`;
+}
+window.addEventListener('resize', () => fitBoard());
 
 function moveBoardFocus(key) {
   const board = app.querySelector('[data-board]');

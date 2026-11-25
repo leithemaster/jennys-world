@@ -504,8 +504,8 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
    from the screen height so the whole fight fits without scrolling. */
 @media (min-width: 1000px) {
   .battle {
-    width: min(1320px, 100%);
-    grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+    width: min(1760px, 100%);
+    grid-template-columns: minmax(170px, 210px) minmax(0, 1fr) minmax(170px, 210px);
     grid-template-rows: auto 1fr auto;
     column-gap: var(--s5); row-gap: 10px; padding: 10px var(--s5) 12px;
   }
@@ -515,17 +515,26 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
   .fighter.you { grid-column: 1; }
   .fighter.enemy { grid-column: 3; }
   .energy-bar { grid-column: 2; grid-row: 1; }
-  .board { grid-column: 2; grid-row: 2; align-self: start; width: calc((100dvh - 245px) * 0.8 + 10px); min-width: 360px; max-width: 760px; }
+  /* width and --cols are set by fitBoard() in app.js to make the cards as big as the space allows */
+  .board { grid-column: 2; grid-row: 2; align-self: start; justify-self: center; min-width: 0; max-width: none; }
+  /* flex instead of grid so a short last row sits centred */
+  .board { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; }
+  .board .slot { width: calc(var(--cw, 100) * 1px); }
   .controls { grid-column: 1 / -1; grid-row: 3; }
-  .portrait { width: clamp(130px, 19dvh, 200px); }
+  .portrait { width: clamp(120px, 17dvh, 190px); }
   .f-name { font-size: 18px; padding: 2px 14px; }
   .hpbar { width: min(100%, 240px); height: 26px; }
   .hpbar span { font-size: 15px; line-height: 20px; }
   .statuses { max-width: 260px; }
   .status { font-size: 12px; padding: 2px 10px; }
   .bubble { font-size: 17px; }
-  .slot .front .card-name { font-size: clamp(12px, 2dvh, 22px); }
-  .slot .front .card-text { font-size: clamp(10px, 1.55dvh, 17px); }
+  /* --cw is the card width in px, set by fitBoard() */
+  .slot .front .card-name { font-size: clamp(12px, calc(var(--cw, 100) * 0.12px), 24px); }
+  .slot .front .card-text { font-size: clamp(8.5px, calc(var(--cw, 100) * 0.095px), 18px); }
+  .slot .front .card-text.long { font-size: clamp(8px, calc(var(--cw, 100) * 0.085px), 16px); }
+  .slot .front .card-text.xlong { font-size: clamp(7.5px, calc(var(--cw, 100) * 0.078px), 15px); line-height: 1.25; }
+  .slot .front .card.text-long .card-art { width: 44%; }
+  .slot .front .card.text-xlong .card-art { width: 36%; }
 }
 
 /* ---------- Fast mode (Settings) ---------- */
