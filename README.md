@@ -17,6 +17,8 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
 
+**Memory Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
+
 The full list of characters, cards and charms is in **[docs/catalog.md](docs/catalog.md)**. There's also a visual catalog page with the in-game art (`tools/catalog-page/`, published as a private artifact). Both are generated from the game files: run `npm run catalog` after changing cards, charms, enemies, characters or outfits, then republish `tools/catalog-page/index.html` with its `data.json`.
 
 ## Characters

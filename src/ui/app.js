@@ -10,6 +10,7 @@ import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
+import { catalogScreen } from './catalog.js';
 import { blobBackdrop } from './chibi.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
@@ -272,23 +273,32 @@ export function title() {
   syncUnlocks();
   const saved = loadRun();
   const stats = getProgress().totals;
-  app.innerHTML = `<main class="title">
-    <div class="title-art" data-hero-art="jenny">${blobBackdrop()}${jennySVG()}</div>
-    <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
-    <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
-    <div class="stack narrow">
+  // Main menu: title on top, the couple on the left, a column of big
+  // buttons in the middle, lifetime stats in the bottom-left corner.
+  const couple = heroOpen('toni') ? ['jenny', 'toni'] : ['jenny'];
+  app.innerHTML = `<main class="title home">
+    <div class="home-logo">
+      <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
+      <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
+    </div>
+    <div class="home-art${couple.length > 1 ? ' couple' : ''}">${blobBackdrop()}${couple.map((c) => `<span class="home-hero" data-hero-art="${c}">${heroSVG(c)}</span>`).join('')}</div>
+    <div class="home-menu">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ${uiIcon('heart')} ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
-      <div class="row3"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-outfits>Outfits</button><button class="btn ghost" data-sound>Settings</button></div>
+      <button class="btn big ghost" data-help>How to play</button>
+      <button class="btn big ghost" data-outfits>Outfits</button>
+      <button class="btn big ghost" data-catalog>Memory Catalog</button>
+      <button class="btn big ghost" data-sound>Settings</button>
     </div>
-    <dl class="stats">
+    <div class="home-stats"><dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
       <div><dt>Wins</dt><dd>${stats.wins}</dd></div>
       <div><dt>Best</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
       <div><dt>Defeated</dt><dd>${stats.defeated}</dd></div>
     </dl>
-    <p class="footnote">Jenny's World</p>
+    <p class="footnote">Jenny's World</p></div>
   </main>`;
+  app.querySelector('[data-catalog]').addEventListener('click', () => catalogScreen(app, { onBack: title }));
   app.querySelector('[data-help]').addEventListener('click', help);
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
   app.querySelector('[data-outfits]').addEventListener('click', outfitScreen);
