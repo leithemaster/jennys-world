@@ -7,7 +7,7 @@ globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: 
 const { CARDS, ARCHES } = await import('../src/game/cards.js');
 const { CHARMS } = await import('../src/game/charms.js');
 const { CHARACTERS, passiveText } = await import('../src/game/characters.js');
-const { RULES } = await import('../src/game/battle.js');
+const { RULES, STICKERS } = await import('../src/game/battle.js');
 const { T } = await import('../src/game/terms.js');
 const { OUTFITS } = await import('../src/game/outfits.js');
 
@@ -34,6 +34,12 @@ for (const ch of Object.values(CHARACTERS)) {
   const deck = [...new Set(ch.deck)].map((c) => { const n = ch.deck.filter((x) => x === c).length; return `${n > 1 ? `${n}× ` : ''}${CARDS[c].name}`; }).join(', ');
   out.push(`| ${ch.name} | ${ch.maxHp} | ${cell(passiveText(ch))} | ${deck} | ${ch.unlock ? ch.unlock.text : 'From the start'} |`);
 }
+out.push('');
+
+const jp = CHARACTERS.jenny.passive;
+out.push(`### Jenny's Sticker Book`, '', `Every ${jp.n}th match in a fight peels off the next sticker. Stickers come from a shuffled deck of ${Object.keys(STICKERS).length}: each shows up once before any repeat, and the next one is shown in her status chip.`, '');
+out.push('| Sticker | Effect |', '|---|---|');
+for (const st of Object.values(STICKERS)) out.push(`| ${st.name} | ${cell(st.text.charAt(0).toUpperCase() + st.text.slice(1))} |`);
 out.push('');
 
 out.push('## Couple outfits', '', 'Each set has a matching look for Jenny and Toni, and both unlock together. Open the game with `?unlockall` to unlock everything for testing.', '');

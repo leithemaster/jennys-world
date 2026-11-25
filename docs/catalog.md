@@ -11,6 +11,18 @@ Every card style is open to every character. A character only changes max HP, th
 | Jenny | 55 | Sticker Book: Every 8th match in a fight gives a cute sticker: Star (deal 4), Bow (4 Block), Heart (heal 3), Bunny (reveal 2) or Bolt (+1 energy). You can see which one is next. | 4× Slash, 4× Guard, Zap, Boba | From the start |
 | Toni | 50 | Comfy: Every heal restores 2 more HP. | 4× Slash, 4× Guard, Yawn, Warm Milk | Beat the Floor 1 boss to unlock. |
 
+### Jenny's Sticker Book
+
+Every 8th match in a fight peels off the next sticker. Stickers come from a shuffled deck of 5: each shows up once before any repeat, and the next one is shown in her status chip.
+
+| Sticker | Effect |
+|---|---|
+| Star | Deal 4 |
+| Bow | 4 Block |
+| Heart | Heal 3 |
+| Bunny | Reveal 2 |
+| Bolt | +1 energy |
+
 ## Couple outfits
 
 Each set has a matching look for Jenny and Toni, and both unlock together. Open the game with `?unlockall` to unlock everything for testing.
