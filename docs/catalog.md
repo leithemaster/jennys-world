@@ -8,8 +8,20 @@ Every card style is open to every character. A character only changes max HP, th
 
 | Character | Max HP | Passive | Starting deck | Unlock |
 |---|---|---|---|---|
-| Jenny | 55 | Sketch the Board: At the start of each fight, reveal 1 extra card. | 4× Slash, 4× Guard, Zap, Boba | From the start |
+| Jenny | 55 | Sticker Book: Every 8th match in a fight gives a cute sticker: Star (deal 4), Bow (4 Block), Heart (heal 3), Bunny (reveal 2) or Bolt (+1 energy). You can see which one is next. | 4× Slash, 4× Guard, Zap, Boba | From the start |
 | Toni | 50 | Comfy: Every heal restores 2 more HP. | 4× Slash, 4× Guard, Yawn, Warm Milk | Beat the Floor 1 boss to unlock. |
+
+## Couple outfits
+
+Each set has a matching look for Jenny and Toni, and both unlock together. Open the game with `?unlockall` to unlock everything for testing.
+
+| Set | Looks | Unlock |
+|---|---|---|
+| Date Night | Jenny's yellow knit and beret, Toni's red jacket. | From the start |
+| Cat & Shiba | Matching animal-ear hoodies: a black cat for Jenny, a shiba for Toni. The original look. | From the start |
+| Lilac Twins | The same lilac cat-ear hoodie, one each. | Finish 5 runs. |
+| Café Shift | Matching striped shirts, aprons and bandanas for the late shift. | Beat the Floor 2 boss. |
+| Christmas Knits | Matching Christmas sweaters, a Santa hat and reindeer antlers. | Free all December. Beat the Floor 1 boss in December to keep it. |
 
 ## Rules for the styles
 

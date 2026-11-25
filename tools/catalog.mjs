@@ -9,6 +9,7 @@ const { CHARMS } = await import('../src/game/charms.js');
 const { CHARACTERS, passiveText } = await import('../src/game/characters.js');
 const { RULES } = await import('../src/game/battle.js');
 const { T } = await import('../src/game/terms.js');
+const { OUTFITS } = await import('../src/game/outfits.js');
 
 const RARITY = ['starter', 'common', 'uncommon', 'rare'];
 const cell = (s) => String(s).replace(/\|/g, '\\|');
@@ -33,6 +34,11 @@ for (const ch of Object.values(CHARACTERS)) {
   const deck = [...new Set(ch.deck)].map((c) => { const n = ch.deck.filter((x) => x === c).length; return `${n > 1 ? `${n}× ` : ''}${CARDS[c].name}`; }).join(', ');
   out.push(`| ${ch.name} | ${ch.maxHp} | ${cell(passiveText(ch))} | ${deck} | ${ch.unlock ? ch.unlock.text : 'From the start'} |`);
 }
+out.push('');
+
+out.push('## Couple outfits', '', 'Each set has a matching look for Jenny and Toni, and both unlock together. Open the game with `?unlockall` to unlock everything for testing.', '');
+out.push('| Set | Looks | Unlock |', '|---|---|---|');
+for (const o of Object.values(OUTFITS)) out.push(`| ${o.name} | ${cell(o.desc)} | ${o.unlock ? o.unlock.text : 'From the start'} |`);
 out.push('');
 
 out.push('## Rules for the styles', '');

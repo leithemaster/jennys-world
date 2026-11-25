@@ -7,23 +7,40 @@ const o = (fill, sw = SW) => `fill="${fill}" stroke="${INK}" stroke-width="${sw}
 const shine = (x, y, rx, ry, rot = 25) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${x} ${y})" fill="#fff" opacity=".9"/>`;
 const shadow = (cx, cy, rx) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="5" fill="#000" opacity=".22"/>`;
 
-// ---------------- Jenny ----------------
-export const LOOKS = {
-  sparkle: { name: 'Sparkle Eyes', eyes: 'open' },
-  classic: { name: 'Happy Classic', eyes: 'closed' },
-  lilac: { name: 'Lilac Wink', eyes: 'wink', hood: '#7a5fb0', hoodLight: '#9d84cc', hoodie: '#7a5fb0', tips: '#ffc3e0' },
-};
-const JBASE = {
-  skin: '#fde6da', hair: '#2b2142', hairShine: '#5b4a85', tips: '#c9b3f0',
-  hood: '#262338', hoodLight: '#3c3758', earIn: '#f49ab6', hoodie: '#262338', string: '#e8e2f2',
-  stripe: '#f06a95', shoe: '#1a1420', pin: '#f49ab6', blush: '#f59ab0',
-};
+// ---------------- Jenny & Toni ----------------
+// Both are drawn from parts so they can wear matching couple outfits (see
+// src/game/outfits.js for the sets and how they unlock). The art for each
+// set lives here: JENNY_OUTFITS[id] and TONI_OUTFITS[id].
 
-export function getLook() {
-  const k = localStorage.getItem('sm.look');
-  return LOOKS[k] ? k : 'sparkle';
-}
-export function setLook(k) { if (LOOKS[k]) localStorage.setItem('sm.look', k); }
+const J = {
+  skin: '#fde6da', hair: '#2b2142', hairShine: '#5b4a85', tips: '#c9b3f0',
+  shoe: '#1a1420', blush: '#f59ab0', string: '#e8e2f2',
+};
+const TONI = {
+  skin: '#f6d6c0', hair: '#1c1922', hairShine: '#4a4458', frame: '#141218',
+  jacket: '#c22f45', jacketDark: '#1f1d24', zip: '#d9d4e0', pants: '#2b2a33', shoe: '#1a1420', blush: '#f2a48a',
+};
+const CREAM = '#fff4e6';
+const XMAS_RED = '#c8323c';
+const XMAS_GREEN = '#2f7a4a';
+const CAFE = { shirt: CREAM, stripe: '#9ec9ff', apron: '#6b4a35', logo: '#f49ab6', hat: '#4f8a6e' };
+
+export const JENNY_OUTFITS = {
+  // Date Night: her yellow knit from the photo, plus an artist's beret.
+  date: { eyes: 'open', hat: 'beret', hatColor: '#8e2b3b', top: { kind: 'knit', color: '#e8b23a', dark: '#b9862a', skirt: '#4a3f63' } },
+  // The original look: black cat-ear hoodie.
+  cat: { eyes: 'open', hood: { ears: 'cat', color: '#262338', light: '#3c3758', earIn: '#f49ab6', pin: '#f49ab6' }, top: { kind: 'hoodie', color: '#262338', stripe: '#f06a95', pin: '#f49ab6' } },
+  lilac: { eyes: 'wink', tips: '#ffc3e0', hood: { ears: 'cat', color: '#7a5fb0', light: '#9d84cc', earIn: '#f49ab6', pin: '#f49ab6' }, top: { kind: 'hoodie', color: '#7a5fb0', stripe: '#f06a95', pin: '#f49ab6' } },
+  cafe: { eyes: 'closed', hat: 'bandana', hatColor: CAFE.hat, top: { kind: 'apron', ...CAFE } },
+  xmas: { eyes: 'open', hat: 'santa', top: { kind: 'xmas', color: XMAS_RED, band: CREAM, accent: XMAS_GREEN } },
+};
+export const TONI_OUTFITS = {
+  date: { top: { kind: 'jacket' } },
+  cat: { hood: { ears: 'shiba', color: '#262338', light: '#3c3758', earOut: '#e8a04a', earIn: CREAM }, top: { kind: 'hoodie', color: '#262338', stripe: '#f06a95' } },
+  lilac: { hood: { ears: 'cat', color: '#7a5fb0', light: '#9d84cc', earIn: '#f49ab6' }, top: { kind: 'hoodie', color: '#7a5fb0', stripe: '#f06a95' } },
+  cafe: { hat: 'bandana', hatColor: CAFE.hat, top: { kind: 'apron', ...CAFE } },
+  xmas: { hat: 'antlers', top: { kind: 'xmas', color: XMAS_RED, band: CREAM, accent: XMAS_GREEN } },
+};
 
 function jennyEyes(kind) {
   const closed = (x) => `<path d="M${x - 8} 82 Q${x} 73 ${x + 8} 82" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>
@@ -37,12 +54,93 @@ function jennyEyes(kind) {
   return closed(64) + open(96);
 }
 
+// Animal-ear hood around the face (shared by both, so couple hoodies match).
+function hoodBack(h) {
+  const ears = h.ears === 'shiba'
+    ? `<path d="M36 38 C30 24 32 10 40 7 C49 9 58 17 62 24 Z" ${o(h.earOut)}/>
+       <path d="M124 38 C130 24 128 10 120 7 C111 9 102 17 98 24 Z" ${o(h.earOut)}/>
+       <path d="M41 28 C39 20 40 14 43 13 C48 15 52 19 54 23 Z" fill="${h.earIn}"/>
+       <path d="M119 28 C121 20 120 14 117 13 C112 15 108 19 106 23 Z" fill="${h.earIn}"/>`
+    : `<path d="M38 34 L32 6 L62 22 Z" ${o(h.color)}/>
+       <path d="M122 34 L128 6 L98 22 Z" ${o(h.color)}/>
+       <path d="M40 27 L37 14 L52 22 Z" fill="${h.earIn}"/>
+       <path d="M120 27 L123 14 L108 22 Z" fill="${h.earIn}"/>`;
+  return `${ears}
+    <path d="M28 70 C26 36 50 15 80 15 C110 15 134 36 132 70 C132 80 128 86 122 88 C120 60 104 44 80 44 C56 44 40 60 38 88 C32 86 28 80 28 70 Z" ${o(h.color)}/>
+    <path d="M42 46 C50 30 64 22 80 21" fill="none" stroke="${h.light}" stroke-width="5" stroke-linecap="round"/>
+    ${shine(104, 28, 8, 4.4)}`;
+}
+
+// Hats and headbands, drawn last.
+function headwear(kind, color) {
+  if (kind === 'beret') return `<ellipse cx="70" cy="36" rx="30" ry="11" transform="rotate(-14 70 36)" ${o(color)}/>
+    <path d="M66 25 l1 -6" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M50 36 C58 28 72 24 84 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`;
+  if (kind === 'santa') return `<path d="M44 42 C46 22 66 10 90 12 C110 14 124 26 130 50 C124 42 116 38 108 40 L114 42 Z" ${o(XMAS_RED)}/>
+    <rect x="38" y="35" width="84" height="12" rx="6" ${o(CREAM)}/>
+    <circle cx="130" cy="52" r="7" ${o(CREAM)}/>
+    ${shine(72, 22, 6, 3)}`;
+  if (kind === 'bandana') return `<path d="M43 52 C48 36 62 29 80 29 C98 29 112 36 117 52 C105 45 93 43 80 43 C67 43 55 45 43 52 Z" ${o(color, 2.8)}/>
+    <circle cx="66" cy="38" r="1.8" fill="#fff" opacity=".8"/><circle cx="82" cy="35" r="1.8" fill="#fff" opacity=".8"/><circle cx="97" cy="39" r="1.8" fill="#fff" opacity=".8"/>
+    <path d="M115 46 L127 41 L124 51 Z M115 48 L125 56 L113 56 Z" ${o(color, 2.2)}/>`;
+  if (kind === 'antlers') {
+    const antler = (s) => `<path d="M${80 + s * 20} 32 L${80 + s * 30} 10 M${80 + s * 26} 19 L${80 + s * 38} 14 M${80 + s * 29} 12 L${80 + s * 26} 4" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M${80 + s * 20} 32 L${80 + s * 30} 10 M${80 + s * 26} 19 L${80 + s * 38} 14 M${80 + s * 29} 12 L${80 + s * 26} 4" fill="none" stroke="#a8743f" stroke-width="3.6" stroke-linecap="round"/>`;
+    return `${antler(-1)}${antler(1)}
+      <path d="M46 46 C52 30 66 24 80 24 C94 24 108 30 114 46" fill="none" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M46 46 C52 30 66 24 80 24 C94 24 108 30 114 46" fill="none" stroke="${XMAS_RED}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="80" cy="24" r="4.2" ${o(XMAS_RED, 2.2)}/>`;
+  }
+  return '';
+}
+
+// Stripes across a body between x0..x1 (a shape that widens by `flare` per unit of y).
+const stripes = (ys, x0, x1, top, flare, color) => ys.map((y) => {
+  const d = (y - top) * flare;
+  return `<path d="M${x0 - d + 2} ${y} H${x1 + d - 2}" stroke="${color}" stroke-width="2.6"/>`;
+}).join('');
+
+// Jenny's top. Her body flares a little (a long hoodie / sweater dress shape).
+function jennyTop(t, p) {
+  const body = (fill) => `<path d="M62 101 H98 L104 133 H56 Z" ${o(fill)}/>`;
+  if (t.kind === 'hoodie') return `${body(t.color)}
+    <path d="M57.3 126 H102.7 L103.6 130.6 H56.4 Z" fill="${t.stripe}"/>
+    <path d="M80 104 C76 100 70 101 71 105 C72 108 77 107 80 104 C83 107 88 108 89 105 C90 101 84 100 80 104 Z" ${o(p.string, 2.4)}/>
+    <path d="M79 105 L76 114 M81 105 L84 114" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M95 112 a4.6 4.6 0 1 0 4.1 6.9 a3.6 3.6 0 1 1 -4.1 -6.9z" fill="${t.pin}" stroke="${INK}" stroke-width="1.6"/>`;
+  if (t.kind === 'knit') return `<path d="M57.5 128 H102.5 L106 139 H54 Z" ${o(t.skirt, 2.8)}/>
+    <path d="M66 130 L64.5 139 M75 130 L74.5 139 M85 130 L85.5 139 M94 130 L95.5 139" stroke="${INK}" stroke-width="1.6" opacity=".55"/>
+    <path d="M62 101 H98 L102 129 H58 Z" ${o(t.color)}/>
+    <path d="M72 109 q-2.5 4 0 8 t0 8 M88 109 q2.5 4 0 8 t0 8" fill="none" stroke="${t.dark}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M59 124.5 H101" stroke="${t.dark}" stroke-width="2"/>
+    <rect x="70" y="96" width="20" height="9" rx="3.5" ${o(t.color, 2.6)}/>
+    <path d="M74 98 v5 M78 98 v5 M82 98 v5 M86 98 v5" stroke="${t.dark}" stroke-width="1.4"/>`;
+  if (t.kind === 'apron') return `${body(t.shirt)}
+    ${stripes([108, 114, 120, 126, 131], 62, 98, 101, 6 / 32, t.stripe)}
+    <path d="M67 107 H93 L97 133 H63 Z" ${o(t.apron, 2.8)}/>
+    <rect x="71" y="101" width="18" height="9" rx="2" ${o(t.apron, 2.4)}/>
+    <path d="M71 102 L66 98 M89 102 L94 98" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="73.5" y="118" width="13" height="8" rx="2" fill="none" stroke="${CREAM}" stroke-width="1.6"/>
+    <path d="M80 107.8 c-1.4 -2 -4 -1 -3 1 c0.6 1.2 3 2.6 3 2.6 c0 0 2.4 -1.4 3 -2.6 c1 -2 -1.6 -3 -3 -1 z" fill="${t.logo}"/>`;
+  if (t.kind === 'xmas') return `${body(t.color)}
+    <path d="M59.4 112 H100.6 L101.6 120 H58.4 Z" fill="${t.band}"/>
+    <path d="M60 116 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3" fill="none" stroke="${t.accent}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${[66, 74, 82, 90].map((x) => `<circle cx="${x + 2}" cy="126" r="1.6" fill="${t.band}"/>`).join('')}
+    <path d="M56.6 129 H103.4 L104 133 H56 Z" fill="${t.band}"/>
+    <rect x="70" y="96" width="20" height="8" rx="3.5" ${o(t.band, 2.6)}/>`;
+  return body('#888');
+}
+const sleeveColor = (t) => (t.kind === 'apron' ? t.shirt : t.kind === 'jacket' ? TONI.jacketDark : t.color);
+
 // opts.crop: head-and-shoulders framing for small portraits
-export function jennyChibi(lookKey = getLook(), opts = {}) {
-  const p = { ...JBASE, ...LOOKS[lookKey] };
+export function jennyChibi(outfit = 'date', opts = {}) {
+  const f = JENNY_OUTFITS[outfit] || JENNY_OUTFITS.date;
+  const p = { ...J, ...(f.tips ? { tips: f.tips } : {}) };
   const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
+  const sleeve = sleeveColor(f.top);
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${opts.crop ? '' : shadow(80, 150, 32)}
+    ${f.hood ? '' : `<path d="M38 98 C28 64 40 30 80 27 C120 30 132 64 122 98 C116 106 106 108 100 104 L60 104 C54 108 44 106 38 98 Z" ${o(p.hair)}/>`}
     <path d="M42 64 C38 84 40 100 46 110 C52 112 56 108 56 104 C52 94 52 78 54 66 Z" ${o(p.hair)}/>
     <path d="M118 64 C122 84 120 100 114 110 C108 112 104 108 104 104 C108 94 108 78 106 66 Z" ${o(p.hair)}/>
     <path d="M44 104 C46 110 52 112 56 104 C55 100 53 98 50 98 C47 98 45 100 44 104 Z" ${o(p.tips)}/>
@@ -51,68 +149,82 @@ export function jennyChibi(lookKey = getLook(), opts = {}) {
     <rect x="83" y="130" width="8" height="12" rx="2" ${o(p.skin)}/>
     <path d="M66 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
     <path d="M81.5 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
-    <path d="M62 101 H98 L104 133 H56 Z" ${o(p.hoodie)}/>
-    <path d="M57.3 126 H102.7 L103.6 130.6 H56.4 Z" fill="${p.stripe}"/>
-    <path d="M80 104 C76 100 70 101 71 105 C72 108 77 107 80 104 C83 107 88 108 89 105 C90 101 84 100 80 104 Z" ${o(p.string, 2.4)}/>
-    <path d="M79 105 L76 114 M81 105 L84 114" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M95 112 a4.6 4.6 0 1 0 4.1 6.9 a3.6 3.6 0 1 1 -4.1 -6.9z" fill="${p.pin}" stroke="${INK}" stroke-width="1.6"/>
-    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(p.hoodie)}/>
-    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(p.hoodie)}/>
+    ${jennyTop(f.top, p)}
+    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(sleeve)}/>
+    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(sleeve)}/>
     <circle cx="54.4" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
     <circle cx="105.6" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
-    <path d="M38 34 L32 6 L62 22 Z" ${o(p.hood)}/>
-    <path d="M122 34 L128 6 L98 22 Z" ${o(p.hood)}/>
-    <path d="M40 27 L37 14 L52 22 Z" fill="${p.earIn}"/>
-    <path d="M120 27 L123 14 L108 22 Z" fill="${p.earIn}"/>
-    <path d="M28 70 C26 36 50 15 80 15 C110 15 134 36 132 70 C132 80 128 86 122 88 C120 60 104 44 80 44 C56 44 40 60 38 88 C32 86 28 80 28 70 Z" ${o(p.hood)}/>
-    <path d="M42 46 C50 30 64 22 80 21" fill="none" stroke="${p.hoodLight}" stroke-width="5" stroke-linecap="round"/>
-    ${shine(104, 28, 8, 4.4)}
+    ${f.hood ? hoodBack(f.hood) : ''}
     <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
     <path d="M42 72 C42 52 58 40 80 40 C102 40 118 52 118 72 L108 72 L104 60 L98 70 L84 70 L80 58 L74 70 L60 70 L57 62 L53 72 Z" ${o(p.hair)}/>
     <path d="M60 48 C66 44 74 43 80 43" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>
-    <path d="M116 26 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z" fill="${p.pin}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>
-    ${jennyEyes(p.eyes)}
+    ${f.hood ? `<path d="M116 26 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z" fill="${f.hood.pin}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>` : `<path d="M98 33 C108 36 116 42 120 52" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>`}
+    ${jennyEyes(f.eyes)}
     <ellipse cx="55" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
     <ellipse cx="105" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
     <path d="M74 92 Q80 98 86 92" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+    ${headwear(f.hat, f.hatColor)}
   </svg>`;
 }
 
-// ---------------- Toni ----------------
-// Short black hair swept up, black rectangle glasses, a red jacket with a
-// black yoke and sleeves, and a big sleepy grin.
-const TONI = {
-  skin: '#f6d6c0', hair: '#1c1922', hairShine: '#4a4458', frame: '#141218',
-  jacket: '#c22f45', jacketDark: '#1f1d24', zip: '#d9d4e0', pants: '#2b2a33', shoe: '#1a1420', blush: '#f2a48a',
-};
-
-export function toniChibi(opts = {}) {
+// Toni's top. His body is boxy, with trousers below.
+function toniTop(t) {
   const p = TONI;
-  const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
-  const lens = (x) => `<rect x="${x - 11}" y="71" width="22" height="17" rx="5" fill="#fff" fill-opacity=".22" stroke="${p.frame}" stroke-width="3.4"/>`;
-  const eye = (x) => `<path d="M${x - 6} 82 Q${x} 75.5 ${x + 6} 82" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>`;
-  return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    ${opts.crop ? '' : shadow(80, 150, 32)}
-    ${opts.crop ? '' : `<text x="118" y="34" font-size="13" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".55">z</text><text x="128" y="22" font-size="10" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".4">z</text>`}
-    <path d="M63 116 H97 L96 141 H82.5 L80 127 L77.5 141 H64 Z" ${o(p.pants)}/>
-    <path d="M61 139 h17 a3 3 0 0 1 3 3 v2 h-20 z" ${o(p.shoe)}/>
-    <path d="M82 139 h14 a3 3 0 0 1 3 3 v2 h-17 z" ${o(p.shoe)}/>
-    <path d="M61 101 H99 L100 124 H60 Z" ${o(p.jacket)}/>
+  const body = (fill) => `<path d="M61 101 H99 L100 124 H60 Z" ${o(fill)}/>`;
+  if (t.kind === 'jacket') return `${body(p.jacket)}
     <path d="M60.4 120.5 H99.6 L100 124 H60 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>
     <path d="M61 101 H99 L99.4 108 H60.6 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
     <path d="M80 104 V123" stroke="${p.zip}" stroke-width="2.2" stroke-linecap="round"/>
     <rect x="78.2" y="110" width="3.6" height="5" rx="1" fill="${p.zip}" stroke="${INK}" stroke-width="1.2"/>
-    <path d="M67 98 L80 105 L93 98 L94 104 L80 111 L66 104 Z" ${o(p.jacketDark, 2.6)}/>
-    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(p.jacketDark)}/>
-    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(p.jacketDark)}/>
+    <path d="M67 98 L80 105 L93 98 L94 104 L80 111 L66 104 Z" ${o(p.jacketDark, 2.6)}/>`;
+  if (t.kind === 'hoodie') return `${body(t.color)}
+    <path d="M60.5 117.5 H99.5 L99.8 121.5 H60.2 Z" fill="${t.stripe}"/>
+    <path d="M80 104 C76 100 70 101 71 105 C72 108 77 107 80 104 C83 107 88 108 89 105 C90 101 84 100 80 104 Z" ${o(J.string, 2.4)}/>
+    <path d="M79 105 L76 114 M81 105 L84 114" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="70" y="112" width="20" height="5" rx="2" fill="none" stroke="${INK}" stroke-width="1.6" opacity=".5"/>`;
+  if (t.kind === 'apron') return `${body(t.shirt)}
+    ${stripes([108, 114, 120], 61, 99, 101, 1 / 23, t.stripe)}
+    <path d="M66 107 H94 L96 124 H64 Z" ${o(t.apron, 2.8)}/>
+    <rect x="71" y="101" width="18" height="9" rx="2" ${o(t.apron, 2.4)}/>
+    <path d="M71 102 L66 98 M89 102 L94 98" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="73.5" y="114" width="13" height="7" rx="2" fill="none" stroke="${CREAM}" stroke-width="1.6"/>
+    <path d="M80 107.8 c-1.4 -2 -4 -1 -3 1 c0.6 1.2 3 2.6 3 2.6 c0 0 2.4 -1.4 3 -2.6 c1 -2 -1.6 -3 -3 -1 z" fill="${t.logo}"/>`;
+  if (t.kind === 'xmas') return `${body(t.color)}
+    <path d="M60.5 108 H99.5 L99.8 115 H60.2 Z" fill="${t.band}"/>
+    <path d="M61 112 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3" fill="none" stroke="${t.accent}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${[66, 74, 82, 90].map((x) => `<circle cx="${x + 2}" cy="119" r="1.6" fill="${t.band}"/>`).join('')}
+    <path d="M60.2 121.5 H99.8 L100 124 H60 Z" fill="${t.band}"/>
+    <rect x="70" y="96" width="20" height="8" rx="3.5" ${o(t.band, 2.6)}/>`;
+  return body('#888');
+}
+
+export function toniChibi(outfit = 'date', opts = {}) {
+  const f = TONI_OUTFITS[outfit] || TONI_OUTFITS.date;
+  const p = TONI;
+  const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
+  const sleeve = sleeveColor(f.top);
+  const lens = (x) => `<rect x="${x - 11}" y="71" width="22" height="17" rx="5" fill="#fff" fill-opacity=".22" stroke="${p.frame}" stroke-width="3.4"/>`;
+  const eye = (x) => `<path d="M${x - 6} 82 Q${x} 75.5 ${x + 6} 82" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>`;
+  const fullHair = `<path d="M40 72 C36 48 48 28 66 23 L68 11 L77 19 L85 8 L91 19 L101 12 L103 25 C118 32 126 50 120 72 L116 72 C116 63 113 58 109 55 L105 63 L97 56 L87 63 L79 54 L69 61 L61 55 C53 59 47 64 45 72 Z" ${o(p.hair)}/>
+    <path d="M60 33 C68 26 78 24 88 25" fill="none" stroke="${p.hairShine}" stroke-width="3.4" stroke-linecap="round"/>`;
+  const fringe = `<path d="M44 70 C44 54 60 42 80 42 C100 42 116 54 116 70 L113 64 L109 55 L105 63 L97 56 L87 63 L79 54 L69 61 L61 55 C53 59 48 64 46 70 Z" ${o(p.hair)}/>`;
+  const zzz = opts.crop || f.hat === 'antlers' ? '' : `<text x="118" y="34" font-size="13" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".55">z</text><text x="128" y="22" font-size="10" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".4">z</text>`;
+  return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${opts.crop ? '' : shadow(80, 150, 32)}
+    ${f.hood ? '' : zzz}
+    <path d="M63 116 H97 L96 141 H82.5 L80 127 L77.5 141 H64 Z" ${o(p.pants)}/>
+    <path d="M61 139 h17 a3 3 0 0 1 3 3 v2 h-20 z" ${o(p.shoe)}/>
+    <path d="M82 139 h14 a3 3 0 0 1 3 3 v2 h-17 z" ${o(p.shoe)}/>
+    ${toniTop(f.top)}
+    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(sleeve)}/>
+    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(sleeve)}/>
     <circle cx="54.4" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
     <circle cx="105.6" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
-    <ellipse cx="42" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
+    ${f.hood ? hoodBack(f.hood) : `<ellipse cx="42" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
     <ellipse cx="118" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
-    <circle cx="40.5" cy="87" r="1.8" fill="${p.zip}" stroke="${INK}" stroke-width="1"/>
+    <circle cx="40.5" cy="87" r="1.8" fill="${p.zip}" stroke="${INK}" stroke-width="1"/>`}
     <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
-    <path d="M40 72 C36 48 48 28 66 23 L68 11 L77 19 L85 8 L91 19 L101 12 L103 25 C118 32 126 50 120 72 L116 72 C116 63 113 58 109 55 L105 63 L97 56 L87 63 L79 54 L69 61 L61 55 C53 59 47 64 45 72 Z" ${o(p.hair)}/>
-    <path d="M60 33 C68 26 78 24 88 25" fill="none" stroke="${p.hairShine}" stroke-width="3.4" stroke-linecap="round"/>
+    ${f.hood ? fringe : fullHair}
     ${eye(64)}${eye(96)}
     ${lens(64)}${lens(96)}
     <path d="M75 78 Q80 75.5 85 78" fill="none" stroke="${p.frame}" stroke-width="3" stroke-linecap="round"/>
@@ -121,6 +233,7 @@ export function toniChibi(opts = {}) {
     <ellipse cx="106" cy="93" rx="5.5" ry="3.2" fill="${p.blush}"/>
     <path d="M70 92 Q80 104 90 92 Z" ${o('#8a2f3c', 2.8)}/>
     <path d="M72.5 92.6 H87.5 L86.3 95.4 H73.7 Z" fill="#fff"/>
+    ${headwear(f.hat, f.hatColor)}
   </svg>`;
 }
 

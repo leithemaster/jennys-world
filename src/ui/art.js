@@ -1,4 +1,5 @@
-import { jennyChibi, toniChibi, enemyChibi, getLook } from './chibi.js';
+import { jennyChibi, toniChibi, enemyChibi } from './chibi.js';
+import { wornOutfit } from '../game/outfits.js';
 // Hand-drawn-ish SVG art: card icons, Jenny's portrait, enemies, map icons.
 const INK = '#1f2126';
 
@@ -74,11 +75,11 @@ export function icon(name, cls = '') {
 }
 
 // Jenny + enemies are drawn in the chibi vector style (see chibi.js).
-export function jennySVG(opts = {}) { return jennyChibi(opts.look || getLook(), opts); }
+export function jennySVG(opts = {}) { return jennyChibi(opts.outfit || wornOutfit('jenny'), opts); }
 export function enemySVG(art, color) { return enemyChibi(art, color); }
 // The playable character's art.
 export function heroSVG(character, opts = {}) {
-  if (character === 'toni') return toniChibi(opts);
+  if (character === 'toni') return toniChibi(opts.outfit || wornOutfit('toni'), opts);
   return jennySVG(opts);
 }
 

@@ -1,7 +1,7 @@
 import { CARDS, ARCHES, cardName, cardText, canUpgrade } from '../game/cards.js';
 import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
-import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES } from '../game/battle.js';
+import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES, STICKERS } from '../game/battle.js';
 import {
   newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
@@ -10,7 +10,8 @@ import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
-import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
+import { blobBackdrop } from './chibi.js';
+import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
@@ -38,6 +39,13 @@ function startNewRun() { pickCharacter(); }
 // Characters whose unlock floor has already been passed. Also fixes up saves
 // from before unlocks existed: reaching past a floor's boss room counts.
 function syncUnlocks() {
+  // Testing switch: open the game with ?unlockall to unlock every character and outfit.
+  if (new URLSearchParams(location.search).has('unlockall')) {
+    Object.keys(CHARACTERS).forEach((id) => unlock('characters', id));
+    Object.keys(OUTFITS).forEach((id) => unlock('outfits', id));
+    history.replaceState(null, '', location.pathname);
+  }
+  syncOutfitUnlocks();
   const best = getProgress().totals.best_floor;
   for (const [id, ch] of Object.entries(CHARACTERS)) {
     if (ch.unlock && best >= (ch.unlock.bossFloor + 1) * (ROWS + 1)) unlock('characters', id);
@@ -106,7 +114,7 @@ applyPace();
 function soundSettings() {
   const pct = (v) => Math.round(v * 100);
   const m = modal(`<h2>Settings</h2>
-    <div class="look-pick"><span class="look-label">Jenny's look</span><div class="looks">${Object.entries(LOOKS).map(([k, l]) => `<button class="look${k === getLook() ? ' on' : ''}" data-look="${k}" aria-pressed="${k === getLook()}">${jennySVG({ look: k, crop: true })}<b>${esc(l.name)}</b></button>`).join('')}</div></div>
+    <button class="btn" data-outfits>Couple outfits</button>
     <label class="slider"><span>Music <b data-mv>${pct(settings.music)}%</b></span>
       <input type="range" min="0" max="100" step="5" value="${pct(settings.music)}" data-music aria-label="Music volume"></label>
     <label class="slider"><span>Effects <b data-sv>${pct(settings.sfx)}%</b></span>
@@ -119,11 +127,7 @@ function soundSettings() {
     <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
     <button class="btn" data-close>Done</button>`);
   const el = m.el;
-  el.querySelectorAll('[data-look]').forEach((btn) => btn.addEventListener('click', () => {
-    setLook(btn.dataset.look);
-    el.querySelectorAll('[data-look]').forEach((x) => { x.classList.toggle('on', x === btn); x.setAttribute('aria-pressed', x === btn); });
-    document.querySelectorAll('.title-art.is-jenny, .portrait-jenny').forEach((n) => { n.innerHTML = jennySVG(n.classList.contains('portrait-jenny') ? { crop: true } : {}); });
-  }));
+  el.querySelector('[data-outfits]').addEventListener('click', () => { m.close(); outfitScreen(); });
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
@@ -269,13 +273,13 @@ export function title() {
   const saved = loadRun();
   const stats = getProgress().totals;
   app.innerHTML = `<main class="title">
-    <div class="title-art is-jenny">${blobBackdrop()}${jennySVG()}</div>
+    <div class="title-art" data-hero-art="jenny">${blobBackdrop()}${jennySVG()}</div>
     <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
     <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
     <div class="stack narrow">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ${uiIcon('heart')} ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
-      <div class="row2"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-sound>Settings</button></div>
+      <div class="row3"><button class="btn ghost" data-help>How to play</button><button class="btn ghost" data-outfits>Outfits</button><button class="btn ghost" data-sound>Settings</button></div>
     </div>
     <dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
@@ -287,11 +291,59 @@ export function title() {
   </main>`;
   app.querySelector('[data-help]').addEventListener('click', help);
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
+  app.querySelector('[data-outfits]').addEventListener('click', outfitScreen);
   app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) harusGift(); else mapScreen(); });
   app.querySelector('[data-new]').addEventListener('click', () => {
     if (saved && !confirm('Start over? Your current run will be lost.')) return;
     startNewRun();
   });
+}
+
+// ---------- couple outfits ----------
+const outfitNote = (name) => {
+  const id = Object.keys(OUTFITS).find((k) => OUTFITS[k].name === name);
+  return `<div class="unlock-note"><span class="hero-art">${jennySVG({ outfit: id, crop: true })}</span><span class="hero-art">${heroSVG('toni', { outfit: id, crop: true })}</span><p><b>New outfits: ${esc(name)}!</b> Put them on from Outfits on the title screen.</p></div>`;
+};
+
+function refreshHeroArt() {
+  document.querySelectorAll('[data-hero-art]').forEach((n) => {
+    const back = n.querySelector('.backdrop') ? blobBackdrop() : '';
+    n.innerHTML = back + heroSVG(n.dataset.heroArt, 'crop' in n.dataset ? { crop: true } : {});
+  });
+}
+
+function outfitScreen() {
+  const toniOpen = heroOpen('toni');
+  const body = () => `<h2>Couple outfits</h2>
+    <p class="small-note">Every set has a matching look for Jenny and Toni.${toniOpen ? '' : ' Toni joins after the Floor 1 boss.'}</p>
+    <div class="outfit-list">${Object.entries(OUTFITS).map(([id, o]) => {
+      const open = outfitOpen(id);
+      const jOn = wornOutfit('jenny') === id, tOn = wornOutfit('toni') === id;
+      return `<div class="outfit${open ? '' : ' locked'}">
+        <div class="outfit-art"><span class="hero-art${jOn ? ' on' : ''}">${jennySVG({ outfit: id, crop: true })}</span><span class="hero-art${tOn && toniOpen ? ' on' : ''}${toniOpen ? '' : ' hidden-hero'}">${heroSVG('toni', { outfit: id, crop: true })}</span></div>
+        <div class="outfit-info"><b>${esc(o.name)}</b><small>${esc(open ? o.desc : o.unlock.text)}</small>
+        ${open ? `<div class="outfit-btns">
+          ${toniOpen ? `<button class="btn small yellow" data-wear="both" data-set="${id}" ${jOn && tOn ? 'disabled' : ''}>${jOn && tOn ? 'Both wearing' : 'Wear as a couple'}</button>` : ''}
+          <button class="btn small ghost" data-wear="jenny" data-set="${id}" ${jOn ? 'disabled' : ''}>${jOn ? 'Jenny ✓' : 'Jenny'}</button>
+          ${toniOpen ? `<button class="btn small ghost" data-wear="toni" data-set="${id}" ${tOn ? 'disabled' : ''}>${tOn ? 'Toni ✓' : 'Toni'}</button>` : ''}
+        </div>` : `<em class="lock-tag">Locked</em>`}</div>
+      </div>`;
+    }).join('')}</div>
+    <button class="btn" data-close>Done</button>`;
+  const m = modal(body(), { wide: true });
+  const bind = () => m.el.querySelectorAll('[data-wear]').forEach((b) => b.addEventListener('click', () => {
+    const who = b.dataset.wear, id = b.dataset.set;
+    if (who !== 'toni') wearOutfit('jenny', id);
+    if (who !== 'jenny') wearOutfit('toni', id);
+    sfx('click');
+    const box = m.el.querySelector('.outfit-list');
+    const scroll = box.scrollTop;
+    m.el.querySelector('.outfit-list').outerHTML = new DOMParser().parseFromString(`<div>${body()}</div>`, 'text/html').querySelector('.outfit-list').outerHTML;
+    m.el.querySelector('.outfit-list').scrollTop = scroll;
+    bind();
+    refreshHeroArt();
+  }));
+  bind();
 }
 
 // ---------- character pick ----------
@@ -326,7 +378,7 @@ function harusGift() {
   noteGuardianMet('haru');
   ids.forEach(noteCharmSeen);
   app.innerHTML = `<main class="room gift">
-    <div class="gift-art">${blobBackdrop()}${heroSVG(run.character)}</div>
+    <div class="gift-art" data-hero-art="${run.character}">${blobBackdrop()}${heroSVG(run.character)}</div>
     <h1>${GAME.gift}</h1>
     <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
     <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
@@ -481,7 +533,7 @@ function battleScreen(enemyId, kind) {
   app.innerHTML = `${header()}<main class="battle">
     <section class="arena">
       <div class="fighter you" data-who="player">
-        <div class="portrait${run.character === 'toni' ? '' : ' portrait-jenny'}">${heroSVG(run.character, { crop: true })}</div>
+        <div class="portrait" data-hero-art="${run.character}" data-crop>${heroSVG(run.character, { crop: true })}</div>
         <div class="f-name">${esc(hero().name)}</div>
         <div class="hpbar"><i data-hpbar></i><span data-hptext></span><em class="blk" data-blk hidden></em></div>
         <div class="statuses" data-pstat></div>
@@ -593,7 +645,9 @@ function battleScreen(enemyId, kind) {
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
     const pas = b.character.passive;
-    $('[data-pstat]').innerHTML = `<span class="status s-power" data-tip="${esc(passiveText(b.character))}">${esc(pas.name)}</span>` + statusHTML(b.player) + (b.powers.bedtime ? `<span class="status s-power" data-tip="Bedtime Story: apply ${b.powers.bedtime} ${T.sleepy} each turn.">Story ${b.powers.bedtime}</span>` : '') + (b.powers.deepSleep ? `<span class="status s-power" data-tip="Deep Sleep: enemies stay ${T.asleep} ${b.powers.deepSleep} turn longer.">Deep Sleep</span>` : '') + (b.powers.sweetDreams ? '<span class="status s-power" data-tip="Sweet Dreams: whenever you heal, deal that much damage.">Sweet Dreams</span>' : '') + (b.powers.roast ? `<span class="status s-power" data-tip="Roast Battle: ${T.exposed} on enemies no longer wears off.">Roast</span>` : '') + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
+    const pasLabel = pas.id === 'stickerBook' ? `${esc(STICKERS[b.nextSticker()].name)} in ${b.stickersIn()}` : esc(pas.name);
+    const pasTip = pas.id === 'stickerBook' ? `${passiveText(b.character)} Next: ${STICKERS[b.nextSticker()].name} sticker (${STICKERS[b.nextSticker()].text}) in ${b.stickersIn()} match${b.stickersIn() > 1 ? 'es' : ''}.` : passiveText(b.character);
+    $('[data-pstat]').innerHTML = `<span class="status s-power" data-tip="${esc(pasTip)}">${pasLabel}</span>` + statusHTML(b.player) + (b.powers.bedtime ? `<span class="status s-power" data-tip="Bedtime Story: apply ${b.powers.bedtime} ${T.sleepy} each turn.">Story ${b.powers.bedtime}</span>` : '') + (b.powers.deepSleep ? `<span class="status s-power" data-tip="Deep Sleep: enemies stay ${T.asleep} ${b.powers.deepSleep} turn longer.">Deep Sleep</span>` : '') + (b.powers.sweetDreams ? '<span class="status s-power" data-tip="Sweet Dreams: whenever you heal, deal that much damage.">Sweet Dreams</span>' : '') + (b.powers.roast ? `<span class="status s-power" data-tip="Roast Battle: ${T.exposed} on enemies no longer wears off.">Roast</span>` : '') + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
@@ -758,6 +812,7 @@ function battleWon(kind, enemyId) {
 function actCleared() {
   run.pos = run.pending; run.path.push(run.pending); run.pending = null; run.floorsCleared += 1;
   const newHeroes = unlockAfterBoss(run.act);
+  const newOutfits = outfitsForBoss(run.act);
   if (run.act >= ACTS.length - 1) return gameOver(true);
   const heal = Math.round((run.maxHp - run.hp) * 0.75);
   run.hp += heal;
@@ -769,6 +824,7 @@ function actCleared() {
     <h1>Floor cleared!</h1>
     <p>${esc(hero().name)} takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
     ${newHeroes.map((n) => `<div class="unlock-note"><span class="hero-art">${heroSVG(Object.keys(CHARACTERS).find((k) => CHARACTERS[k].name === n), { crop: true })}</span><p><b>${esc(n)} unlocked!</b> Pick ${esc(n)} at the start of your next run.</p></div>`).join('')}
+    ${newOutfits.map(outfitNote).join('')}
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
   bindHeader(app);
   app.querySelector('[data-go]').addEventListener('click', mapScreen);
@@ -778,8 +834,9 @@ function gameOver(won, abandoned) {
   battle = null;
   clearRun();
   const stats = recordRunEnd(runSummary(run, won)).totals;
+  const newOutfits = outfitsForRunEnd();
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
-    <div class="title-art">${blobBackdrop()}${heroSVG(run.character)}</div>
+    <div class="title-art" data-hero-art="${run.character}">${blobBackdrop()}${heroSVG(run.character)}</div>
     <h1>${won ? 'The Tower is cleared!' : abandoned ? 'Run abandoned' : 'Knocked out!'}</h1>
     <p>${won ? `${esc(hero().name)} beat The Blue Screen. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
@@ -789,6 +846,7 @@ function gameOver(won, abandoned) {
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
+    ${newOutfits.map(outfitNote).join('')}
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
   app.querySelector('[data-again]').addEventListener('click', startNewRun);

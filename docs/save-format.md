@@ -29,7 +29,8 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
   "characters": {
     "jenny": { "runs": 12, "wins": 1, "best_floor": 30 }
   },
-  "unlocks": { "characters": ["jenny"] },
+  "unlocks": { "characters": ["jenny", "toni"], "outfits": ["cafe"] },
+  "cosmetics": { "jenny": "cat", "toni": "date" },
   "collection": {
     "cards":     { "stinger": { "seen": 9, "taken": 3 } },
     "charms":    { "kimbap":  { "seen": 4, "taken": 1 } },
@@ -57,6 +58,8 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
 | `totals` | Across every character. `best_floor` counts rooms cleared, out of 30. |
 | `characters.<id>` | The same numbers for one character. A key exists for every unlocked character. |
 | `unlocks.characters` | Playable characters. `jenny` is always there. |
+| `unlocks.outfits` | Outfit sets unlocked by a milestone (ids from `src/game/outfits.js`). Sets with no unlock rule are always open, listed or not. |
+| `cosmetics.<character>` | The outfit set that character wears. Falls back to `date` if that set isn't available. |
 | `collection.cards` / `charms` | `seen`: times offered (reward, shop, gift). `taken`: times added to a run. Taking also counts as seeing. |
 | `collection.enemies` | `met`: fights started. `defeated`: fights won. |
 | `collection.events` / `guardians` | `met`: times visited. |

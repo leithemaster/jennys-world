@@ -26,7 +26,8 @@ export function blankProgress() {
     created_at: now(),
     totals: { runs: 0, wins: 0, best_floor: 0, defeated: 0 },
     characters: { jenny: blankCharacter() },
-    unlocks: { characters: ['jenny'] },
+    unlocks: { characters: ['jenny'], outfits: [] },
+    cosmetics: { jenny: 'date', toni: 'date' }, // outfit set each character wears (see outfits.js)
     collection: {
       cards: {},     // id -> { seen, taken }
       charms: {},    // id -> { seen, taken }
@@ -55,6 +56,7 @@ const MIGRATIONS = {
       p.totals.defeated = old.kills | 0;
       Object.assign(p.characters.jenny, { runs: p.totals.runs, wins: p.totals.wins, best_floor: p.totals.best_floor });
     }
+    delete p.cosmetics; // filled from the old look setting in fillDefaults
     return p;
   },
 };
@@ -63,10 +65,19 @@ const MIGRATIONS = {
 // so older saves never crash newer code.
 function fillDefaults(p) {
   const base = blankProgress();
+  if (!p.cosmetics) {
+    // Saves from before outfits: keep the look the player already had.
+    // Old looks: sparkle / classic = the cat hoodie, lilac = Lilac Twins.
+    const old = globalThis.localStorage?.getItem?.('sm.look');
+    const had = old === 'lilac' ? 'lilac' : (old || p.totals?.runs > 0) ? 'cat' : 'date';
+    p.cosmetics = { jenny: had, toni: 'date' };
+    if (had === 'lilac') { p.unlocks ||= {}; p.unlocks.outfits = [...(p.unlocks.outfits || []), 'lilac']; }
+  }
   for (const k of Object.keys(base)) if (p[k] === undefined) p[k] = base[k];
   for (const k of Object.keys(base.totals)) if (p.totals[k] === undefined) p.totals[k] = 0;
   for (const k of Object.keys(base.collection)) p.collection[k] ||= {};
   p.unlocks.characters ||= ['jenny'];
+  p.unlocks.outfits ||= [];
   for (const c of p.unlocks.characters) p.characters[c] ||= blankCharacter();
   return p;
 }
@@ -137,6 +148,12 @@ export function unlock(kind, id) {
   if (kind === 'characters') getProgress().characters[id] ||= blankCharacter();
   save();
   return true;
+}
+
+// ---------- cosmetics ----------
+export function setCosmetic(character, id) {
+  getProgress().cosmetics[character] = id;
+  save();
 }
 
 // ---------- end of a run ----------

@@ -19,6 +19,16 @@ const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 let uidSeq = 1;
 
+// Jenny's Sticker Book. Drawn from a shuffled deck per fight, so every
+// sticker shows up once before any repeats, and the next one is visible.
+export const STICKERS = {
+  star: { name: 'Star', text: 'deal 4', fx: (b) => b.attack(4, { raw: true }) },
+  bow: { name: 'Bow', text: `4 ${T.block}`, fx: (b) => b.gainBlock(4) },
+  heart: { name: 'Heart', text: 'heal 3', fx: (b) => b.heal(3) },
+  bunny: { name: 'Bunny', text: 'reveal 2', fx: (b) => b.reveal(2, true) },
+  bolt: { name: 'Bolt', text: `+1 ${T.energy}`, fx: (b) => b.gainEnergy(1) },
+};
+
 export class Battle {
   constructor(run, enemyId, hooks = {}) {
     this.run = run;
@@ -30,6 +40,8 @@ export class Battle {
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
     this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false };
     this.healedThisFight = 0;
+    this.matchesThisFight = 0;
+    this.stickerDeck = [];
     this.character = CHARACTERS[run.character] || CHARACTERS.jenny;
     this.turnEnergy = 3;
     this.flags = {};
@@ -59,10 +71,6 @@ export class Battle {
     if (this.has('sleepMask')) this.enemy.weak += 1;
     this.chooseIntent();
     this.dealBoard();
-    if (this.character.passive.id === 'sketch') {
-      this.reveal(this.character.passive.n, true, true);
-      this.log(`Sketch the Board: ${this.character.passive.n} cards revealed.`);
-    }
     this.startTurn();
     this.log(`${this.enemy.name} blocks the way!`);
   }
@@ -99,6 +107,13 @@ export class Battle {
   }
 
   keyOf(card) { return card.id + (card.up ? '+' : ''); }
+
+  // The sticker the next Sticker Book trigger will give (refills the deck when empty).
+  nextSticker() {
+    if (!this.stickerDeck.length) this.stickerDeck = shuffle(Object.keys(STICKERS));
+    return this.stickerDeck[0];
+  }
+  stickersIn() { const n = this.character.passive.n; return n - (this.matchesThisFight % n); }
 
   flip(i) {
     if (this.over || this.busy) return;
@@ -158,6 +173,16 @@ export class Battle {
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
     def.fx(this, !!card.up);
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
+    this.matchesThisFight += 1;
+    const pas = this.character.passive;
+    if (pas.id === 'stickerBook' && this.matchesThisFight % pas.n === 0) {
+      const id = this.nextSticker();
+      this.stickerDeck.shift();
+      const st = STICKERS[id];
+      this.emit('float', 'player', `${st.name} sticker!`, 'heal');
+      this.log(`Sticker Book: ${st.name} sticker (${st.text}).`);
+      st.fx(this);
+    }
     this.busy = false;
     if (this.checkEnd()) return;
     if (this.board.every((s) => s.state === 'gone')) {

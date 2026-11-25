@@ -7,10 +7,12 @@
 export const CHARACTERS = {
   jenny: {
     name: 'Jenny',
-    blurb: 'Artsy, loves anything cute. Sketches the board before she plays.',
+    blurb: 'Artsy, loves anything cute. Decorates every fight with stickers.',
     maxHp: 55,
     deck: ['slash', 'slash', 'slash', 'slash', 'guard', 'guard', 'guard', 'guard', 'zap', 'boba'],
-    passive: { id: 'sketch', n: 1, name: 'Sketch the Board', desc: (n) => `At the start of each fight, reveal ${n} extra card${n === 1 ? "" : "s"}.` },
+    // Every n-th match in a fight peels the next sticker off her sticker book
+    // (a shuffled deck of 5, see STICKERS in battle.js; no repeats until all 5 are used).
+    passive: { id: 'stickerBook', n: 8, name: 'Sticker Book', desc: (n) => `Every ${n}${n === 2 ? "nd" : n === 3 ? "rd" : "th"} match in a fight gives a cute sticker: Star (deal 4), Bow (4 Block), Heart (heal 3), Bunny (reveal 2) or Bolt (+1 energy). You can see which one is next.` },
   },
   toni: {
     name: 'Toni',

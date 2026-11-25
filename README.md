@@ -23,8 +23,12 @@ The full list of characters, cards and charms is in **[docs/catalog.md](docs/cat
 
 Pick who climbs at the start of each run. Every card style is open to every character; a character only changes max HP, the starting deck and one passive (all in `src/game/characters.js`).
 
-- **Jenny** (55 HP): *Sketch the Board*, reveals 1 extra card at the start of each fight. Starts with Zap and Boba.
+- **Jenny** (55 HP): *Sticker Book*, every 8th match in a fight gives a cute sticker (Star, Bow, Heart, Bunny or Bolt). The stickers come from a shuffled deck and the next one is shown, so it's never a surprise. Starts with Zap and Boba.
 - **Toni** (50 HP): *Comfy*, every heal restores 2 more HP. Starts with Yawn and Warm Milk. Unlocked by beating the Floor 1 boss (saves that already got past it unlock him automatically).
+
+## Couple outfits
+
+Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
 
 ## Haru's Gift
 
