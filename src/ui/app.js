@@ -137,7 +137,33 @@ function modal(html, { onClose, wide } = {}) {
 
 function showDeck(cards, title, note = '') {
   const sorted = [...cards].sort((a, b) => (CARDS[a.id].type + a.id).localeCompare(CARDS[b.id].type + b.id));
-  modal(`<h2>${esc(title)}</h2>${note ? `<p class="deck-note">${note}</p>` : ''}<div class="card-grid">${sorted.map((c) => cardHTML(c)).join('') || '<p>Empty.</p>'}</div><button class="btn" data-close>Close</button>`, { wide: true });
+  const hint = sorted.some(hasUpgradeView) ? '<p class="deck-note">Click a card to see its upgraded version.</p>' : '';
+  const m = modal(`<h2>${esc(title)}</h2>${note ? `<p class="deck-note">${note}</p>` : ''}${hint}<div class="card-grid">${sorted.map((c, i) => hasUpgradeView(c)
+    ? `<button class="card-btn flip" data-flip="${i}" aria-label="${esc(cardName(c))}: show other version">${cardHTML(c)}</button>`
+    : cardHTML(c)).join('') || '<p>Empty.</p>'}</div><button class="btn" data-close>Close</button>`, { wide: true });
+  // Toggle each card between its normal and upgraded version.
+  m.el.querySelectorAll('[data-flip]').forEach((b) => {
+    const c = sorted[Number(b.dataset.flip)];
+    let other = false;
+    b.addEventListener('click', () => { other = !other; b.innerHTML = cardHTML({ ...c, up: other ? !c.up : c.up }, other ? 'alt-view' : ''); });
+  });
+}
+
+// Cards that have an upgraded version worth showing (not statuses or curses).
+function hasUpgradeView(c) {
+  const r = CARDS[c.id].rarity;
+  return r !== 'status' && r !== 'curse';
+}
+
+// While choosing a card to upgrade, resting on a card (or focusing it) shows the upgraded version.
+function upgradePreview(btn, c) {
+  let t;
+  const show = () => { btn.innerHTML = cardHTML({ ...c, up: true }, 'alt-view'); };
+  const hide = () => { clearTimeout(t); btn.innerHTML = cardHTML(c); };
+  btn.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { clearTimeout(t); t = setTimeout(show, 450); } });
+  btn.addEventListener('pointerleave', hide);
+  btn.addEventListener('focus', show);
+  btn.addEventListener('blur', hide);
 }
 
 // Pick a card from the deck; resolves to deck index or null.
@@ -146,10 +172,14 @@ function pickFromDeck(title, filter = () => true, confirmLabel) {
     const items = run.deck.map((c, i) => ({ c, i })).filter(({ c }) => filter(c));
     if (!items.length) { resolve(null); return; }
     let done = false;
-    const m = modal(`<h2>${esc(title)}</h2><div class="card-grid">${items.map(({ c, i }) => `<button class="card-btn" data-i="${i}" aria-label="${esc(cardName(c))}">${cardHTML(c)}</button>`).join('')}</div><button class="btn ghost" data-close>Cancel</button>`, {
+    const preview = filter === canUpgrade;
+    const m = modal(`<h2>${esc(title)}</h2>${preview ? '<p class="deck-note">Hover a card to see what the upgrade does.</p>' : ''}<div class="card-grid">${items.map(({ c, i }) => `<button class="card-btn" data-i="${i}" aria-label="${esc(cardName(c))}">${cardHTML(c)}</button>`).join('')}</div><button class="btn ghost" data-close>Cancel</button>`, {
       wide: true, onClose: () => { if (!done) resolve(null); },
     });
-    m.el.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => { done = true; m.close(); resolve(Number(b.dataset.i)); }));
+    m.el.querySelectorAll('[data-i]').forEach((b) => {
+      if (preview) upgradePreview(b, run.deck[Number(b.dataset.i)]);
+      b.addEventListener('click', () => { done = true; m.close(); resolve(Number(b.dataset.i)); });
+    });
     void confirmLabel;
   });
 }

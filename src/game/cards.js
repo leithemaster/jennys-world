@@ -225,9 +225,14 @@ export const CARDS = {
   },
   dejaVu: {
     arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'rare', icon: 'film',
-    text: (u) => `Reveal every card on the board.${u ? ' +1 energy.' : ''} Exhaust.`,
+    text: (u) => `Reveal all cards, or the next board if none are left.${u ? ' +1 energy.' : ''} Exhaust.`,
     exhaust: true,
-    fx: (b, u) => { b.reveal(99, false, true); if (u) b.gainEnergy(1); },
+    fx: (b, u) => {
+      // Played as the last pair there's nothing left to reveal, so save it for the next board.
+      if (b.board.some((s) => s.state === 'down')) b.reveal(99, false, true);
+      else { b.pendingReveal = 16; b.log('Déjà Vu: the whole next board will be revealed.'); }
+      if (u) b.gainEnergy(1);
+    },
   },
 
   // ---------- status (added by enemies, gone after the fight) ----------

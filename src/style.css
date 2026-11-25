@@ -237,6 +237,11 @@ b { font-weight: 800; }
 .card-grid > .card, .card-grid > .card-btn { aspect-ratio: 5 / 7; }
 .card-btn { padding: 0; border: 0; background: none; border-radius: var(--r-card); aspect-ratio: 5 / 7; transition: transform 180ms var(--ease-pop); }
 .card-btn:disabled { opacity: 0.5; }
+/* Upgraded-version preview: a mint ring and an "Upgraded" tag so it reads as a preview, not the real card. */
+.card.alt-view { position: relative; outline: 4px solid var(--mint); outline-offset: 2px; }
+.card.alt-view::after { content: 'Upgraded'; top: 5px; left: auto; right: 5px; width: auto; height: auto; opacity: 1; z-index: 2; background: var(--mint); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 0 7px; font: 800 10px/1.5 var(--font-ui); white-space: nowrap; }
+.card:not(.up).alt-view::after { content: 'Normal'; background: var(--paper); }
+.card:not(.up).alt-view { outline-color: var(--muted); }
 .card-btn .card { box-shadow: var(--shadow-sm); }
 @media (hover: hover) { .card-btn:hover:not(:disabled) { transform: translateY(-6px) rotate(-1.5deg); } }
 
