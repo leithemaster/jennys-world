@@ -121,7 +121,7 @@ export const CARDS = {
   },
   hype: {
     name: 'Hype', type: 'power', rarity: 'uncommon', icon: 'fire',
-    text: (u) => `Power: gain ${u ? 3 : 2} Strength.`,
+    text: (u) => `Power: gain ${u ? 3 : 2} Fighting Spirit.`,
     fx: (b, u) => b.applyPlayer('strength', u ? 3 : 2),
   },
 
@@ -160,71 +160,71 @@ export const CARDS = {
   // ---------- play-style cards ----------
   // Glitch
   virusUpload: {
-    arch: 'glitch', name: 'Virus Upload', type: 'skill', rarity: 'common', icon: 'drop',
+    arch: 'glitch', name: 'Virus Upload', type: 'skill', rarity: 'common', icon: 'upload',
     text: (u) => `Apply ${u ? 9 : 6} Glitch.`,
     fx: (b, u) => b.applyEnemy('poison', u ? 9 : 6),
   },
   lagSpike: {
-    arch: 'glitch', name: 'Lag Spike', type: 'skill', rarity: 'common', icon: 'hourglass',
+    arch: 'glitch', name: 'Lag Spike', type: 'skill', rarity: 'common', icon: 'snail',
     text: (u) => `Apply ${u ? 4 : 3} Glitch. Block ${u ? 6 : 4}.`,
     fx: (b, u) => { b.applyEnemy('poison', u ? 4 : 3); b.gainBlock(u ? 6 : 4); },
   },
   corrupt: {
-    arch: 'glitch', name: 'Corrupt', type: 'attack', rarity: 'uncommon', icon: 'static',
+    arch: 'glitch', name: 'Corrupt', type: 'attack', rarity: 'uncommon', icon: 'skull',
     text: (u) => `Deal damage equal to the enemy's Glitch${u ? ' +6' : ''}.`,
     requires: (r, h) => h.deckCount(['stinger', 'virusUpload', 'lagSpike', 'catalyst', 'malware']) >= 1,
     fx: (b, u) => b.attack(b.enemy.poison + (u ? 6 : 0), { raw: true }),
   },
   malware: {
-    arch: 'glitch', name: 'Malware', type: 'power', rarity: 'rare', icon: 'bug',
+    arch: 'glitch', name: 'Malware', type: 'power', rarity: 'rare', icon: 'worm',
     text: (u) => `Power: apply ${u ? 4 : 3} Glitch at the start of each turn.`,
     fx: (b, u) => { b.powers.malware += u ? 4 : 3; },
   },
   // Guard
   bubbleWrap: {
-    arch: 'guard', name: 'Bubble Wrap', type: 'skill', rarity: 'common', icon: 'shield',
+    arch: 'guard', name: 'Bubble Wrap', type: 'skill', rarity: 'common', icon: 'bubbles',
     text: (u) => `Block ${u ? 8 : 6}. If you already have Block, +${u ? 5 : 4} more.`,
     fx: (b, u) => b.gainBlock((u ? 8 : 6) + (b.player.block > 0 ? (u ? 5 : 4) : 0)),
   },
   payback: {
-    arch: 'guard', name: 'Payback', type: 'attack', rarity: 'uncommon', icon: 'shieldHit',
+    arch: 'guard', name: 'Payback', type: 'attack', rarity: 'uncommon', icon: 'uturn',
     text: (u) => `Block ${u ? 7 : 5}. Deal ${u ? 7 : 5}.`,
     fx: (b, u) => { b.gainBlock(u ? 7 : 5); b.attack(u ? 7 : 5); },
   },
   ironHoodie: {
-    arch: 'guard', name: 'Iron Hoodie', type: 'power', rarity: 'rare', icon: 'hood',
+    arch: 'guard', name: 'Iron Hoodie', type: 'power', rarity: 'rare', icon: 'helmet',
     text: (u) => `Power: gain ${u ? 5 : 3} Block at the start of each turn.`,
     fx: (b, u) => { b.powers.armor += u ? 5 : 3; },
   },
   // Combo
   encore: {
-    arch: 'combo', name: 'Encore', type: 'attack', rarity: 'common', icon: 'star',
+    arch: 'combo', name: 'Encore', type: 'attack', rarity: 'common', icon: 'mic',
     text: (u) => `Deal ${u ? 7 : 5}. +1 combo.`,
     fx: (b, u) => { b.attack(u ? 7 : 5); b.combo += 1; },
   },
   hotStreak: {
-    arch: 'combo', name: 'Hot Streak', type: 'attack', rarity: 'uncommon', icon: 'fire',
+    arch: 'combo', name: 'Hot Streak', type: 'attack', rarity: 'uncommon', icon: 'comet',
     text: (u) => `Deal ${u ? 8 : 6}. If combo is 3+, +1 energy.`,
     fx: (b, u) => { b.attack(u ? 8 : 6); if (b.combo >= 3) b.gainEnergy(1); },
   },
   groove: {
-    arch: 'combo', name: 'Groove', type: 'power', rarity: 'rare', icon: 'arrow',
+    arch: 'combo', name: 'Groove', type: 'power', rarity: 'rare', icon: 'notes',
     text: (u) => `Power: a miss only halves your combo.${u ? ' +1 energy.' : ''}`,
     fx: (b, u) => { b.powers.groove = true; if (u) b.gainEnergy(1); },
   },
   // Memory
   cheatSheet: {
-    arch: 'memory', name: 'Cheat Sheet', type: 'skill', rarity: 'common', icon: 'eye',
+    arch: 'memory', name: 'Cheat Sheet', type: 'skill', rarity: 'common', icon: 'paper',
     text: (u) => `Reveal ${u ? 5 : 3} hidden cards.`,
     fx: (b, u) => b.reveal(u ? 5 : 3),
   },
   spotlight: {
-    arch: 'memory', name: 'Spotlight', type: 'power', rarity: 'uncommon', icon: 'camera',
+    arch: 'memory', name: 'Spotlight', type: 'power', rarity: 'uncommon', icon: 'spot',
     text: (u) => `Power: matching a revealed card deals ${u ? 6 : 4}.`,
     fx: (b, u) => { b.powers.spotlight += u ? 6 : 4; },
   },
   dejaVu: {
-    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'rare', icon: 'film',
+    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'rare', icon: 'loop',
     text: (u) => `Reveal all cards, or the next board if none are left.${u ? ' +1 energy.' : ''} Exhaust.`,
     exhaust: true,
     fx: (b, u) => {

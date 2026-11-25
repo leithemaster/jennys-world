@@ -296,7 +296,7 @@ export class Battle {
       case 'atk': for (let k = 0; k < (it.times || 1); k++) hitPlayer(it.n); this.log(`${e.name} attacks!`); break;
       case 'atkBlock': hitPlayer(it.n); e.block += it.b; this.log(`${e.name} attacks and shields up.`); break;
       case 'block': e.block += it.n; this.log(`${e.name} shields up (${it.n}).`); break;
-      case 'buff': e.strength += it.n; this.log(`${e.name} powers up! +${it.n} Strength.`); this.emit('float', 'enemy', `+${it.n} Strength`, 'strength'); break;
+      case 'buff': e.strength += it.n; this.log(`${e.name} powers up! +${it.n} Fighting Spirit.`); this.emit('float', 'enemy', `+${it.n} Fighting Spirit`, 'strength'); break;
       case 'heal': e.hp = Math.min(e.maxHp, e.hp + it.n); this.emit('float', 'enemy', `+${it.n}`, 'heal'); this.log(`${e.name} munches and heals.`); break;
       case 'debuff':
         if (it.weak) this.applyPlayer('weak', it.weak);
@@ -367,11 +367,11 @@ export class Battle {
   }
 }
 
-export const STATUS_NAMES = { weak: 'Sleepy', vuln: 'Exposed', poison: 'Glitch', strength: 'Strength', thorns: 'Spikes' };
+export const STATUS_NAMES = { weak: 'Sleepy', vuln: 'Exposed', poison: 'Glitch', strength: 'Fighting Spirit', thorns: 'Spikes' };
 export const STATUS_HELP = {
   weak: 'Sleepy: deals 25% less damage.',
   vuln: 'Exposed: takes 50% more damage.',
   poison: 'Glitch: loses that much HP each turn, then Glitch goes down by 1.',
-  strength: 'Strength: adds damage to every hit.',
+  strength: 'Fighting Spirit: adds damage to every hit.',
   thorns: 'Spikes: deals damage back when hit.',
 };

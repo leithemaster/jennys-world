@@ -32,7 +32,7 @@ export const CHARMS = {
   mint: { name: 'Mint Tin', icon: '🍬', pool: 'drop', desc: 'Your first miss each turn refunds its energy.' },
   strap: { name: 'Phone Strap', icon: '📱', pool: 'drop', desc: 'Clearing a board gives 6 Block.' },
   tamago: { name: 'Pocket Pet', icon: '🥚', pool: 'drop', desc: 'Every 3rd turn, +1 energy.' },
-  glowstick: { name: 'Glow Stick', icon: '✨', pool: 'drop', desc: 'Start each fight with 1 Strength.' },
+  glowstick: { name: 'Glow Stick', icon: '✨', pool: 'drop', desc: 'Start each fight with 1 Fighting Spirit.' },
   lipTint: { name: 'Lip Tint', icon: '💄', pool: 'drop', desc: 'Clearing a board heals 3.' },
   venomVial: { name: 'Glitch Vial', icon: '🧪', pool: 'drop', desc: 'Whenever you apply Glitch, apply 2 more.',
     requires: (r, h) => h.deckHas(['stinger', 'catalyst']) },

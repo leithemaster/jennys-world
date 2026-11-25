@@ -448,7 +448,7 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'status' || it.t === 'atkStatus') parts.push(`<span class="i-debuff">${icon(CARDS[it.card].icon)}+${it.count} ${esc(CARDS[it.card].name)}</span>`);
     if (it.t === 'scramble') parts.push(`<span class="i-debuff">${icon('bounce')}Scramble</span>`);
     const tipText = {
-      atk: 'Will attack.', atkBlock: 'Will attack and gain Block.', block: 'Will gain Block.', buff: 'Will gain Strength.', heal: 'Will heal.',
+      atk: 'Will attack.', atkBlock: 'Will attack and gain Block.', block: 'Will gain Block.', buff: 'Will gain Fighting Spirit.', heal: 'Will heal.',
       debuff: 'Will make you Sleepy or Exposed.', status: 'Will add junk cards to your deck.', atkStatus: 'Will attack and add junk cards to your deck.',
       scramble: 'Will shuffle every face-down card on the board!',
     }[it.t];
