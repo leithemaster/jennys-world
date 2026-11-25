@@ -94,14 +94,14 @@ export function toniChibi(opts = {}) {
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${opts.crop ? '' : shadow(80, 150, 32)}
     ${opts.crop ? '' : `<text x="118" y="34" font-size="13" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".55">z</text><text x="128" y="22" font-size="10" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".4">z</text>`}
-    <rect x="69" y="130" width="8" height="12" rx="2" ${o(p.pants)}/>
-    <rect x="83" y="130" width="8" height="12" rx="2" ${o(p.pants)}/>
-    <path d="M66 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
-    <path d="M81.5 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
-    <path d="M62 101 H98 L104 133 H56 Z" ${o(p.jacket)}/>
-    <path d="M62 101 H98 L100.2 113 H59.8 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>
-    <path d="M80 104 V132" stroke="${p.zip}" stroke-width="2.2" stroke-linecap="round"/>
-    <rect x="78.2" y="112" width="3.6" height="5" rx="1" fill="${p.zip}" stroke="${INK}" stroke-width="1.2"/>
+    <path d="M63 116 H97 L96 141 H82.5 L80 127 L77.5 141 H64 Z" ${o(p.pants)}/>
+    <path d="M61 139 h17 a3 3 0 0 1 3 3 v2 h-20 z" ${o(p.shoe)}/>
+    <path d="M82 139 h14 a3 3 0 0 1 3 3 v2 h-17 z" ${o(p.shoe)}/>
+    <path d="M61 101 H99 L100 124 H60 Z" ${o(p.jacket)}/>
+    <path d="M60.4 120.5 H99.6 L100 124 H60 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M61 101 H99 L99.4 108 H60.6 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M80 104 V123" stroke="${p.zip}" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="78.2" y="110" width="3.6" height="5" rx="1" fill="${p.zip}" stroke="${INK}" stroke-width="1.2"/>
     <path d="M67 98 L80 105 L93 98 L94 104 L80 111 L66 104 Z" ${o(p.jacketDark, 2.6)}/>
     <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(p.jacketDark)}/>
     <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(p.jacketDark)}/>
