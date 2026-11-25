@@ -50,7 +50,8 @@ const ALLOWED = {
 export function generateMap(act) {
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
-    const count = r === 0 ? 3 : 2 + Math.floor(Math.random() * 3); // 2–4 rooms
+    // 5 starting rooms (one per lane), then 3–5 rooms per column so paths keep branching
+    const count = r === 0 ? COLS : 3 + Math.floor(Math.random() * 3);
     const cols = shuffle([...Array(COLS).keys()]).slice(0, count).sort((a, b) => a - b);
     rows.push(cols.map((col) => ({ row: r, col, type: FIXED[r] || null, next: [] })));
   }

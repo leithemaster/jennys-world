@@ -271,10 +271,12 @@ function mapScreen() {
   run.path ||= [];
   saveRun(run);
   const rows = run.map.rows;
-  const W = 340, rowH = 74, padY = 60;
-  const H = padY * 2 + rowH * rows.length + 40;
-  const xOf = (col) => 40 + col * ((W - 80) / 4);
-  const yOf = (row) => (row === 'boss' ? padY - 10 : H - padY - row * rowH);
+  // Landscape map: the climb runs left → right, the 5 lanes stack top → bottom, boss on the far right.
+  const colW = 104, laneH = 84, padX = 56, padY = 52;
+  const W = padX * 2 + colW * rows.length + 40;
+  const H = padY * 2 + laneH * 4;
+  const xOf = (row) => (row === 'boss' ? W - padX : padX + row * colW);
+  const yOf = (lane) => padY + lane * laneH;
   const avail = availableRooms(run);
   const isAvail = (r, c) => avail.some((a) => a.row === r && (r === 'boss' || a.col === c));
   const visited = (r, c) => run.path.some((p) => p.row === r && p.col === c);
@@ -292,21 +294,21 @@ function mapScreen() {
 
   let lines = '';
   rows.forEach((row, r) => row.forEach((n) => {
-    const targets = r === rows.length - 1 ? [{ x: W / 2, y: yOf('boss') }] : n.next.map((c) => ({ x: xOf(c), y: yOf(r + 1), c }));
+    const targets = r === rows.length - 1 ? [{ x: xOf('boss'), y: H / 2 }] : n.next.map((c) => ({ x: xOf(r + 1), y: yOf(c), c }));
     targets.forEach((t) => {
       const on = visited(r, n.col) && (t.c === undefined ? run.pos?.row === 'boss' : visited(r + 1, t.c));
       const open = live(r, n.col) && (t.c === undefined || live(r + 1, t.c));
-      lines += `<line x1="${xOf(n.col)}" y1="${yOf(r)}" x2="${t.x}" y2="${t.y}" class="${on ? 'on' : open ? '' : 'skip'}"/>`;
+      lines += `<line x1="${xOf(r)}" y1="${yOf(n.col)}" x2="${t.x}" y2="${t.y}" class="${on ? 'on' : open ? '' : 'skip'}"/>`;
     });
   }));
   let nodes = '';
   rows.forEach((row, r) => row.forEach((n) => {
     const a = isAvail(r, n.col), v = visited(r, n.col), gone = !v && !live(r, n.col);
-    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}${gone ? ' skipped' : ''}" transform="translate(${xOf(n.col)} ${yOf(r)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
+    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}${gone ? ' skipped' : ''}" transform="translate(${xOf(r)} ${yOf(n.col)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
       <circle r="19"/><g transform="translate(-12 -12) scale(.75)">${roomIcon(n.type).replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
   }));
   const bossA = isAvail('boss');
-  nodes += `<g class="node t-boss${bossA ? ' avail' : ''}" transform="translate(${W / 2} ${yOf('boss')})" ${bossA ? 'tabindex="0" role="button" data-room="boss" aria-label="Boss room"' : ''}>
+  nodes += `<g class="node t-boss${bossA ? ' avail' : ''}" transform="translate(${xOf('boss')} ${H / 2})" ${bossA ? 'tabindex="0" role="button" data-room="boss" aria-label="Boss room"' : ''}>
     <circle r="30"/><g transform="translate(-18 -18) scale(1.125)">${roomIcon('boss').replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
 
   const boss = ENEMIES[ACTS[run.act].boss];
@@ -319,8 +321,9 @@ function mapScreen() {
   const scroller = app.querySelector('.map-scroll');
   const target = app.querySelector('.node.avail');
   if (target) {
-    const ty = Number(target.getAttribute('transform').match(/ ([\d.]+)\)/)[1]);
-    scroller.scrollTop = Math.max(0, ty - scroller.clientHeight / 2);
+    // on narrow windows the map scrolls sideways; keep the next rooms in view
+    const tx = Number(target.getAttribute('transform').match(/\(([\d.]+) /)[1]);
+    scroller.scrollLeft = Math.max(0, (tx / W) * scroller.scrollWidth - scroller.clientWidth / 2);
   }
   app.querySelectorAll('[data-room]').forEach((g) => {
     const go = () => {
