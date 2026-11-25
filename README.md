@@ -30,7 +30,7 @@ Pick who climbs at the start of each run. Every card style is open to every char
 
 ## Couple outfits
 
-Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
+Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit and fill in the whole Memory Catalog, for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
 
 ## Haru's Gift
 

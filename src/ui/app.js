@@ -7,6 +7,7 @@ import {
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
+import { EVENTS } from '../game/events.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
@@ -16,7 +17,7 @@ import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfits
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
-  getProgress, recordRunEnd, isUnlocked, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
+  getProgress, recordRunEnd, isUnlocked, isFound, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
   noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet,
 } from '../game/progress.js';
 
@@ -40,10 +41,16 @@ function startNewRun() { pickCharacter(); }
 // Characters whose unlock floor has already been passed. Also fixes up saves
 // from before unlocks existed: reaching past a floor's boss room counts.
 function syncUnlocks() {
-  // Testing switch: open the game with ?unlockall to unlock every character and outfit.
+  // Testing switch: open the game with ?unlockall to unlock every character
+  // and outfit and fill in the whole Memory Catalog.
   if (new URLSearchParams(location.search).has('unlockall')) {
     Object.keys(CHARACTERS).forEach((id) => unlock('characters', id));
     Object.keys(OUTFITS).forEach((id) => unlock('outfits', id));
+    Object.keys(CARDS).filter((id) => !isFound('cards', id)).forEach(noteCardSeen);
+    Object.keys(CHARMS).filter((id) => !isFound('charms', id)).forEach(noteCharmSeen);
+    Object.keys(ENEMIES).filter((id) => !isFound('enemies', id)).forEach(noteEnemyMet);
+    EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
+    if (!isFound('guardians', 'haru')) noteGuardianMet('haru');
     history.replaceState(null, '', location.pathname);
   }
   syncOutfitUnlocks();
