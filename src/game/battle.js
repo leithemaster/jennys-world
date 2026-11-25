@@ -12,6 +12,9 @@ import { T } from './terms.js';
 const BOARD_PAIRS = 8;
 // Tunable rules. freeReveal = cards revealed for free on every new board.
 export const RULES = { freeReveal: 2 };
+// Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
+export const PACE = { scale: 1 };
+const wait = (fn, ms) => setTimeout(fn, ms * PACE.scale);
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 let uidSeq = 1;
@@ -109,10 +112,10 @@ export class Battle {
     this.busy = true;
     this.emit('update');
     if (this.keyOf(a.card) === this.keyOf(b.card)) {
-      setTimeout(() => { this.resolveMatch(a, b); }, 340);
+      wait(() => { this.resolveMatch(a, b); }, 340);
     } else {
       this.miss();
-      setTimeout(() => {
+      wait(() => {
         a.state = a.revealed ? 'revealed' : 'down';
         b.state = b.revealed ? 'revealed' : 'down';
         this.busy = false;
@@ -157,7 +160,7 @@ export class Battle {
       this.log(`Board cleared! +1 ${T.energy}.`);
       this.emit('sfx', 'clear');
       this.emit('cleared');
-      setTimeout(() => { this.dealBoard(); this.emit('update'); this.checkAutoEnd(); }, 450);
+      wait(() => { this.dealBoard(); this.emit('update'); this.checkAutoEnd(); }, 450);
       this.emit('update');
       return;
     }
@@ -174,7 +177,7 @@ export class Battle {
       return;
     }
     if (!this.over && !this.busy && !this.first && this.energy <= 0) {
-      setTimeout(() => { if (!this.over && !this.busy && !this.first && this.energy <= 0) this.endTurn(); }, 500);
+      wait(() => { if (!this.over && !this.busy && !this.first && this.energy <= 0) this.endTurn(); }, 500);
     }
   }
 
@@ -269,7 +272,7 @@ export class Battle {
     if (this.player.vuln > 0) this.player.vuln -= 1;
     this.busy = true;
     this.emit('update');
-    setTimeout(() => this.enemyTurn(), 450);
+    wait(() => this.enemyTurn(), 450);
   }
 
   enemyTurn() {

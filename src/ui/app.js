@@ -1,7 +1,7 @@
 import { CARDS, ARCHES, cardName, cardText, canUpgrade } from '../game/cards.js';
 import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
-import { Battle, STATUS_NAMES, STATUS_HELP } from '../game/battle.js';
+import { Battle, STATUS_NAMES, STATUS_HELP, PACE } from '../game/battle.js';
 import {
   newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS, removeCost,
@@ -59,6 +59,13 @@ function bindHeader(root) {
   root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
 }
 
+// Fast mode: shortens battle timers (via PACE) and CSS animations (via html.fast).
+function applyPace() {
+  PACE.scale = settings.fast ? 0.45 : 1;
+  document.documentElement.classList.toggle('fast', !!settings.fast);
+}
+applyPace();
+
 function soundSettings() {
   const pct = (v) => Math.round(v * 100);
   const m = modal(`<h2>Settings</h2>
@@ -71,6 +78,7 @@ function soundSettings() {
       <button class="btn ghost" data-mute-music>${settings.musicOn ? 'Mute music' : 'Unmute music'}</button>
       <button class="btn ghost" data-mute-sfx>${settings.sfxOn ? 'Mute effects' : 'Unmute effects'}</button>
     </div>
+    <label class="toggle"><input type="checkbox" data-fast ${settings.fast ? 'checked' : ''}><span><b>Fast mode</b><small>Quicker card flips, enemy turns and animations.</small></span></label>
     <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
     <button class="btn" data-close>Done</button>`);
   const el = m.el;
@@ -82,6 +90,7 @@ function soundSettings() {
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
+  el.querySelector('[data-fast]').addEventListener('change', (e) => { settings.fast = e.target.checked; saveSettings(); applyPace(); });
   el.querySelector('[data-mute-music]').addEventListener('click', (e) => { settings.musicOn = !settings.musicOn; e.target.textContent = settings.musicOn ? 'Mute music' : 'Unmute music'; saveSettings(); });
   el.querySelector('[data-mute-sfx]').addEventListener('click', (e) => { settings.sfxOn = !settings.sfxOn; e.target.textContent = settings.sfxOn ? 'Mute effects' : 'Unmute effects'; saveSettings(); sfx('click'); });
 }
@@ -206,6 +215,7 @@ function help() {
     <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
+    <p><b>Keyboard:</b> in a fight, arrow keys move between cards, Enter flips, E ends your turn. On the map, arrow keys pick a room and Enter goes in. D shows your deck and Esc opens the menu anywhere. Fast mode in Settings speeds up the animations.</p>
     <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo or Memory build a style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
     <p><b>Between fights:</b> add new cards, collect charms, shop, rest or try your luck at "?" rooms. A smaller, sharper deck is often stronger.</p>
     <p class="muted">Keys: Space ends your turn · Esc closes windows</p>
@@ -317,7 +327,8 @@ function mapScreen() {
   app.innerHTML = `${header()}<main class="map-screen">
     <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
     <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
-    <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${{ fight: 'Fight', elite: 'Elite', event: 'Unknown', shop: 'Shop', rest: 'Rest', treasure: 'Treasure' }[t]}</span></li>`).join('')}</ul>
+    <div class="map-pick" data-pick aria-live="polite"></div>
+    <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${T.rooms[t][0]}</span></li>`).join('')}</ul>
   </main>`;
   bindHeader(app);
   const scroller = app.querySelector('.map-scroll');
@@ -327,15 +338,35 @@ function mapScreen() {
     const tx = Number(target.getAttribute('transform').match(/\(([\d.]+) /)[1]);
     scroller.scrollLeft = Math.max(0, (tx / W) * scroller.scrollWidth - scroller.clientWidth / 2);
   }
-  app.querySelectorAll('[data-room]').forEach((g) => {
-    const go = () => {
-      const v = g.dataset.room;
-      if (v === 'boss') enterRoom({ row: 'boss' });
-      else { const [r, c] = v.split(',').map(Number); enterRoom({ row: r, col: c }); }
-    };
-    g.addEventListener('click', go);
-    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  // Two-step pick: the first click selects a room and says what it is,
+  // a second click (or the Enter button / Enter key) goes in.
+  const rooms = [...app.querySelectorAll('[data-room]')].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const pickEl = app.querySelector('[data-pick]');
+  let sel = null;
+  const typeOf = (g) => [...g.classList].find((c) => c.startsWith('t-')).slice(2);
+  const enter = () => {
+    if (!sel) return;
+    const v = sel.dataset.room;
+    if (v === 'boss') enterRoom({ row: 'boss' });
+    else { const [r, c] = v.split(',').map(Number); enterRoom({ row: r, col: c }); }
+  };
+  const select = (g) => {
+    sel = g;
+    rooms.forEach((x) => x.classList.toggle('sel', x === g));
+    const [name, what] = T.rooms[typeOf(g)];
+    pickEl.innerHTML = `<div class="pick-room t-${typeOf(g)}">${roomIcon(typeOf(g))}<div><b>${esc(name)}</b><span>${esc(what)}</span></div></div><button class="btn yellow" data-go>Go <kbd>Enter</kbd></button>`;
+    pickEl.querySelector('[data-go]').addEventListener('click', enter);
+    g.focus({ preventScroll: true });
+  };
+  pickEl.innerHTML = `<p class="pick-hint">${rooms.length > 1 ? 'Click a glowing room to see what it is.' : 'Click the glowing room to see what it is.'} <span class="keys">Or use <kbd>←</kbd><kbd>→</kbd> and <kbd>Enter</kbd>.</span></p>`;
+  rooms.forEach((g) => {
+    g.addEventListener('click', () => (sel === g ? enter() : select(g)));
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); sel === g ? enter() : select(g); } });
   });
+  app.querySelector('.map-screen').pick = {
+    step: (d) => { if (!rooms.length) return; const i = rooms.indexOf(sel); select(rooms[i < 0 ? 0 : (i + d + rooms.length) % rooms.length]); },
+    enter: () => (sel ? enter() : rooms[0] && select(rooms[0])),
+  };
 }
 
 function enterRoom(pos) {
@@ -358,6 +389,27 @@ function completeRoom() {
 }
 
 // ---------- battle ----------
+// Plain-words description of an enemy move. `dmg` is the real damage after
+// statuses; without it the base number is used (for "next turn" previews).
+function describeMove(it, dmg = null) {
+  const hit = dmg ?? it.n;
+  const base = dmg !== null && dmg !== it.n ? ` (${it.n} before statuses)` : '';
+  const atk = it.times ? `attack ${it.times} times for ${hit} each (${hit * it.times} total)${base}` : `attack for ${hit}${base}`;
+  const junk = (c) => `shuffle ${c.count} ${CARDS[c.card].name} into your draw pile (${CARDS[c.card].name}: ${cardText({ id: c.card })})`;
+  switch (it.t) {
+    case 'atk': return `Will ${atk}.`;
+    case 'atkBlock': return `Will ${atk} and gain ${it.b} ${T.block}.`;
+    case 'block': return `Will gain ${it.n} ${T.block}.`;
+    case 'buff': return `Will gain ${it.n} ${T.spirit}: +${it.n} damage on every hit.`;
+    case 'heal': return `Will heal ${it.n} ${T.hp}.`;
+    case 'debuff': return `Will give you ${[it.weak && `${it.weak} ${T.sleepy} (you deal 25% less damage)`, it.vuln && `${it.vuln} ${T.exposed} (you take 50% more damage)`].filter(Boolean).join(' and ')}.`;
+    case 'status': return `Will ${junk(it)}.`;
+    case 'atkStatus': return `Will ${atk}, then ${junk(it)}.`;
+    case 'scramble': return 'Will shuffle every card left on the board and turn them face down.';
+    default: return '';
+  }
+}
+
 function battleScreen(enemyId, kind) {
   const def = ENEMIES[enemyId];
   app.innerHTML = `${header()}<main class="battle">
@@ -383,12 +435,13 @@ function battleScreen(enemyId, kind) {
       <div class="mid">
         <div class="combo" data-combo></div>
         <div class="log" data-log aria-live="polite"></div>
+        <div class="keys-hint" aria-hidden="true"><kbd>←↑→↓</kbd> move · <kbd>Enter</kbd> flip · <kbd>E</kbd> end turn · <kbd>D</kbd> deck · <kbd>Esc</kbd> menu</div>
       </div>
       <div class="piles">
-        <button class="pile" data-pile="draw" aria-label="Draw pile">${icon('film')}<b data-draw></b></button>
-        <button class="pile" data-pile="discard" aria-label="Discard pile">${icon('swirl')}<b data-discard></b></button>
+        <button class="pile" data-pile="draw" aria-label="Draw pile" data-tip="Draw pile: cards that will come up on the next boards.">${icon('pileDraw')}<b data-draw></b><small>Draw</small></button>
+        <button class="pile" data-pile="discard" aria-label="Discard pile" data-tip="Discard pile: cards you have played. They shuffle back into the draw pile when it runs out.">${icon('pileDiscard')}<b data-discard></b><small>Discard</small></button>
       </div>
-      <button class="btn yellow end" data-end>End turn</button>
+      <button class="btn yellow end" data-end title="End turn (E)">End turn <kbd>E</kbd></button>
     </footer>
   </main>`;
   bindHeader(app);
@@ -412,6 +465,7 @@ function battleScreen(enemyId, kind) {
 
   const renderBoard = () => {
     const b = battle;
+    const hadFocus = boardEl.contains(document.activeElement);
     boardEl.style.setProperty('--cols', b.board.length > 16 ? 5 : 4);
     boardEl.innerHTML = b.board.map((s, i) => `<button class="slot" data-i="${i}">
         <span class="face back">${icon('star')}</span>
@@ -420,6 +474,7 @@ function battleScreen(enemyId, kind) {
     boardEl.querySelectorAll('.slot').forEach((el) => el.addEventListener('click', () => battle.flip(Number(el.dataset.i))));
     boardEl.classList.remove('deal'); void boardEl.offsetWidth; boardEl.classList.add('deal');
     updateSlots();
+    if (hadFocus) boardEl.querySelector('.slot')?.focus();
   };
   const updateSlots = () => {
     battle.board.forEach((s, i) => {
@@ -449,12 +504,8 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'debuff') parts.push(`<span class="i-debuff">${icon('swirl')}Hex</span>`);
     if (it.t === 'status' || it.t === 'atkStatus') parts.push(`<span class="i-debuff">${icon(CARDS[it.card].icon)}+${it.count} ${esc(CARDS[it.card].name)}</span>`);
     if (it.t === 'scramble') parts.push(`<span class="i-debuff">${icon('bounce')}Scramble</span>`);
-    const tipText = {
-      atk: 'Will attack.', atkBlock: `Will attack and gain ${T.block}.`, block: `Will gain ${T.block}.`, buff: `Will gain ${T.spirit}.`, heal: 'Will heal.',
-      debuff: `Will make you ${T.sleepy} or ${T.exposed}.`, status: 'Will add junk cards to your deck.', atkStatus: 'Will attack and add junk cards to your deck.',
-      scramble: 'Will shuffle every face-down card on the board!',
-    }[it.t];
-    return `<div class="bubble" data-tip="${esc(tipText)}">${parts.join('')}</div>`;
+    const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : 'Picks its moves at random.';
+    return `<div class="bubble" data-tip="${esc(`${describeMove(it, dmg)} ${next}`)}">${parts.join('')}</div>`;
   };
 
   const update = () => {
@@ -513,7 +564,7 @@ function battleScreen(enemyId, kind) {
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
     scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
     turn: () => { if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
-    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false)), 900); },
+    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false)), 900 * PACE.scale); },
   });
   $('[data-end]').addEventListener('click', () => battle.endTurn());
   app.querySelectorAll('[data-pile]').forEach((p) => p.addEventListener('click', () => {
@@ -524,12 +575,38 @@ function battleScreen(enemyId, kind) {
   update();
 }
 
+// ---------- keyboard ----------
+// Battle: arrows move between cards, Enter/Space flips, E ends the turn,
+// D opens your deck. Map: arrows pick a room, Enter goes in. Esc opens the menu.
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && battle && !battle.over && !document.querySelector('.modal-wrap') && !e.target.closest('button')) {
-    e.preventDefault();
-    battle.endTurn();
+  if (e.ctrlKey || e.metaKey || e.altKey || e.target.matches?.('input, textarea, select')) return;
+  if (document.querySelector('.modal-wrap')) return; // modals handle their own keys
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (key === 'Escape' && app.querySelector('[data-menu]')) { e.preventDefault(); menu(); return; }
+  if (key === 'd' && app.querySelector('[data-deck]')) { e.preventDefault(); app.querySelector('[data-deck]').click(); return; }
+  if (battle && app.querySelector('.battle')) {
+    if (key === 'e' || (key === ' ' && !e.target.closest?.('button'))) { e.preventDefault(); if (!battle.over) battle.endTurn(); return; }
+    if (key.startsWith('Arrow')) { e.preventDefault(); moveBoardFocus(key); }
+    return;
+  }
+  const map = app.querySelector('.map-screen');
+  if (map && map.pick) {
+    if (key.startsWith('Arrow')) { e.preventDefault(); map.pick.step(key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 1); }
+    else if (key === 'Enter' || key === ' ') { e.preventDefault(); map.pick.enter(); }
   }
 });
+
+function moveBoardFocus(key) {
+  const board = app.querySelector('[data-board]');
+  const slots = [...board.querySelectorAll('.slot')];
+  const cols = Number(getComputedStyle(board).getPropertyValue('--cols')) || 4;
+  let i = slots.indexOf(document.activeElement);
+  if (i < 0) { slots.find((s) => !s.disabled)?.focus(); return; }
+  const d = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols }[key];
+  for (let j = i + d; j >= 0 && j < slots.length; j += d) {
+    if (!slots[j].disabled) { slots[j].focus(); return; }
+  }
+}
 
 function battleWon(kind, enemyId) {
   battle = null;

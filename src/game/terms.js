@@ -32,6 +32,16 @@ export const T = {
   spikes: 'Spikes',
   // rooms
   rest: 'rest booth',
+  // map rooms: [name, what happens there]
+  rooms: {
+    fight: ['Fight', 'A normal enemy. Win coins and a card.'],
+    elite: ['Elite', 'A tough enemy. Win coins, a card and a charm.'],
+    event: ['Unknown', 'Something happens. Could be good, could be risky.'],
+    shop: ['Shop', 'Buy cards and charms, or remove a card.'],
+    rest: ['Rest', 'Nap to heal, or practice to upgrade a card.'],
+    treasure: ['Treasure', 'A prize locker with a charm inside.'],
+    boss: ['Boss', 'The boss of this floor.'],
+  },
   // card types (internal ids: attack, skill, power, status)
   types: { attack: 'Attack', skill: 'Skill', power: 'Power', status: 'Status' },
 };

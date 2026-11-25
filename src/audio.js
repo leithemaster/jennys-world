@@ -3,7 +3,7 @@
 // Defaults: music 25%, effects 40%. Settings persist in localStorage.
 
 const KEY = 'sm.audio';
-const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true };
+const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false };
 export const settings = { ...DEFAULTS, ...safeLoad() };
 
 function safeLoad() {
