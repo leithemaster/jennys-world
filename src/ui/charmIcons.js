@@ -19,6 +19,10 @@ const I = {
   shibaCharm: `<path d="M7 12 L9 4 L14 9 M25 12 L23 4 L18 9" ${s('#f0a04b')}/><circle cx="16" cy="17" r="10" ${s('#f0a04b')}/><ellipse cx="16" cy="21" rx="6" ry="4.5" fill="#fff4e6"/><circle cx="12" cy="15" r="1.3" fill="${K}"/><circle cx="20" cy="15" r="1.3" fill="${K}"/><circle cx="16" cy="19" r="1.4" fill="${K}"/>`,
   giftCard: `<rect x="5" y="12" width="22" height="15" rx="2" ${s('#ff5d8f')}/><rect x="4" y="9" width="24" height="5" rx="1.5" ${s('#ff5d8f')}/>${line('M16 9 V27')}<path d="M16 9 C12 3 8 6 11 9 M16 9 C20 3 24 6 21 9" fill="none" stroke="${K}" stroke-width="1.8" stroke-linecap="round"/>`,
 
+  sleepMask: `<path d="M4 13 C4 9 10 8 16 10 C22 8 28 9 28 13 C28 19 22 21 16 18 C10 21 4 19 4 13 Z" ${s('#a98bf0')}/>${line('M8 14 q3 2 6 0 M18 14 q3 2 6 0', 1.5)}${line('M4 13 L1 11 M28 13 L31 11')}<text x="24" y="8" font-size="7" font-weight="900" fill="${K}" font-family="sans-serif">z</text>`,
+  hotWaterBottle: `<path d="M9 10 H23 C26 10 27 13 27 16 V24 C27 27 25 28 22 28 H10 C7 28 5 27 5 24 V16 C5 13 6 10 9 10 Z" ${s('#ff8f6b')}/><rect x="13" y="5" width="6" height="5" rx="1" ${s('#fff4e6', 1.6)}/>${line('M10 17 q2 -2 4 0 t4 0 t4 0 M10 22 q2 -2 4 0 t4 0 t4 0', 1.4)}`,
+  gossipPhone: `<rect x="9" y="3" width="14" height="26" rx="3" ${s('#ff5d8f')}/><rect x="11.5" y="6.5" width="9" height="15" rx="1" fill="#fff4e6"/>${line('M13 11 h6 M13 14 h4', 1.4)}<circle cx="16" cy="25" r="1.4" fill="${K}"/>`,
+
   // drops
   luckyCat: `<path d="M8 12 L9 4 L14 9 M24 12 L23 4 L18 9" ${s('#fff4e6')}/><circle cx="16" cy="17" r="10" ${s('#fff4e6')}/>${line('M11 15 q1.5 -1.5 3 0 M18 15 q1.5 -1.5 3 0', 1.5)}<circle cx="16" cy="19" r="1.2" fill="#ff5d8f"/><path d="M24 20 L29 15" stroke="${K}" stroke-width="3" stroke-linecap="round"/>`,
   americano: `<path d="M9 9 H23 L21 28 H11 Z" ${s('#8a5a3c')}/><rect x="8" y="6" width="16" height="4" rx="1.5" ${s('#fff4e6', 1.6)}/>${line('M18 6 L21 1')}${[[13, 16], [18, 19], [14, 23]].map(([x, y]) => `<rect x="${x}" y="${y}" width="3.4" height="3.4" fill="#cfefff" stroke="${K}" stroke-width="1"/>`).join('')}`,

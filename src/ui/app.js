@@ -8,7 +8,8 @@ import {
 } from '../game/run.js';
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
-import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
+import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
+import { CHARACTERS, passiveText } from '../game/characters.js';
 import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
@@ -33,12 +34,14 @@ function takeCharm(id) {
   gainCharm(run, id);
   noteCharmTaken(id);
 }
-function startNewRun() {
-  run = newRun();
+function startNewRun() { pickCharacter(); }
+function beginRun(character) {
+  run = newRun(character);
   run.deck.forEach((c) => noteCardTaken(c.id));
   saveRun(run);
   harusGift();
 }
+const hero = () => CHARACTERS[run?.character] || CHARACTERS.jenny;
 
 export function cardHTML(c, extra = '') {
   const def = CARDS[c.id];
@@ -49,7 +52,7 @@ export function cardHTML(c, extra = '') {
     <div class="card-art">${icon(def.icon)}</div>
     <div class="card-name">${esc(cardName(c))}</div>
     <div class="card-text${len ? ` ${len}` : ''}">${esc(text)}</div>
-    <div class="card-type">${TYPE_LABEL[def.type]}${def.arch ? ` · <span class="arch a-${def.arch}">${ARCHES[def.arch].name}</span>` : ''}${def.rarity === 'curse' ? ' · Curse' : ''}</div>
+    <div class="card-type">${TYPE_LABEL[def.type]}${def.arch ? ` · <span class="arch a-${def.arch}">${ARCHES[def.arch].name}</span>` : ''}${def.arch2 ? `/<span class="arch a-${def.arch2}">${ARCHES[def.arch2].name}</span>` : ''}${def.rarity === 'curse' ? ' · Curse' : ''}</div>
   </div>`;
 }
 
@@ -76,7 +79,7 @@ function header() {
 }
 
 function bindHeader(root) {
-  root.querySelector('[data-deck]')?.addEventListener('click', () => { const s = deckStyle(run); showDeck(run.deck, 'Your deck', s ? `Play style: <b class="arch a-${s.arch}">${ARCHES[s.arch].name}</b> · ${esc(ARCHES[s.arch].desc)} Rewards will offer more ${ARCHES[s.arch].name} cards.` : 'No play style yet. Pick up Glitch, Guard, Combo or Memory cards and rewards will start offering more of that style.'); });
+  root.querySelector('[data-deck]')?.addEventListener('click', () => { const s = deckStyle(run); showDeck(run.deck, 'Your deck', s ? `Play style: <b class="arch a-${s.arch}">${ARCHES[s.arch].name}</b> · ${esc(ARCHES[s.arch].desc)} Rewards will offer more ${ARCHES[s.arch].name} cards.` : 'No play style yet. Pick up cards from any style (Glitch, Guard, Combo, Memory, Dreamy, Cozy, Exposed) and rewards will start offering more of it.'); });
   root.querySelector('[data-menu]')?.addEventListener('click', menu);
   root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
 }
@@ -107,7 +110,7 @@ function soundSettings() {
   el.querySelectorAll('[data-look]').forEach((btn) => btn.addEventListener('click', () => {
     setLook(btn.dataset.look);
     el.querySelectorAll('[data-look]').forEach((x) => { x.classList.toggle('on', x === btn); x.setAttribute('aria-pressed', x === btn); });
-    document.querySelectorAll('.title-art, .portrait-jenny').forEach((n) => { n.innerHTML = jennySVG(n.classList.contains('portrait-jenny') ? { crop: true } : {}); });
+    document.querySelectorAll('.title-art.is-jenny, .portrait-jenny').forEach((n) => { n.innerHTML = jennySVG(n.classList.contains('portrait-jenny') ? { crop: true } : {}); });
   }));
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
@@ -238,7 +241,9 @@ function help() {
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
     <p><b>Keyboard:</b> in a fight, arrow keys move between cards, Enter flips, E ends your turn. On the map, arrow keys pick a room and Enter goes in. D shows your deck and Esc opens the menu anywhere. Fast mode in Settings speeds up the animations.</p>
-    <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo or Memory build a style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
+    <p><b>${T.sleepy} and ${T.asleep}:</b> an enemy with ${RULES.sleepAt} ${T.sleepy} falls ${T.asleep} and skips its next ${RULES.sleepTurns} turns (bosses ${RULES.bossSleepTurns}). Each time it wakes up, it takes ${RULES.sleepGrow} more ${T.sleepy}.</p>
+    <p><b>${T.cozy}:</b> on a ${T.cozy} card, healing past your max ${T.hp} hits the enemy instead.</p>
+    <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo, Memory, Dreamy, Cozy or Exposed build a style. Every character can play every style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
     <p><b>Between fights:</b> add new cards, collect charms, shop, rest or try your luck at "?" rooms. A smaller, sharper deck is often stronger.</p>
     <p class="muted">Keys: Space ends your turn · Esc closes windows</p>
   </div><button class="btn" data-close>Got it</button>`);
@@ -251,7 +256,7 @@ export function title() {
   const saved = loadRun();
   const stats = getProgress().totals;
   app.innerHTML = `<main class="title">
-    <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
+    <div class="title-art is-jenny">${blobBackdrop()}${jennySVG()}</div>
     <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
     <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
     <div class="stack narrow">
@@ -276,6 +281,27 @@ export function title() {
   });
 }
 
+// ---------- character pick ----------
+function pickCharacter() {
+  battle = null;
+  app.innerHTML = `<main class="room pick-hero">
+    <h1>Who's climbing?</h1>
+    <p class="room-text">Every card style is open to everyone. Each climber starts a little differently.</p>
+    <div class="hero-choices">${Object.entries(CHARACTERS).map(([id, ch]) => `<button class="hero-card" data-hero="${id}">
+      <span class="hero-art">${heroSVG(id, { crop: true })}</span>
+      <b>${esc(ch.name)}</b>
+      <small>${esc(ch.blurb)}</small>
+      <span class="hero-stats">${uiIcon('heart')} ${ch.maxHp} max ${T.hp}</span>
+      <em class="hero-passive">${esc(passiveText(ch))}</em>
+      <span class="hero-deck">Starts with ${esc([...new Set(ch.deck)].map((c) => { const n = ch.deck.filter((x) => x === c).length; return `${n > 1 ? `${n} ` : ''}${CARDS[c].name}`; }).join(', '))}</span>
+    </button>`).join('')}</div>
+    <button class="btn ghost" data-back>Back</button>
+  </main>`;
+  app.querySelectorAll('[data-hero]').forEach((b) => b.addEventListener('click', () => beginRun(b.dataset.hero)));
+  app.querySelector('[data-back]').addEventListener('click', title);
+  app.querySelector('[data-hero]').focus();
+}
+
 // ---------- Haru's Gift ----------
 function harusGift() {
   battle = null;
@@ -283,7 +309,7 @@ function harusGift() {
   noteGuardianMet('haru');
   ids.forEach(noteCharmSeen);
   app.innerHTML = `<main class="room gift">
-    <div class="gift-art">${blobBackdrop()}${jennySVG()}</div>
+    <div class="gift-art">${blobBackdrop()}${heroSVG(run.character)}</div>
     <h1>${GAME.gift}</h1>
     <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
     <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
@@ -438,8 +464,8 @@ function battleScreen(enemyId, kind) {
   app.innerHTML = `${header()}<main class="battle">
     <section class="arena">
       <div class="fighter you" data-who="player">
-        <div class="portrait portrait-jenny">${jennySVG({ crop: true })}</div>
-        <div class="f-name">Jenny</div>
+        <div class="portrait${run.character === 'toni' ? '' : ' portrait-jenny'}">${heroSVG(run.character, { crop: true })}</div>
+        <div class="f-name">${esc(hero().name)}</div>
         <div class="hpbar"><i data-hpbar></i><span data-hptext></span><em class="blk" data-blk hidden></em></div>
         <div class="statuses" data-pstat></div>
       </div>
@@ -513,12 +539,21 @@ function battleScreen(enemyId, kind) {
     });
   };
 
-  const statusHTML = (o) => ['strength', 'weak', 'vuln', 'poison', 'thorns']
+  const statusHTML = (o) => ['asleep', 'strength', 'weak', 'vuln', 'poison', 'thorns']
     .filter((k) => o[k] > 0)
-    .map((k) => `<button class="status s-${k}" data-tip="${esc(STATUS_HELP[k])}">${esc(STATUS_NAMES[k])} <b>${o[k]}</b></button>`).join('');
+    .map((k) => {
+      const sleepy = k === 'weak' && o.sleepAt;
+      const val = sleepy ? `${o[k]}/${o.sleepAt}` : o[k];
+      const tip = sleepy ? `${STATUS_HELP[k]} This one falls ${T.asleep} at ${o.sleepAt}.` : STATUS_HELP[k];
+      return `<button class="status s-${k}" data-tip="${esc(tip)}">${esc(STATUS_NAMES[k])} <b>${val}</b></button>`;
+    }).join('');
 
   const intentHTML = () => {
     const it = battle.intent; if (!it || battle.enemy.hp <= 0) return '';
+    if (battle.enemy.asleep) {
+      const n = battle.enemy.asleep;
+      return `<div class="bubble" data-tip="${esc(`${T.asleep}: skips its next ${n} turn${n > 1 ? 's' : ''}. When it wakes up it will ${describeMove(it)}.`)}"><span class="i-debuff">${icon('zzz')}${T.asleep} ×${n}</span></div>`;
+    }
     const dmg = battle.intentDamage();
     const parts = [];
     if (it.t === 'atk' || it.t === 'atkBlock' || it.t === 'atkStatus') parts.push(`<span class="i-atk">${icon('blade')}${dmg}${it.times ? `×${it.times}` : ''}</span>`);
@@ -540,7 +575,8 @@ function battleScreen(enemyId, kind) {
     $('[data-ehptext]').textContent = `${e.hp}/${e.maxHp}`;
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
-    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
+    const pas = b.character.passive;
+    $('[data-pstat]').innerHTML = `<span class="status s-power" data-tip="${esc(passiveText(b.character))}">${esc(pas.name)}</span>` + statusHTML(b.player) + (b.powers.bedtime ? `<span class="status s-power" data-tip="Bedtime Story: apply ${b.powers.bedtime} ${T.sleepy} each turn.">Story ${b.powers.bedtime}</span>` : '') + (b.powers.deepSleep ? `<span class="status s-power" data-tip="Deep Sleep: enemies stay ${T.asleep} ${b.powers.deepSleep} turn longer.">Deep Sleep</span>` : '') + (b.powers.sweetDreams ? '<span class="status s-power" data-tip="Sweet Dreams: whenever you heal, deal that much damage.">Sweet Dreams</span>' : '') + (b.powers.roast ? `<span class="status s-power" data-tip="Roast Battle: ${T.exposed} on enemies no longer wears off.">Roast</span>` : '') + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
@@ -713,7 +749,7 @@ function actCleared() {
   saveRun(run);
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
-    <p>Jenny takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
+    <p>${esc(hero().name)} takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
   bindHeader(app);
   app.querySelector('[data-go]').addEventListener('click', mapScreen);
@@ -724,9 +760,9 @@ function gameOver(won, abandoned) {
   clearRun();
   const stats = recordRunEnd(runSummary(run, won)).totals;
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
-    <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
+    <div class="title-art">${blobBackdrop()}${heroSVG(run.character)}</div>
     <h1>${won ? 'The Tower is cleared!' : abandoned ? 'Run abandoned' : 'Knocked out!'}</h1>
-    <p>${won ? 'Jenny beat The Blue Screen. Legendary.' : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
+    <p>${won ? `${esc(hero().name)} beat The Blue Screen. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
       <div><dt>Rooms</dt><dd>${run.floorsCleared}</dd></div>
       <div><dt>Defeated</dt><dd>${run.kills}</dd></div>

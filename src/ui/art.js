@@ -1,4 +1,4 @@
-import { jennyChibi, enemyChibi, getLook } from './chibi.js';
+import { jennyChibi, enemyChibi, getLook, TONI_PALETTE } from './chibi.js';
 // Hand-drawn-ish SVG art: card icons, Jenny's portrait, enemies, map icons.
 const INK = '#1f2126';
 
@@ -44,6 +44,26 @@ export const ICONS = {
   snail: '<rect x="3" y="23" width="25" height="5" rx="2.5" fill="currentColor"/><circle cx="14" cy="15" r="9" fill="currentColor"/><path d="M14 15 m0 -1.6 a1.6 1.6 0 1 1 -1.6 1.6 a3.6 3.6 0 0 1 3.6 -3.6 a5.6 5.6 0 0 1 5.6 5.6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M25 23 L24 15 M27 23 L29 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="14.5" r="1.7" fill="currentColor"/><circle cx="29" cy="14.5" r="1.7" fill="currentColor"/>',
   skull: '<path d="M16 3 C8 3 4 9 4 15 C4 19 7 21 9 22 V28 H23 V22 C25 21 28 19 28 15 C28 9 24 3 16 3 Z" fill="currentColor"/><circle cx="11" cy="15" r="3.6" fill="#fff"/><circle cx="21" cy="15" r="3.6" fill="#fff"/><path d="M14 28 V24 M18 28 V24" stroke="#fff" stroke-width="2"/>',
   worm: '<g fill="currentColor"><circle cx="6" cy="24" r="3.4"/><circle cx="11" cy="20.5" r="3.8"/><circle cx="16.5" cy="18.5" r="4.1"/><circle cx="22" cy="15" r="4.4"/></g><circle cx="25" cy="9" r="5.5" fill="currentColor"/><circle cx="23.3" cy="8.4" r="1.4" fill="#fff"/><circle cx="27.2" cy="8.4" r="1.4" fill="#fff"/><path d="M25 3.5 L23 0.5 M26.5 3.6 L29 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  // Dreamy
+  zzz: '<path d="M4 8 H13 L4 19 H13 M16 4 H23 L16 13 H23 M19 18 H29 L19 29 H29" stroke="currentColor" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>',
+  moon: '<path d="M20 3 A13 13 0 1 0 29 22 A10 10 0 1 1 20 3 Z" fill="currentColor"/><circle cx="25" cy="7" r="1.6" fill="currentColor"/><circle cx="28" cy="13" r="1.1" fill="currentColor"/>',
+  sheep: '<g fill="currentColor"><circle cx="10" cy="14" r="5"/><circle cx="16" cy="11" r="5.5"/><circle cx="22" cy="14" r="5"/><circle cx="13" cy="19" r="5"/><circle cx="20" cy="19" r="5"/><rect x="10" y="22" width="3" height="7" rx="1.5"/><rect x="19" y="22" width="3" height="7" rx="1.5"/></g><ellipse cx="27" cy="13" rx="4" ry="3.4" fill="currentColor"/><circle cx="28" cy="12.4" r="1" fill="#fff"/>',
+  pillow: '<path d="M4 9 C10 6 22 6 28 9 C30 14 30 18 28 23 C22 26 10 26 4 23 C2 18 2 14 4 9 Z" fill="currentColor"/><path d="M9 12 C14 10 18 10 23 12" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>',
+  book: '<path d="M3 7 C8 5 12 5 16 8 C20 5 24 5 29 7 V26 C24 24 20 24 16 27 C12 24 8 24 3 26 Z" fill="currentColor"/><path d="M16 8 V27" stroke="#fff" stroke-width="2"/><circle cx="23" cy="13" r="2.4" fill="#fff"/>',
+  bed: '<rect x="3" y="16" width="26" height="7" rx="2" fill="currentColor"/><rect x="3" y="9" width="4" height="19" rx="1.5" fill="currentColor"/><rect x="25" y="13" width="4" height="15" rx="1.5" fill="currentColor"/><ellipse cx="12" cy="14" rx="4" ry="2.6" fill="currentColor"/><text x="20" y="11" font-size="9" font-weight="900" fill="currentColor" font-family="sans-serif">z</text>',
+  // Cozy
+  milk: '<path d="M10 9 L13 3 H19 L22 9 V28 H10 Z" fill="currentColor"/><rect x="12" y="15" width="8" height="8" rx="1" fill="#fff"/><path d="M14 19 C14 17 18 17 18 19 C18 21 16 22 16 22 C16 22 14 21 14 19 Z" fill="currentColor"/>',
+  mug: '<path d="M5 11 H22 V24 C22 27 20 28 17 28 H10 C7 28 5 27 5 24 Z" fill="currentColor"/><path d="M22 14 H25 C28 14 28 22 25 22 H22" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M10 8 C9 6 11 5 10 3 M15 8 C14 6 16 5 15 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  hug: '<path d="M16 28 C6 21 3 16 3 11 C3 7 6 4 9.5 4 C12.5 4 14.5 6 16 8.5 C17.5 6 19.5 4 22.5 4 C26 4 29 7 29 11 C29 16 26 21 16 28 Z" fill="currentColor"/><path d="M8 14 C11 19 21 19 24 14" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  bandaid: '<rect x="2" y="11" width="28" height="10" rx="5" transform="rotate(-35 16 16)" fill="currentColor"/><rect x="11" y="12" width="10" height="8" transform="rotate(-35 16 16)" fill="#fff" opacity=".8"/>',
+  bowl: '<path d="M3 14 H29 C29 22 23 27 16 27 C9 27 3 22 3 14 Z" fill="currentColor"/><path d="M8 13 C8 9 12 8 13 11 C14 7 19 7 19 11 C21 8 25 9 24 13" fill="currentColor"/><path d="M22 3 L18 12 M26 4 L20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  moonStar: '<path d="M15 4 A12 12 0 1 0 27 20 A9 9 0 1 1 15 4 Z" fill="currentColor"/><path d="M24 3 L25.3 6.7 L29 8 L25.3 9.3 L24 13 L22.7 9.3 L19 8 L22.7 6.7 Z" fill="currentColor"/>',
+  // Exposed
+  megaphone: '<path d="M4 13 H9 L23 5 V27 L9 19 H4 Z" fill="currentColor"/><path d="M8 19 L10 27 H14 L12 19" fill="currentColor"/><path d="M26 11 C28 13 28 19 26 21" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  stack: '<rect x="4" y="21" width="24" height="7" rx="2" fill="currentColor"/><rect x="7" y="13" width="18" height="7" rx="2" fill="currentColor" opacity=".8"/><rect x="10" y="5" width="12" height="7" rx="2" fill="currentColor" opacity=".6"/>',
+  whisper: '<path d="M4 6 H28 V21 H14 L7 27 V21 H4 Z" fill="currentColor"/><circle cx="11" cy="13.5" r="2" fill="#fff"/><circle cx="16" cy="13.5" r="2" fill="#fff"/><circle cx="21" cy="13.5" r="2" fill="#fff"/>',
+  chili: '<path d="M22 8 C28 12 26 22 16 27 C10 30 4 28 5 26 C12 25 17 18 18 10 Z" fill="currentColor"/><path d="M19 9 C19 5 22 3 25 4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  crown: '<path d="M3 24 L5 8 L11 15 L16 5 L21 15 L27 8 L29 24 Z" fill="currentColor"/><rect x="3" y="25" width="26" height="4" rx="1" fill="currentColor"/><circle cx="16" cy="18" r="2.4" fill="#fff"/>',
   pileDraw: '<rect x="9" y="3" width="15" height="20" rx="3" fill="currentColor" opacity=".45"/><rect x="6" y="6" width="15" height="20" rx="3" fill="currentColor" opacity=".7"/><rect x="3" y="9" width="15" height="20" rx="3" fill="currentColor"/>',
   pileDiscard: '<rect x="4" y="10" width="15" height="20" rx="3" fill="currentColor" transform="rotate(-14 11 20)"/><rect x="12" y="8" width="15" height="20" rx="3" fill="currentColor" opacity=".7" transform="rotate(12 19 18)"/>',
   static: '<path d="M2 16 L6 8 L10 22 L14 6 L18 26 L22 10 L26 20 L30 14" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linejoin="round"/>',
@@ -56,6 +76,11 @@ export function icon(name, cls = '') {
 // Jenny + enemies are drawn in the chibi vector style (see chibi.js).
 export function jennySVG(opts = {}) { return jennyChibi(opts.look || getLook(), opts); }
 export function enemySVG(art, color) { return enemyChibi(art, color); }
+// The playable character's art.
+export function heroSVG(character, opts = {}) {
+  if (character === 'toni') return jennyChibi('classic', { ...opts, palette: TONI_PALETTE });
+  return jennySVG(opts);
+}
 
 export const ROOM_ICONS = {
   fight: '<path d="M8 24 L22 10 L25 7 L24 11 L11 26 Z M24 24 L10 10 L7 7 L8 11 L21 26 Z" fill="currentColor"/>',

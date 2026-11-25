@@ -3,7 +3,13 @@
 // and forgets a bit each turn. Run:  node tools/sim.mjs [runsPerConfig]
 //
 // Simplified run: per floor 6 fights, 2 elites, 2 rests, then the boss.
-// The bot takes the first card offered after each fight.
+// The bot takes the first card offered after each fight, or with a target
+// style, the first offered card of that style.
+//
+//   node tools/sim.mjs 200            free-reveal comparison (Jenny)
+//   node tools/sim.mjs 200 chars      Jenny vs Toni (and Jenny with no passive)
+//   node tools/sim.mjs 200 styles     every character x every card style
+//   node tools/sim.mjs 200 deaths     where runs end
 
 // ---- fake clock so battle timeouts resolve instantly ----
 let now = 0;
@@ -24,7 +30,8 @@ const { Battle, RULES } = await import('../src/game/battle.js');
 const { newRun, gainCharm, afterFightHealing, enemyFor, cardChoices } = await import('../src/game/run.js');
 const { drawCharm } = await import('../src/game/loot.js');
 const { CHARMS } = await import('../src/game/charms.js');
-const { canUpgrade } = await import('../src/game/cards.js');
+const { canUpgrade, CARDS, ARCHES } = await import('../src/game/cards.js');
+const { CHARACTERS } = await import('../src/game/characters.js');
 
 const SKILLS = {
   casual: { recall: 0.6, forget: 0.2 },
@@ -86,9 +93,10 @@ function fight(run, enemyId, skill, stats) {
   return result === 'win';
 }
 
-function playRun(skill, stats) {
-  const run = newRun();
-  const gifts = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru');
+function playRun(skill, stats, opts = {}) {
+  const run = newRun(opts.character || 'jenny');
+  let gifts = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru');
+  if (opts.style) { const g = gifts.filter((k) => CHARMS[k].style === opts.style); if (g.length) gifts = g; }
   gainCharm(run, gifts[Math.floor(Math.random() * gifts.length)]);
   run.giftPending = false;
   for (let act = 0; act < 3; act++) {
@@ -105,7 +113,8 @@ function playRun(skill, stats) {
       if (!won) { stats.deaths[`${act}:${room}`] = (stats.deaths[`${act}:${room}`] || 0) + 1; return act; }
       afterFightHealing(run);
       const offer = cardChoices(run, room);
-      if (offer[0]) run.deck.push(offer[0]);
+      const pick = (opts.style && offer.find((c) => CARDS[c.id].arch === opts.style || CARDS[c.id].arch2 === opts.style)) || (opts.style ? null : offer[0]);
+      if (pick) run.deck.push(pick);
       if (room === 'elite') gainCharm(run, drawCharm(run, 'drop'));
       if (room === 'boss') {
         gainCharm(run, drawCharm(run, 'boss'));
@@ -118,6 +127,41 @@ function playRun(skill, stats) {
 }
 
 const N = Number(process.argv[2] || 300);
+const MODE = process.argv[3];
+const newStats = () => ({ fights: 0, turns: 0, hpLost: 0, matches: 0, misses: 0, lucky: 0, deaths: {}, bossKills: [0, 0, 0] });
+function summarize(stats, wins, extra) {
+  return {
+    ...extra,
+    'beat boss 1': `${Math.round((stats.bossKills[0] / N) * 100)}%`,
+    'beat boss 2': `${Math.round((stats.bossKills[1] / N) * 100)}%`,
+    'win run': `${Math.round((wins / N) * 100)}%`,
+    'turns/fight': (stats.turns / stats.fights).toFixed(2),
+    'hp lost/fight': (stats.hpLost / stats.fights).toFixed(1),
+  };
+}
+function batch(skill, opts) {
+  const stats = newStats();
+  let wins = 0;
+  for (let i = 0; i < N; i++) if (playRun(skill, stats, opts) === 3) wins++;
+  return { stats, wins };
+}
+if (MODE === 'chars' || MODE === 'styles') {
+  const out = [];
+  const jennyN = CHARACTERS.jenny.passive.n;
+  const setups = MODE === 'chars'
+    ? [{ label: 'jenny (no passive)', character: 'jenny', noPassive: true }, ...Object.keys(CHARACTERS).map((c) => ({ label: c, character: c }))]
+    : Object.keys(CHARACTERS).flatMap((c) => [null, ...Object.keys(ARCHES)].map((style) => ({ label: `${c} · ${style || 'any'}`, character: c, style })));
+  for (const s of setups) {
+    for (const [skillName, skill] of Object.entries(SKILLS)) {
+      CHARACTERS.jenny.passive.n = s.noPassive ? 0 : jennyN;
+      const { stats, wins } = batch(skill, s);
+      out.push(summarize(stats, wins, { setup: s.label, skill: skillName }));
+    }
+  }
+  CHARACTERS.jenny.passive.n = jennyN;
+  console.table(out);
+  process.exit(0);
+}
 const rows = [];
 // default: compare free reveals 0/1/2. `node tools/sim.mjs 200 pairs` compares board sizes instead.
 const PAIRS_MODE = process.argv[3] === 'pairs';

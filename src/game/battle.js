@@ -8,9 +8,10 @@
 import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
 import { T } from './terms.js';
+import { CHARACTERS } from './characters.js';
 
 // Tunable rules. freeReveal = cards revealed for free on every new board.
-export const RULES = { freeReveal: 3, boardPairs: 9 }; // boardPairs: deck cards per board (each shows as a pair)
+export const RULES = { freeReveal: 3, boardPairs: 9, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
 const wait = (fn, ms) => setTimeout(fn, ms * PACE.scale);
@@ -25,9 +26,11 @@ export class Battle {
     const def = ENEMIES[enemyId];
     this.def = def;
     const hp = randInt(def.hp[0], def.hp[1]);
-    this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, step: 0, last: [] };
+    this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
-    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0 };
+    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false };
+    this.healedThisFight = 0;
+    this.character = CHARACTERS[run.character] || CHARACTERS.jenny;
     this.turnEnergy = 3;
     this.flags = {};
     this.turn = 0;
@@ -52,8 +55,14 @@ export class Battle {
     if (this.has('puffyJacket')) this.player.block += 4;
     if (this.has('glowstick')) this.player.strength += 1;
     if (this.has('neon')) this.enemy.vuln += 2;
+    if (this.has('gossipPhone')) this.enemy.vuln += 1;
+    if (this.has('sleepMask')) this.enemy.weak += 1;
     this.chooseIntent();
     this.dealBoard();
+    if (this.character.passive.id === 'sketch') {
+      this.reveal(this.character.passive.n, true, true);
+      this.log(`Sketch the Board: ${this.character.passive.n} cards revealed.`);
+    }
     this.startTurn();
     this.log(`${this.enemy.name} blocks the way!`);
   }
@@ -232,17 +241,42 @@ export class Battle {
     this.energy = Math.max(0, this.energy + n);
     if (!quiet) this.emit('float', 'player', `${n > 0 ? '+' : ''}${n} ${T.energy}`, 'energy');
   }
-  heal(n) {
+  // opts.cozy: healing past max HP hits the enemy instead of being wasted.
+  heal(n, opts = {}) {
+    if (n <= 0) return;
+    if (this.character.passive.id === 'comfy') n += this.character.passive.n;
     const before = this.run.hp;
     this.run.hp = Math.min(this.run.maxHp, this.run.hp + n);
-    this.emit('float', 'player', `+${this.run.hp - before}`, 'heal');
+    const healed = this.run.hp - before;
+    this.healedThisFight += healed;
+    this.emit('float', 'player', `+${healed}`, 'heal');
+    const extra = n - healed;
+    if (opts.cozy && extra > 0) { this.attack(extra, { raw: true }); this.log(`Cozy: ${extra} extra healing hits ${this.enemy.name}.`); }
+    if (this.powers.sweetDreams && healed > 0) this.attack(healed, { raw: true });
   }
   selfDamage(n) {
     this.run.hp = Math.max(0, this.run.hp - n);
     this.emit('hit', 'player', n, 0);
     this.checkEnd();
   }
-  applyEnemy(k, n) { if (n > 0 && k === 'poison' && this.has('venomVial')) n += 2; if (n > 0) { this.enemy[k] += n; this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k); } }
+  applyEnemy(k, n) {
+    if (n > 0 && k === 'poison' && this.has('venomVial')) n += 2;
+    if (n <= 0) return;
+    const e = this.enemy;
+    if (k === 'weak' && e.asleep) { this.emit('float', 'enemy', 'Zzz', 'weak'); return; }
+    e[k] += n;
+    this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k);
+    // Sleepy builds up to Asleep: the enemy skips its next turns. Each time it
+    // wakes up, it takes 1 more Sleepy to put it back to sleep.
+    if (k === 'weak' && !e.asleep && e.weak >= e.sleepAt) {
+      e.weak = 0;
+      e.asleep = (this.def.boss ? RULES.bossSleepTurns : RULES.sleepTurns) + this.powers.deepSleep;
+      e.sleepAt += RULES.sleepGrow;
+      this.emit('float', 'enemy', T.asleep, 'weak');
+      this.emit('sfx', 'clear');
+      this.log(`${e.name} falls ${T.asleep.toLowerCase()} for ${e.asleep} turn${e.asleep > 1 ? 's' : ''}!`);
+    }
+  }
   applyPlayer(k, n) { if (n > 0) { this.player[k] += n; this.emit('float', 'player', `+${n} ${STATUS_NAMES[k]}`, k); } }
 
   // ---------- turns ----------
@@ -257,6 +291,7 @@ export class Battle {
     if (this.has('headset')) this.reveal(1, true);
     if (this.powers.armor) this.gainBlock(this.powers.armor);
     if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
+    if (this.powers.bedtime) this.applyEnemy('weak', this.powers.bedtime);
     // Glitch (poison) ticks on the player at the start of their turn
     if (this.player.poison > 0) { this.selfDamage(this.player.poison); this.player.poison -= 1; }
     this.emit('turn');
@@ -282,6 +317,15 @@ export class Battle {
       this.emit('hit', 'enemy', e.poison, 0, 'poison');
       e.poison -= 1;
       if (this.checkEnd()) { this.busy = false; return; }
+    }
+    if (e.asleep > 0) {
+      e.asleep -= 1;
+      this.log(e.asleep ? `${e.name} is fast ${T.asleep.toLowerCase()}. Zzz…` : `${e.name} sleeps through its turn and wakes up.`);
+      this.emit('float', 'enemy', 'Zzz', 'weak');
+      if (e.vuln > 0 && !this.powers.roast) e.vuln -= 1;
+      this.busy = false;
+      this.startTurn();
+      return;
     }
     const it = this.intent;
     const hitPlayer = (n) => {
@@ -323,7 +367,7 @@ export class Battle {
       }
     }
     if (e.weak > 0) e.weak -= 1;
-    if (e.vuln > 0) e.vuln -= 1;
+    if (e.vuln > 0 && !this.powers.roast) e.vuln -= 1;
     if (this.checkEnd()) { this.busy = false; return; }
     this.chooseIntent();
     this.busy = false;
@@ -370,9 +414,10 @@ export class Battle {
   }
 }
 
-export const STATUS_NAMES = { weak: T.sleepy, vuln: T.exposed, poison: T.glitch, strength: T.spirit, thorns: T.spikes };
+export const STATUS_NAMES = { weak: T.sleepy, vuln: T.exposed, poison: T.glitch, strength: T.spirit, thorns: T.spikes, asleep: T.asleep };
 export const STATUS_HELP = {
-  weak: `${T.sleepy}: deals 25% less damage.`,
+  weak: `${T.sleepy}: deals 25% less damage. An enemy with ${RULES.sleepAt} ${T.sleepy} falls ${T.asleep} (each time it wakes up, it takes ${RULES.sleepGrow} more).`,
+  asleep: `${T.asleep}: skips its turns until it wakes up. Can't get more ${T.sleepy} while asleep. ${T.glitch} still ticks.`,
   vuln: `${T.exposed}: takes 50% more damage.`,
   poison: `${T.glitch}: loses that much ${T.hp} each turn, then ${T.glitch} goes down by 1.`,
   strength: `${T.spirit}: adds damage to every hit.`,

@@ -15,15 +15,28 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 ## The run
 
-Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 25+ cards, collect 19 charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later.
+Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
+
+The full list of characters, cards and charms is in **[docs/catalog.md](docs/catalog.md)**. It's generated from the game files with `node tools/catalog.mjs`, so run that after changing cards or charms.
+
+## Characters
+
+Pick who climbs at the start of each run. Every card style is open to every character; a character only changes max HP, the starting deck and one passive (all in `src/game/characters.js`).
+
+- **Jenny** (55 HP): *Sketch the Board*, reveals 1 extra card at the start of each fight. Starts with Zap and Boba.
+- **Toni** (50 HP): *Comfy*, every heal restores 2 more HP. Starts with Yawn and Warm Milk. His art is a placeholder for now.
 
 ## Haru's Gift
 
-Every run starts by picking 1 of 3 starter charms from Haru (12 in total): Moon Pin, Knitted Scarf, Lucky Coin, Glitch Pen, Puffy Jacket, Rhythm Bracelet, Warm Thermos, Spare Battery, Sketchbook, Pillow Pet, Shiba Keychain and Gift Card. Some of them push you toward a play style.
+Every run starts by picking 1 of 3 starter charms from Haru (15 in total). Some of them push you toward a play style, including Sleep Mask (Dreamy), Hot Water Bottle (Cozy) and Gossip Phone (Exposed).
 
 ## Play styles
 
-Cards can be tagged **Glitch** (damage over time), **Guard** (Block), **Combo** (chain matches) or **Memory** (reveal cards). Your deck's style is the tag you own the most of. Once you have one, card rewards and shops pull extra cards from that style's own deck: 1 style card per reward at first, 2 once you're committed (4+ style cards). The Deck button shows your current style.
+Cards can be tagged **Glitch** (damage over time), **Guard** (Block), **Combo** (chain matches), **Memory** (reveal cards), **Dreamy** (Sleepy until the enemy falls Asleep), **Cozy** (healing, with extra healing turning into damage) or **Exposed** (stack Exposed and hit hard). **Hybrid** cards carry two tags and count toward both. Your deck's style is the tag you own the most of (starter cards don't count).
+
+- **Asleep:** an enemy that reaches 3 Sleepy skips its next 2 turns (bosses 1). It can't get more Sleepy while asleep, and each time it wakes up it takes 3 more to fall asleep again.
+- **Cozy:** on a Cozy card, healing past your max HP hits the enemy.
+- There's no "draw a card" in this game: anything that would draw reveals cards instead. Once you have one, card rewards and shops pull extra cards from that style's own deck: 1 style card per reward at first, 2 once you're committed (4+ style cards). The Deck button shows your current style.
 
 ## Loot decks (less swingy RNG)
 
@@ -51,7 +64,11 @@ Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in
 
 ## Playtest simulator
 
-`node tools/sim.mjs 200` plays 200 full runs per setting with a bot that has human-like memory (a casual and a sharp version) and prints win rates, turns per fight, HP lost and miss rate. Change `RULES` in `src/game/battle.js` to try other rules. `node tools/sim.mjs 200 deaths` shows where runs end.
+`node tools/sim.mjs 200` plays 200 full runs per setting with a bot that has human-like memory (a casual and a sharp version) and prints win rates, turns per fight, HP lost and miss rate. Change `RULES` in `src/game/battle.js` to try other rules.
+
+- `node tools/sim.mjs 200 chars` compares the characters (and Jenny with no passive).
+- `node tools/sim.mjs 200 styles` plays every character with every card style (the bot only picks cards of that style).
+- `node tools/sim.mjs 200 deaths` shows where runs end.
 
 ## Run it locally
 
@@ -69,12 +86,14 @@ The code itself uses fixed internal ids (for example the `strength` status), so 
 ## Where things live
 
 - `src/game/terms.js` – every player-facing name and keyword (rename things here)
+- `src/game/characters.js` – playable characters: HP, starting deck, passive
 - `src/game/cards.js` – every card and what it does
 - `src/game/enemies.js` – enemies, their move patterns, and which floor they're on
 - `src/game/charms.js` – charms (passive items)
 - `src/game/events.js` – "?" room events
 - `src/game/battle.js` – the fight rules
-- `src/game/run.js` – map generation and guarantees, rewards, shop stock, saving
+- `src/game/run.js` – map generation and guarantees, rewards, shop stock, run save
+- `src/game/progress.js` – the save that lasts between runs (stats, unlocks, collection)
 - `src/game/loot.js` – loot decks and item conditions
 - `src/audio.js` – music and generated sound effects
 - `src/ui/` – screens and art (all original SVG drawings)

@@ -1,6 +1,7 @@
 // Run state: deck, HP, coins, charms, map position. Saved whenever you're on
 // the map, so a run can be continued later.
-import { STARTER_DECK, CARDS } from './cards.js';
+import { CARDS } from './cards.js';
+import { CHARACTERS } from './characters.js';
 import { CHARMS } from './charms.js';
 import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard } from './loot.js';
 
@@ -14,11 +15,12 @@ const COLS = 5;
 
 const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-export function newRun() {
+export function newRun(character = 'jenny') {
+  const ch = CHARACTERS[character] || CHARACTERS.jenny;
   const run = {
-    character: 'jenny',
-    hp: 55, maxHp: 55, coins: 99,
-    deck: STARTER_DECK.map((id) => ({ id })),
+    character: CHARACTERS[character] ? character : 'jenny',
+    hp: ch.maxHp, maxHp: ch.maxHp, coins: 99,
+    deck: ch.deck.map((id) => ({ id })),
     charms: [],
     giftPending: true,
     act: 0,
@@ -181,6 +183,9 @@ export function gainCharm(run, id) {
   if (id === 'glitchPen') run.deck.push({ id: 'stinger' }, { id: 'stinger' });
   if (id === 'puffyJacket') run.deck.push({ id: 'hoodieUp' });
   if (id === 'rhythmBracelet') run.deck.push({ id: 'comboKick' });
+  if (id === 'sleepMask') run.deck.push({ id: 'lightsOut' });
+  if (id === 'hotWaterBottle') run.deck.push({ id: 'groupHug' });
+  if (id === 'gossipPhone') run.deck.push({ id: 'callOut' });
   if (id === 'sketchbook') {
     const ups = run.deck.filter((c) => !c.up && CARDS[c.id].rarity !== 'status' && CARDS[c.id].rarity !== 'curse');
     for (let i = 0; i < 2 && ups.length; i++) ups.splice(Math.floor(Math.random() * ups.length), 1)[0].up = true;
@@ -198,6 +203,7 @@ export function afterFightHealing(run) {
   if (run.charms.includes('bandage')) h += 5;
   if (run.charms.includes('plush')) h += 12;
   if (run.charms.includes('thermos')) h += 7;
+  if (run.charms.includes('hotWaterBottle')) h += 4;
   const before = run.hp;
   run.hp = Math.min(run.maxHp, run.hp + h);
   return run.hp - before;

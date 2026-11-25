@@ -27,6 +27,8 @@ export const T = {
   // statuses (internal ids: strength, weak, vuln, poison, thorns)
   spirit: 'Fighting Spirit',
   sleepy: 'Sleepy',
+  asleep: 'Asleep',
+  cozy: 'Cozy', // keyword: healing past max HP hits the enemy
   exposed: 'Exposed',
   glitch: 'Glitch',
   spikes: 'Spikes',

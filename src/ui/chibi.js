@@ -19,6 +19,13 @@ const JBASE = {
   stripe: '#f06a95', shoe: '#1a1420', pin: '#f49ab6', blush: '#f59ab0',
 };
 
+// PLACEHOLDER: Toni reuses Jenny's body in sleepy blues until his real art exists.
+export const TONI_PALETTE = {
+  eyes: 'closed', hair: '#4a3426', hairShine: '#7a5a44', tips: '#8c6a50',
+  hood: '#3f6fb5', hoodLight: '#5f8ad0', earIn: '#ffd166', hoodie: '#3f6fb5',
+  stripe: '#ffd166', pin: '#ffd166', blush: '#f2a48a',
+};
+
 export function getLook() {
   const k = localStorage.getItem('sm.look');
   return LOOKS[k] ? k : 'sparkle';
@@ -38,8 +45,9 @@ function jennyEyes(kind) {
 }
 
 // opts.crop: head-and-shoulders framing for small portraits
+// opts.palette overrides colours (used for Toni's placeholder look).
 export function jennyChibi(lookKey = getLook(), opts = {}) {
-  const p = { ...JBASE, ...LOOKS[lookKey] };
+  const p = { ...JBASE, ...LOOKS[lookKey], ...(opts.palette || {}) };
   const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${opts.crop ? '' : shadow(80, 150, 32)}

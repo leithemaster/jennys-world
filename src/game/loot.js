@@ -78,12 +78,17 @@ export function drawCard(run, rarity, exclude = []) {
 }
 
 // ---------- play styles ----------
-// Your deck's style is whichever style tag (Glitch / Guard / Combo / Memory)
-// you own the most cards of. Once you have one, rewards and shops pull extra
+// Your deck's style is whichever style tag (Glitch / Guard / Combo / Memory /
+// Dreamy / Cozy / Exposed) you own the most cards of. Starter cards don't
+// count, so a character's starting deck never picks the style for you. Once you have one, rewards and shops pull extra
 // cards from that style's own deck, so a Glitch run keeps finding Glitch cards.
 export function deckStyle(run) {
   const counts = {};
-  for (const c of run.deck) { const a = CARDS[c.id].arch; if (a) counts[a] = (counts[a] || 0) + 1; }
+  for (const c of run.deck) {
+    const d = CARDS[c.id];
+    if (d.rarity === 'starter') continue;
+    for (const a of [d.arch, d.arch2]) if (a) counts[a] = (counts[a] || 0) + 1;
+  }
   const gift = run.charms.map((k) => CHARMS[k].style).find(Boolean);
   if (gift) counts[gift] = (counts[gift] || 0) + 1.5;
   const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
@@ -92,7 +97,7 @@ export function deckStyle(run) {
 
 export function drawStyleCard(run, arch, rarity, exclude = []) {
   const ok = (id) => !exclude.includes(id) && cardAllowed(run, id);
-  const ids = (r) => Object.keys(CARDS).filter((id) => CARDS[id].arch === arch && (!r || CARDS[id].rarity === r));
+  const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && (!r || CARDS[id].rarity === r));
   return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || drawFrom(run, `card:${arch}:any`, () => ids(), ok);
 }
 

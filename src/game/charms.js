@@ -21,6 +21,9 @@ export const CHARMS = {
   pillowPet: { name: 'Pillow Pet', icon: '🐑', pool: 'haru', desc: `Naps at ${T.rest}s heal 15% more and give +2 max ${T.hp}.` },
   shibaCharm: { name: 'Shiba Keychain', icon: '🐶', pool: 'haru', desc: `Once per run, survive a knockout with 25% ${T.hp}.` },
   giftCard: { name: 'Gift Card', icon: '🎁', pool: 'haru', desc: 'Your first purchase in each shop is half price.' },
+  sleepMask: { name: 'Sleep Mask', icon: '😴', pool: 'haru', style: 'dreamy', desc: `Start with Lights Out. Enemies start each fight with 1 ${T.sleepy}.` },
+  hotWaterBottle: { name: 'Hot Water Bottle', icon: '♨️', pool: 'haru', style: 'cozy', desc: 'Start with Group Hug. Heal 4 after each fight.' },
+  gossipPhone: { name: 'Gossip Phone', icon: '📞', pool: 'haru', style: 'exposed', desc: `Start with Call Out. Enemies start each fight with 1 ${T.exposed}.` },
 
   // ----- drops -----
   luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'Every new board is shown for a moment.' },
@@ -36,7 +39,7 @@ export const CHARMS = {
   glowstick: { name: 'Glow Stick', icon: '✨', pool: 'drop', desc: `Start each fight with 1 ${T.spirit}.` },
   lipTint: { name: 'Lip Tint', icon: '💄', pool: 'drop', desc: 'Clearing a board heals 3.' },
   venomVial: { name: 'Glitch Vial', icon: '🧪', pool: 'drop', desc: `Whenever you apply ${T.glitch}, apply 2 more.`,
-    requires: (r, h) => h.deckHas(['stinger', 'catalyst']) },
+    requires: (r, h) => h.deckHas(['stinger', 'catalyst', 'virusUpload', 'lagSpike', 'leak']) },
   fuzzySocks: { name: 'Fuzzy Socks', icon: '🧦', pool: 'drop', desc: `Guard and Hoodie Up give 3 more ${T.block}.`,
     requires: (r, h) => h.deckCount(['guard', 'hoodieUp']) >= 3 },
   powerBank: { name: 'Power Bank', icon: '🔋', pool: 'drop', desc: `Matching a ${T.types.power} card gives +1 ${T.energy}.`,

@@ -1,11 +1,22 @@
 // Every card in Kioku Tower. Each card in your deck appears on the board as a
 // pair; matching two of the same card plays it.
 //
+// arch / arch2: card style(s). A hybrid card has two styles and counts
+// toward both, so mixed decks keep finding cards for either half.
+// Wording rule: this game has no "draw a card". Anything that would draw
+// a card reveals cards instead.
 // type: attack | skill | power | status
 // rarity: starter | common | uncommon | rare | status
 // fx(b, up) runs the effect inside a Battle (b); `up` is true when upgraded.
 
 import { T } from './terms.js';
+
+// Cards that count toward a style's conditions (which cards can show up).
+// Starter cards count too, so Jenny's Zap opens the Exposed payoffs.
+export const SLEEPY_CARDS = ['yawn', 'trip', 'lightsOut', 'countingSheep', 'pillowFight', 'bedtimeStory', 'deepSleep', 'napTime', 'dreamJournal'];
+export const HEAL_CARDS = ['warmMilk', 'snack', 'hotCocoa', 'groupHug', 'feelBetter', 'secondHelping', 'sweetDreams', 'napTime'];
+export const EXPOSED_CARDS = ['zap', 'callOut', 'pileOn', 'snitch', 'roast', 'roastBattle', 'heckle', 'leak'];
+
 export const CARDS = {
   // ---------- starter ----------
   slash: {
@@ -27,6 +38,20 @@ export const CARDS = {
     name: 'Boba', type: 'skill', rarity: 'starter', icon: 'cup',
     text: (u) => `+${u ? 3 : 2} ${T.energy}.`,
     fx: (b, u) => b.gainEnergy(u ? 3 : 2),
+  },
+  // Toni's starters. Tagged with their style for the card frame, but starter
+  // cards never count toward your deck's style (see deckStyle in loot.js).
+  yawn: {
+    arch: 'dreamy',
+    name: 'Yawn', type: 'skill', rarity: 'starter', icon: 'zzz',
+    text: (u) => `Apply 2 ${T.sleepy}.${u ? ` ${T.block} 5.` : ''}`,
+    fx: (b, u) => { b.applyEnemy('weak', 2); if (u) b.gainBlock(5); },
+  },
+  warmMilk: {
+    arch: 'cozy',
+    name: 'Warm Milk', type: 'skill', rarity: 'starter', icon: 'milk',
+    text: (u) => `Heal ${u ? 5 : 3}. ${T.cozy}.`,
+    fx: (b, u) => b.heal(u ? 5 : 3, { cozy: true }),
   },
 
   // ---------- common ----------
@@ -59,10 +84,10 @@ export const CARDS = {
     fx: (b, u) => { b.reveal(u ? 4 : 2); b.gainBlock(3); },
   },
   trip: {
-    arch: 'guard',
+    arch: 'guard', arch2: 'dreamy',
     name: 'Trip', type: 'skill', rarity: 'common', icon: 'swirl',
-    text: (u) => `Apply ${u ? 3 : 2} ${T.sleepy}. ${T.block} ${u ? 5 : 3}.`,
-    fx: (b, u) => { b.applyEnemy('weak', u ? 3 : 2); b.gainBlock(u ? 5 : 3); },
+    text: (u) => `Apply ${u ? 2 : 1} ${T.sleepy}. ${T.block} ${u ? 6 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('weak', u ? 2 : 1); b.gainBlock(u ? 6 : 4); },
   },
   comboKick: {
     arch: 'combo',
@@ -71,10 +96,11 @@ export const CARDS = {
     fx: (b, u) => b.attack(4 + (u ? 5 : 3) * b.combo),
   },
   snack: {
+    arch: 'cozy',
     name: 'Onigiri', type: 'skill', rarity: 'common', icon: 'rice',
-    text: (u) => `Heal ${u ? 6 : 4}. ${T.exhaust}.`,
+    text: (u) => `Heal ${u ? 7 : 5}. ${T.cozy}. ${T.exhaust}.`,
     exhaust: true,
-    fx: (b, u) => b.heal(u ? 6 : 4),
+    fx: (b, u) => b.heal(u ? 7 : 5, { cozy: true }),
   },
 
   // ---------- uncommon ----------
@@ -95,7 +121,7 @@ export const CARDS = {
     arch: 'glitch',
     name: 'Catalyst', type: 'skill', rarity: 'uncommon', icon: 'flask',
     text: (u) => `${u ? 'Triple' : 'Double'} the enemy's ${T.glitch}.`,
-    requires: (r, h) => h.deckHas(['stinger', 'virusUpload', 'lagSpike', 'malware']),
+    requires: (r, h) => h.deckHas(['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak']),
     fx: (b, u) => b.applyEnemy('poison', b.enemy.poison * (u ? 2 : 1)),
   },
   memoryLane: {
@@ -173,7 +199,7 @@ export const CARDS = {
   corrupt: {
     arch: 'glitch', name: 'Corrupt', type: 'attack', rarity: 'uncommon', icon: 'skull',
     text: (u) => `Deal damage equal to the enemy's ${T.glitch}${u ? ' +6' : ''}.`,
-    requires: (r, h) => h.deckCount(['stinger', 'virusUpload', 'lagSpike', 'catalyst', 'malware']) >= 1,
+    requires: (r, h) => h.deckCount(['stinger', 'virusUpload', 'lagSpike', 'catalyst', 'malware', 'leak']) >= 1,
     fx: (b, u) => b.attack(b.enemy.poison + (u ? 6 : 0), { raw: true }),
   },
   malware: {
@@ -236,6 +262,113 @@ export const CARDS = {
     },
   },
 
+  // Dreamy: build Sleepy until the enemy falls Asleep
+  lightsOut: {
+    arch: 'dreamy', name: 'Lights Out', type: 'skill', rarity: 'common', icon: 'moon',
+    text: (u) => `Apply 2 ${T.sleepy}. ${T.block} ${u ? 8 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('weak', 2); b.gainBlock(u ? 8 : 4); },
+  },
+  countingSheep: {
+    arch: 'dreamy', name: 'Counting Sheep', type: 'attack', rarity: 'common', icon: 'sheep',
+    text: (u) => `Deal ${u ? 7 : 5}. Apply ${u ? 2 : 1} ${T.sleepy}.`,
+    fx: (b, u) => { b.attack(u ? 7 : 5); b.applyEnemy('weak', u ? 2 : 1); },
+  },
+  pillowFight: {
+    arch: 'dreamy', name: 'Pillow Fight', type: 'attack', rarity: 'uncommon', icon: 'pillow',
+    text: (u) => `Deal ${u ? 10 : 7}. Double damage if the enemy is ${T.asleep}.`,
+    requires: (r, h) => h.deckHas(SLEEPY_CARDS),
+    fx: (b, u) => b.attack((u ? 10 : 7) * (b.enemy.asleep ? 2 : 1)),
+  },
+  bedtimeStory: {
+    arch: 'dreamy', name: 'Bedtime Story', type: 'power', rarity: 'uncommon', icon: 'book',
+    text: (u) => `${T.power}: apply 1 ${T.sleepy} at the start of each turn.${u ? ` Apply 2 now.` : ''}`,
+    fx: (b, u) => { b.powers.bedtime += 1; if (u) b.applyEnemy('weak', 2); },
+  },
+  deepSleep: {
+    arch: 'dreamy', name: 'Deep Sleep', type: 'power', rarity: 'rare', icon: 'bed',
+    text: (u) => `${T.power}: enemies stay ${T.asleep} 1 turn longer.${u ? ` Apply 2 ${T.sleepy}.` : ''}`,
+    requires: (r, h) => h.deckCount(SLEEPY_CARDS) >= 2,
+    fx: (b, u) => { b.powers.deepSleep += 1; if (u) b.applyEnemy('weak', 2); },
+  },
+  // Cozy: heal, and turn extra healing into damage
+  hotCocoa: {
+    arch: 'cozy', name: 'Hot Cocoa', type: 'skill', rarity: 'common', icon: 'mug',
+    text: (u) => `Heal ${u ? 3 : 2}. +1 ${T.energy}. ${T.cozy}.`,
+    fx: (b, u) => { b.heal(u ? 3 : 2, { cozy: true }); b.gainEnergy(1); },
+  },
+  groupHug: {
+    arch: 'cozy', arch2: 'guard', name: 'Group Hug', type: 'skill', rarity: 'common', icon: 'hug',
+    text: (u) => `Heal ${u ? 4 : 3}. ${T.block} ${u ? 7 : 4}. ${T.cozy}.`,
+    fx: (b, u) => { b.heal(u ? 4 : 3, { cozy: true }); b.gainBlock(u ? 7 : 4); },
+  },
+  feelBetter: {
+    arch: 'cozy', name: 'Feel Better', type: 'attack', rarity: 'uncommon', icon: 'bandaid',
+    text: (u) => `Deal ${u ? 11 : 8}. Heal ${u ? 4 : 3}. ${T.cozy}.`,
+    fx: (b, u) => { b.attack(u ? 11 : 8); b.heal(u ? 4 : 3, { cozy: true }); },
+  },
+  secondHelping: {
+    arch: 'cozy', name: 'Second Helping', type: 'attack', rarity: 'uncommon', icon: 'bowl',
+    text: (u) => `Deal damage equal to the ${T.hp} you have healed this fight (max 30)${u ? ' +6' : ''}.`,
+    requires: (r, h) => h.deckCount(HEAL_CARDS) >= 2,
+    fx: (b, u) => b.attack(Math.min(30, b.healedThisFight) + (u ? 6 : 0), { raw: true }),
+  },
+  sweetDreams: {
+    arch: 'cozy', name: 'Sweet Dreams', type: 'power', rarity: 'rare', icon: 'moonStar',
+    text: (u) => `${T.power}: whenever you heal, deal that much damage.${u ? ' Heal 4.' : ''}`,
+    requires: (r, h) => h.deckHas(HEAL_CARDS),
+    fx: (b, u) => { b.powers.sweetDreams = true; if (u) b.heal(4); },
+  },
+  // Exposed: stack Exposed and hit hard
+  callOut: {
+    arch: 'exposed', name: 'Call Out', type: 'attack', rarity: 'common', icon: 'megaphone',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.exposed}, then deal ${u ? 6 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.attack(u ? 6 : 4); },
+  },
+  pileOn: {
+    arch: 'exposed', name: 'Pile On', type: 'attack', rarity: 'common', icon: 'stack',
+    text: (u) => `Deal ${u ? 8 : 6}. If the enemy is ${T.exposed}, deal it again.`,
+    fx: (b, u) => { const ex = b.enemy.vuln > 0; b.attack(u ? 8 : 6); if (ex) b.attack(u ? 8 : 6); },
+  },
+  snitch: {
+    arch: 'exposed', arch2: 'memory', name: 'Snitch', type: 'skill', rarity: 'uncommon', icon: 'whisper',
+    text: (u) => `Apply ${u ? 2 : 1} ${T.exposed}. Reveal ${u ? 3 : 2} hidden cards. ${T.block} ${u ? 6 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 2 : 1); b.reveal(u ? 3 : 2); b.gainBlock(u ? 6 : 4); },
+  },
+  roast: {
+    arch: 'exposed', name: 'Roast', type: 'attack', rarity: 'uncommon', icon: 'chili',
+    text: (u) => `Deal ${u ? 7 : 5}, +${u ? 4 : 3} for each ${T.exposed} on the enemy.`,
+    requires: (r, h) => h.deckHas(EXPOSED_CARDS),
+    fx: (b, u) => b.attack((u ? 7 : 5) + (u ? 4 : 3) * b.enemy.vuln),
+  },
+  roastBattle: {
+    arch: 'exposed', name: 'Roast Battle', type: 'power', rarity: 'rare', icon: 'crown',
+    text: (u) => `${T.power}: ${T.exposed} on enemies no longer wears off.${u ? ` Apply 2 ${T.exposed}.` : ''}`,
+    requires: (r, h) => h.deckHas(EXPOSED_CARDS),
+    fx: (b, u) => { b.powers.roast = true; if (u) b.applyEnemy('vuln', 2); },
+  },
+
+  // Hybrids: count toward two styles
+  napTime: {
+    arch: 'dreamy', arch2: 'cozy', name: 'Nap Time', type: 'skill', rarity: 'uncommon', icon: 'pillow',
+    text: (u) => `Heal ${u ? 4 : 3}, or ${u ? 9 : 7} if the enemy is ${T.asleep}. ${T.cozy}.`,
+    fx: (b, u) => b.heal(b.enemy.asleep ? (u ? 9 : 7) : (u ? 4 : 3), { cozy: true }),
+  },
+  dreamJournal: {
+    arch: 'dreamy', arch2: 'memory', name: 'Dream Journal', type: 'skill', rarity: 'common', icon: 'book',
+    text: (u) => `Apply ${u ? 2 : 1} ${T.sleepy}. Reveal 2 hidden cards.`,
+    fx: (b, u) => { b.applyEnemy('weak', u ? 2 : 1); b.reveal(2); },
+  },
+  heckle: {
+    arch: 'exposed', arch2: 'combo', name: 'Heckle', type: 'attack', rarity: 'common', icon: 'megaphone',
+    text: (u) => `Deal ${u ? 7 : 5}. Apply 1 ${T.exposed}. +1 ${T.combo}.`,
+    fx: (b, u) => { b.attack(u ? 7 : 5); b.applyEnemy('vuln', 1); b.combo += 1; },
+  },
+  leak: {
+    arch: 'exposed', arch2: 'glitch', name: 'Data Leak', type: 'skill', rarity: 'uncommon', icon: 'upload',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.exposed} and ${u ? 4 : 3} ${T.glitch}. ${T.block} ${u ? 6 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); b.gainBlock(u ? 6 : 4); },
+  },
+
   // ---------- status (added by enemies, gone after the fight) ----------
   bug: {
     name: 'Bug', type: 'status', rarity: 'status', icon: 'bug', exhaust: true,
@@ -265,9 +398,11 @@ export const ARCHES = {
   guard: { name: 'Guard', color: '#4a6fa5', desc: `Pile up ${T.block} and hit back with it.` },
   combo: { name: 'Combo', color: '#d2493f', desc: `Chain matches for big ${T.combo} damage.` },
   memory: { name: 'Memory', color: '#7a5ab3', desc: 'Reveal cards and never miss.' },
+  dreamy: { name: 'Dreamy', color: '#5b6fc9', desc: `Build ${T.sleepy} until the enemy falls ${T.asleep}.` },
+  cozy: { name: 'Cozy', color: '#d9822b', desc: 'Heal up, and turn extra healing into damage.' },
+  exposed: { name: 'Exposed', color: '#c2417a', desc: `Stack ${T.exposed} and hit where it hurts.` },
 };
 
-export const STARTER_DECK = ['slash', 'slash', 'slash', 'slash', 'guard', 'guard', 'guard', 'guard', 'zap', 'boba'];
 
 export function cardName(c) {
   return CARDS[c.id].name + (c.up ? '+' : '');
