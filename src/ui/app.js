@@ -3,7 +3,7 @@ import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES } from '../game/battle.js';
 import {
-  newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
+  newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
@@ -14,7 +14,7 @@ import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
-  getProgress, recordRunEnd, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
+  getProgress, recordRunEnd, isUnlocked, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
   noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet,
 } from '../game/progress.js';
 
@@ -35,6 +35,18 @@ function takeCharm(id) {
   noteCharmTaken(id);
 }
 function startNewRun() { pickCharacter(); }
+// Characters whose unlock floor has already been passed. Also fixes up saves
+// from before unlocks existed: reaching past a floor's boss room counts.
+function syncUnlocks() {
+  const best = getProgress().totals.best_floor;
+  for (const [id, ch] of Object.entries(CHARACTERS)) {
+    if (ch.unlock && best >= (ch.unlock.bossFloor + 1) * (ROWS + 1)) unlock('characters', id);
+  }
+}
+function unlockAfterBoss(floor) {
+  return Object.entries(CHARACTERS).filter(([id, ch]) => ch.unlock?.bossFloor === floor && unlock('characters', id)).map(([, ch]) => ch.name);
+}
+const heroOpen = (id) => !CHARACTERS[id].unlock || isUnlocked('characters', id);
 function beginRun(character) {
   run = newRun(character);
   run.deck.forEach((c) => noteCardTaken(c.id));
@@ -253,6 +265,7 @@ function help() {
 export function title() {
   battle = null;
   document.title = `${GAME.name} · Jenny's World`;
+  syncUnlocks();
   const saved = loadRun();
   const stats = getProgress().totals;
   app.innerHTML = `<main class="title">
@@ -287,7 +300,11 @@ function pickCharacter() {
   app.innerHTML = `<main class="room pick-hero">
     <h1>Who's climbing?</h1>
     <p class="room-text">Every card style is open to everyone. Each climber starts a little differently.</p>
-    <div class="hero-choices">${Object.entries(CHARACTERS).map(([id, ch]) => `<button class="hero-card" data-hero="${id}">
+    <div class="hero-choices">${Object.entries(CHARACTERS).map(([id, ch]) => !heroOpen(id) ? `<button class="hero-card locked" disabled>
+      <span class="hero-art">${heroSVG(id, { crop: true })}</span>
+      <b>???</b>
+      <small>${esc(ch.unlock.text)}</small>
+    </button>` : `<button class="hero-card" data-hero="${id}">
       <span class="hero-art">${heroSVG(id, { crop: true })}</span>
       <b>${esc(ch.name)}</b>
       <small>${esc(ch.blurb)}</small>
@@ -740,6 +757,7 @@ function battleWon(kind, enemyId) {
 
 function actCleared() {
   run.pos = run.pending; run.path.push(run.pending); run.pending = null; run.floorsCleared += 1;
+  const newHeroes = unlockAfterBoss(run.act);
   if (run.act >= ACTS.length - 1) return gameOver(true);
   const heal = Math.round((run.maxHp - run.hp) * 0.75);
   run.hp += heal;
@@ -750,6 +768,7 @@ function actCleared() {
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
     <p>${esc(hero().name)} takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
+    ${newHeroes.map((n) => `<div class="unlock-note"><span class="hero-art">${heroSVG(Object.keys(CHARACTERS).find((k) => CHARACTERS[k].name === n), { crop: true })}</span><p><b>${esc(n)} unlocked!</b> Pick ${esc(n)} at the start of your next run.</p></div>`).join('')}
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
   bindHeader(app);
   app.querySelector('[data-go]').addEventListener('click', mapScreen);

@@ -19,13 +19,6 @@ const JBASE = {
   stripe: '#f06a95', shoe: '#1a1420', pin: '#f49ab6', blush: '#f59ab0',
 };
 
-// PLACEHOLDER: Toni reuses Jenny's body in sleepy blues until his real art exists.
-export const TONI_PALETTE = {
-  eyes: 'closed', hair: '#4a3426', hairShine: '#7a5a44', tips: '#8c6a50',
-  hood: '#3f6fb5', hoodLight: '#5f8ad0', earIn: '#ffd166', hoodie: '#3f6fb5',
-  stripe: '#ffd166', pin: '#ffd166', blush: '#f2a48a',
-};
-
 export function getLook() {
   const k = localStorage.getItem('sm.look');
   return LOOKS[k] ? k : 'sparkle';
@@ -45,9 +38,8 @@ function jennyEyes(kind) {
 }
 
 // opts.crop: head-and-shoulders framing for small portraits
-// opts.palette overrides colours (used for Toni's placeholder look).
 export function jennyChibi(lookKey = getLook(), opts = {}) {
-  const p = { ...JBASE, ...LOOKS[lookKey], ...(opts.palette || {}) };
+  const p = { ...JBASE, ...LOOKS[lookKey] };
   const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${opts.crop ? '' : shadow(80, 150, 32)}
@@ -83,6 +75,52 @@ export function jennyChibi(lookKey = getLook(), opts = {}) {
     <ellipse cx="55" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
     <ellipse cx="105" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
     <path d="M74 92 Q80 98 86 92" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ---------------- Toni ----------------
+// Short black hair swept up, black rectangle glasses, a red jacket with a
+// black yoke and sleeves, and a big sleepy grin.
+const TONI = {
+  skin: '#f6d6c0', hair: '#1c1922', hairShine: '#4a4458', frame: '#141218',
+  jacket: '#c22f45', jacketDark: '#1f1d24', zip: '#d9d4e0', pants: '#2b2a33', shoe: '#1a1420', blush: '#f2a48a',
+};
+
+export function toniChibi(opts = {}) {
+  const p = TONI;
+  const vb = opts.crop ? '26 2 108 108' : '0 0 160 160';
+  const lens = (x) => `<rect x="${x - 11}" y="71" width="22" height="17" rx="5" fill="#fff" fill-opacity=".22" stroke="${p.frame}" stroke-width="3.4"/>`;
+  const eye = (x) => `<path d="M${x - 6} 82 Q${x} 75.5 ${x + 6} 82" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>`;
+  return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${opts.crop ? '' : shadow(80, 150, 32)}
+    ${opts.crop ? '' : `<text x="118" y="34" font-size="13" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".55">z</text><text x="128" y="22" font-size="10" font-weight="900" fill="${INK}" font-family="sans-serif" opacity=".4">z</text>`}
+    <rect x="69" y="130" width="8" height="12" rx="2" ${o(p.pants)}/>
+    <rect x="83" y="130" width="8" height="12" rx="2" ${o(p.pants)}/>
+    <path d="M66 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
+    <path d="M81.5 140 h12 a2.5 2.5 0 0 1 2.5 2.5 v1.5 h-14.5 z" ${o(p.shoe)}/>
+    <path d="M62 101 H98 L104 133 H56 Z" ${o(p.jacket)}/>
+    <path d="M62 101 H98 L100.2 113 H59.8 Z" fill="${p.jacketDark}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>
+    <path d="M80 104 V132" stroke="${p.zip}" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="78.2" y="112" width="3.6" height="5" rx="1" fill="${p.zip}" stroke="${INK}" stroke-width="1.2"/>
+    <path d="M67 98 L80 105 L93 98 L94 104 L80 111 L66 104 Z" ${o(p.jacketDark, 2.6)}/>
+    <rect x="52.5" y="103" width="10" height="20" rx="5" transform="rotate(9 57.5 103)" ${o(p.jacketDark)}/>
+    <rect x="97.5" y="103" width="10" height="20" rx="5" transform="rotate(-9 102.5 103)" ${o(p.jacketDark)}/>
+    <circle cx="54.4" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
+    <circle cx="105.6" cy="124" r="3.8" ${o(p.skin, 2.8)}/>
+    <ellipse cx="42" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
+    <ellipse cx="118" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
+    <circle cx="40.5" cy="87" r="1.8" fill="${p.zip}" stroke="${INK}" stroke-width="1"/>
+    <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
+    <path d="M40 72 C36 48 48 28 66 23 L68 11 L77 19 L85 8 L91 19 L101 12 L103 25 C118 32 126 50 120 72 L116 72 C116 63 113 58 109 55 L105 63 L97 56 L87 63 L79 54 L69 61 L61 55 C53 59 47 64 45 72 Z" ${o(p.hair)}/>
+    <path d="M60 33 C68 26 78 24 88 25" fill="none" stroke="${p.hairShine}" stroke-width="3.4" stroke-linecap="round"/>
+    ${eye(64)}${eye(96)}
+    ${lens(64)}${lens(96)}
+    <path d="M75 78 Q80 75.5 85 78" fill="none" stroke="${p.frame}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M53 76 L44 74 M107 76 L116 74" stroke="${p.frame}" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="54" cy="93" rx="5.5" ry="3.2" fill="${p.blush}"/>
+    <ellipse cx="106" cy="93" rx="5.5" ry="3.2" fill="${p.blush}"/>
+    <path d="M70 92 Q80 104 90 92 Z" ${o('#8a2f3c', 2.8)}/>
+    <path d="M72.5 92.6 H87.5 L86.3 95.4 H73.7 Z" fill="#fff"/>
   </svg>`;
 }
 

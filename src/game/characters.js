@@ -17,6 +17,8 @@ export const CHARACTERS = {
     blurb: 'Always half asleep. Naps, snacks and somehow still wins.',
     maxHp: 50,
     deck: ['slash', 'slash', 'slash', 'slash', 'guard', 'guard', 'guard', 'guard', 'yawn', 'warmMilk'],
+    // Unlocked by beating this floor's boss (0 = Floor 1). Saved in the progress save.
+    unlock: { bossFloor: 0, text: 'Beat the Floor 1 boss to unlock.' },
     passive: { id: 'comfy', n: 2, name: 'Comfy', desc: (n) => `Every heal restores ${n} more HP.` },
   },
 };

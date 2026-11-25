@@ -455,6 +455,11 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
 .hero-passive { font-style: normal; font-weight: 800; background: #fff4c2; border: 2px solid var(--ink); border-radius: 10px; padding: 4px 8px; font-size: 13px; }
 .hero-deck { font-size: 12px; opacity: .8; }
 @media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } }
+.hero-card.locked { cursor: default; opacity: .75; box-shadow: 0 5px 0 var(--ink); transform: none; }
+.hero-card.locked .hero-art { filter: brightness(0); opacity: .55; }
+.unlock-note { display: flex; align-items: center; gap: var(--s3); background: #fff4c2; border: 3px solid var(--ink); border-radius: 16px; padding: var(--s2) var(--s4); color: var(--ink); }
+.unlock-note .hero-art { width: 64px; height: 64px; }
+.unlock-note p { margin: 0; }
 .gift-art > svg { position: relative; width: 100%; height: 100%; }
 .gift-art .backdrop { position: absolute; inset: -16%; width: 132%; height: 132%; }
 .tag { font-style: normal; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; background: var(--pink); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 1px 9px; }

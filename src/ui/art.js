@@ -1,4 +1,4 @@
-import { jennyChibi, enemyChibi, getLook, TONI_PALETTE } from './chibi.js';
+import { jennyChibi, toniChibi, enemyChibi, getLook } from './chibi.js';
 // Hand-drawn-ish SVG art: card icons, Jenny's portrait, enemies, map icons.
 const INK = '#1f2126';
 
@@ -78,7 +78,7 @@ export function jennySVG(opts = {}) { return jennyChibi(opts.look || getLook(), 
 export function enemySVG(art, color) { return enemyChibi(art, color); }
 // The playable character's art.
 export function heroSVG(character, opts = {}) {
-  if (character === 'toni') return jennyChibi('classic', { ...opts, palette: TONI_PALETTE });
+  if (character === 'toni') return toniChibi(opts);
   return jennySVG(opts);
 }
 

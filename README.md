@@ -24,7 +24,7 @@ The full list of characters, cards and charms is in **[docs/catalog.md](docs/cat
 Pick who climbs at the start of each run. Every card style is open to every character; a character only changes max HP, the starting deck and one passive (all in `src/game/characters.js`).
 
 - **Jenny** (55 HP): *Sketch the Board*, reveals 1 extra card at the start of each fight. Starts with Zap and Boba.
-- **Toni** (50 HP): *Comfy*, every heal restores 2 more HP. Starts with Yawn and Warm Milk. His art is a placeholder for now.
+- **Toni** (50 HP): *Comfy*, every heal restores 2 more HP. Starts with Yawn and Warm Milk. Unlocked by beating the Floor 1 boss (saves that already got past it unlock him automatically).
 
 ## Haru's Gift
 
