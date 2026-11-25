@@ -1,7 +1,7 @@
 import { CARDS, ARCHES, cardName, cardText, canUpgrade } from '../game/cards.js';
 import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
-import { Battle, STATUS_NAMES, STATUS_HELP, PACE } from '../game/battle.js';
+import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES } from '../game/battle.js';
 import {
   newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS, removeCost,
@@ -214,7 +214,7 @@ function help() {
     <p><b>Every card in your deck shows up twice</b> on the board, face down. Flip two cards: if they match, that card is played.</p>
     <p><b>Flipping a pair costs 1 ${T.energy}.</b> You get 3 ${T.energy} a turn. When it runs out, the enemy does what its bubble says.</p>
     <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 ${T.energy} and a fresh board.</p>
-    <p><b>Free peek:</b> every new board starts with 2 cards revealed.</p>
+    <p><b>Free peek:</b> every board has ${RULES.boardPairs * 2} cards, and each new board starts with ${RULES.freeReveal} of them revealed.</p>
     <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>

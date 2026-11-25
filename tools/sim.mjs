@@ -119,14 +119,18 @@ function playRun(skill, stats) {
 
 const N = Number(process.argv[2] || 300);
 const rows = [];
-for (const free of [0, 1, 2]) {
+// default: compare free reveals 0/1/2. `node tools/sim.mjs 200 pairs` compares board sizes instead.
+const PAIRS_MODE = process.argv[3] === 'pairs';
+const setups = PAIRS_MODE ? [{ free: 2, pairs: 8 }, { free: 2, pairs: 9 }, { free: 3, pairs: 9 }] : [0, 1, 2].map((f) => ({ free: f, pairs: RULES.boardPairs }));
+for (const { free, pairs } of setups) {
   for (const [skillName, skill] of Object.entries(SKILLS)) {
     RULES.freeReveal = free;
+    RULES.boardPairs = pairs;
     const stats = { fights: 0, turns: 0, hpLost: 0, matches: 0, misses: 0, lucky: 0, deaths: {}, bossKills: [0, 0, 0] };
     let wins = 0;
     for (let i = 0; i < N; i++) if (playRun(skill, stats) === 3) wins++;
     rows.push({
-      free, skill: skillName,
+      ...(PAIRS_MODE ? { 'board cards': pairs * 2, free } : { free }), skill: skillName,
       'beat boss 1': `${Math.round((stats.bossKills[0] / N) * 100)}%`,
       'beat boss 2': `${Math.round((stats.bossKills[1] / N) * 100)}%`,
       'win run': `${Math.round((wins / N) * 100)}%`,

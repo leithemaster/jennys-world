@@ -9,9 +9,8 @@ import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
 import { T } from './terms.js';
 
-const BOARD_PAIRS = 8;
 // Tunable rules. freeReveal = cards revealed for free on every new board.
-export const RULES = { freeReveal: 2 };
+export const RULES = { freeReveal: 3, boardPairs: 9 }; // boardPairs: deck cards per board (each shows as a pair)
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
 const wait = (fn, ms) => setTimeout(fn, ms * PACE.scale);
@@ -64,7 +63,7 @@ export class Battle {
     // Discard whatever's left on the old board.
     for (const c of this.boardCards || []) (c._exhaust ? this.exhaust : this.discard).push(c);
     const hand = [];
-    while (hand.length < BOARD_PAIRS) {
+    while (hand.length < RULES.boardPairs) {
       if (!this.draw.length) {
         if (!this.discard.length) break;
         this.draw = shuffle(this.discard);
