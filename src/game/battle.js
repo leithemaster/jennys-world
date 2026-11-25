@@ -7,6 +7,7 @@
 // so remembering them pays off. When energy hits 0, the enemy acts.
 import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
+import { T } from './terms.js';
 
 const BOARD_PAIRS = 8;
 // Tunable rules. freeReveal = cards revealed for free on every new board.
@@ -93,7 +94,7 @@ export class Battle {
     const s = this.board[i];
     if (!s || s.state === 'up' || s.state === 'gone') return;
     if (!this.first) {
-      if (this.energy <= 0) { this.log('Out of energy. End your turn.'); return; }
+      if (this.energy <= 0) { this.log(`Out of ${T.energy}. End your turn.`); return; }
       this.energy -= 1;
       s.state = 'up'; s.seen = true;
       this.emit('sfx', 'flip');
@@ -123,13 +124,13 @@ export class Battle {
 
   miss() {
     this.emit('sfx', 'miss');
-    if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log('Miss! Momentum keeps your combo.'); }
-    else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log('Miss! Groove keeps half your combo.'); }
+    if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
+    else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log(`Miss! Groove keeps half your ${T.combo}.`); }
     else { this.combo = 0; this.log('No match…'); }
     if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
       this.flags.missRefunded = true;
       this.energy += 1;
-      this.log('Miss refunded (+1 energy).');
+      this.log(`Miss refunded (+1 ${T.energy}).`);
     }
   }
 
@@ -153,7 +154,7 @@ export class Battle {
       if (this.has('strap')) this.gainBlock(6);
       if (this.has('lipTint')) this.heal(3);
       if (this.has('snackBag')) this.heal(2);
-      this.log('Board cleared! +1 energy.');
+      this.log(`Board cleared! +1 ${T.energy}.`);
       this.emit('sfx', 'clear');
       this.emit('cleared');
       setTimeout(() => { this.dealBoard(); this.emit('update'); this.checkAutoEnd(); }, 450);
@@ -168,7 +169,7 @@ export class Battle {
     if (!this.over && !this.busy && !this.first && this.energy <= 0 && this.has('spareBattery') && !this.batteryUsed) {
       this.batteryUsed = true;
       this.gainEnergy(2);
-      this.log('Spare Battery! +2 energy.');
+      this.log(`Spare Battery! +2 ${T.energy}.`);
       this.emit('update');
       return;
     }
@@ -227,7 +228,7 @@ export class Battle {
   }
   gainEnergy(n, quiet) {
     this.energy = Math.max(0, this.energy + n);
-    if (!quiet) this.emit('float', 'player', `${n > 0 ? '+' : ''}${n} energy`, 'energy');
+    if (!quiet) this.emit('float', 'player', `${n > 0 ? '+' : ''}${n} ${T.energy}`, 'energy');
   }
   heal(n) {
     const before = this.run.hp;
@@ -296,7 +297,7 @@ export class Battle {
       case 'atk': for (let k = 0; k < (it.times || 1); k++) hitPlayer(it.n); this.log(`${e.name} attacks!`); break;
       case 'atkBlock': hitPlayer(it.n); e.block += it.b; this.log(`${e.name} attacks and shields up.`); break;
       case 'block': e.block += it.n; this.log(`${e.name} shields up (${it.n}).`); break;
-      case 'buff': e.strength += it.n; this.log(`${e.name} powers up! +${it.n} Fighting Spirit.`); this.emit('float', 'enemy', `+${it.n} Fighting Spirit`, 'strength'); break;
+      case 'buff': e.strength += it.n; this.log(`${e.name} powers up! +${it.n} ${T.spirit}.`); this.emit('float', 'enemy', `+${it.n} ${T.spirit}`, 'strength'); break;
       case 'heal': e.hp = Math.min(e.maxHp, e.hp + it.n); this.emit('float', 'enemy', `+${it.n}`, 'heal'); this.log(`${e.name} munches and heals.`); break;
       case 'debuff':
         if (it.weak) this.applyPlayer('weak', it.weak);
@@ -350,14 +351,14 @@ export class Battle {
     if (this.run.hp <= 0 && this.has('shibaCharm') && !this.run.shibaUsed) {
       this.run.shibaUsed = true;
       this.run.hp = Math.max(1, Math.round(this.run.maxHp * 0.25));
-      this.log('Shiba Keychain! Back up with 25% HP.');
+      this.log(`Shiba Keychain! Back up with 25% ${T.hp}.`);
       this.emit('float', 'player', 'Saved!', 'heal');
       this.emit('update');
     }
     if (this.run.hp <= 0 && this.has('shibaPlush') && !this.savedByShiba) {
       this.savedByShiba = true;
       this.run.hp = 1;
-      this.log('Shiba Plush saves you! (1 HP)');
+      this.log(`Shiba Plush saves you! (1 ${T.hp})`);
       this.emit('float', 'player', 'Saved!', 'heal');
       this.emit('update');
     }
@@ -367,11 +368,11 @@ export class Battle {
   }
 }
 
-export const STATUS_NAMES = { weak: 'Sleepy', vuln: 'Exposed', poison: 'Glitch', strength: 'Fighting Spirit', thorns: 'Spikes' };
+export const STATUS_NAMES = { weak: T.sleepy, vuln: T.exposed, poison: T.glitch, strength: T.spirit, thorns: T.spikes };
 export const STATUS_HELP = {
-  weak: 'Sleepy: deals 25% less damage.',
-  vuln: 'Exposed: takes 50% more damage.',
-  poison: 'Glitch: loses that much HP each turn, then Glitch goes down by 1.',
-  strength: 'Fighting Spirit: adds damage to every hit.',
-  thorns: 'Spikes: deals damage back when hit.',
+  weak: `${T.sleepy}: deals 25% less damage.`,
+  vuln: `${T.exposed}: takes 50% more damage.`,
+  poison: `${T.glitch}: loses that much ${T.hp} each turn, then ${T.glitch} goes down by 1.`,
+  strength: `${T.spirit}: adds damage to every hit.`,
+  thorns: `${T.spikes}: deals damage back when hit.`,
 };

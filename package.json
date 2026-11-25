@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Spire Match: a memory card battler. Match pairs, build a deck, climb the Net Café Tower.",
+  "description": "Kioku Tower: a memory card battler. Match pairs, build a deck, climb the Net Café Tower.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

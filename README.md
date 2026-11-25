@@ -1,4 +1,4 @@
-# Spire Match
+# Kioku Tower
 
 A memory card battler made for my sister. Part of Jenny's World.
 
@@ -60,8 +60,15 @@ npm install
 npm run dev
 ```
 
+## Renaming things
+
+Every name a player reads lives in **`src/game/terms.js`**: the game's name, the tower and shop names, Haru's Gift, and keywords like Block, energy, combo, Exhaust, the statuses (Fighting Spirit, Sleepy, Exposed, Glitch, Spikes) and card types. Change a word there and it updates card text, charms, events, the battle log, tooltips and help.
+
+The code itself uses fixed internal ids (for example the `strength` status), so renaming never breaks saved runs. Card, charm and enemy names are in their own files (`cards.js`, `charms.js`, `enemies.js`).
+
 ## Where things live
 
+- `src/game/terms.js` – every player-facing name and keyword (rename things here)
 - `src/game/cards.js` – every card and what it does
 - `src/game/enemies.js` – enemies, their move patterns, and which floor they're on
 - `src/game/charms.js` – charms (passive items)

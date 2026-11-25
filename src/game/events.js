@@ -1,18 +1,19 @@
 // "?" rooms. Each option: label, (optional) note, can(run) -> bool, go(run, api) -> result text.
 // api: { addCard(id), randomCard(rarity?), addCharm(id?), upgradeRandom(), removeCard(), pickRemove(), pickUpgrade() }
 
+import { T } from './terms.js';
 export const EVENTS = [
   {
     id: 'claw',
     title: 'Claw Machine',
-    text: 'A claw machine full of tiny charms blinks at you. One try costs 25 coins.',
+    text: `A claw machine full of tiny charms blinks at you. One try costs 25 ${T.coins}.`,
     options: [
-      { label: 'Play (25 coins)', can: (r) => r.coins >= 25, go: (r, api) => {
+      { label: `Play (25 ${T.coins})`, can: (r) => r.coins >= 25, go: (r, api) => {
         r.coins -= 25;
         if (Math.random() < 0.55) { const c = api.addCharm(); return `The claw holds! You win ${c}.`; }
         return 'So close… the charm slips out of the claw.';
       } },
-      { label: 'Walk away', go: () => 'You keep your coins.' },
+      { label: 'Walk away', go: () => `You keep your ${T.coins}.` },
     ],
   },
   {
@@ -29,10 +30,10 @@ export const EVENTS = [
     title: 'Vending Machine',
     text: 'A vending machine hums in the corner. The coin slot is taped over, but the snacks look great.',
     options: [
-      { label: 'Buy a snack (15 coins)', note: 'Heal 12.', can: (r) => r.coins >= 15, go: (r) => { r.coins -= 15; r.hp = Math.min(r.maxHp, r.hp + 12); return 'Crunchy. +12 HP.'; } },
-      { label: 'Give it a kick', note: 'Take 5 damage. Maybe coins fall out.', go: (r) => {
+      { label: `Buy a snack (15 ${T.coins})`, note: 'Heal 12.', can: (r) => r.coins >= 15, go: (r) => { r.coins -= 15; r.hp = Math.min(r.maxHp, r.hp + 12); return `Crunchy. +12 ${T.hp}.`; } },
+      { label: 'Give it a kick', note: `Take 5 damage. Maybe ${T.coins} fall out.`, go: (r) => {
         r.hp = Math.max(1, r.hp - 5);
-        if (Math.random() < 0.6) { r.coins += 35; return 'Ouch! …but 35 coins rattle out.'; }
+        if (Math.random() < 0.6) { r.coins += 35; return `Ouch! …but 35 ${T.coins} rattle out.`; }
         return 'Ouch. Nothing happens.';
       } },
       { label: 'Leave', go: () => 'You move on.' },
@@ -45,16 +46,16 @@ export const EVENTS = [
     text: 'A sticker photo booth. Strike a pose and change something about yourself.',
     options: [
       { label: 'Cute pose', note: 'Upgrade a card.', go: async (r, api) => (await api.pickUpgrade()) },
-      { label: 'Cool pose', note: 'Remove a card. Lose 6 HP.', go: async (r, api) => { r.hp = Math.max(1, r.hp - 6); return api.pickRemove(); } },
+      { label: 'Cool pose', note: `Remove a card. Lose 6 ${T.hp}.`, go: async (r, api) => { r.hp = Math.max(1, r.hp - 6); return api.pickRemove(); } },
       { label: 'Skip', go: () => 'Maybe next time.' },
     ],
   },
   {
     id: 'gacha',
     title: 'Gacha Capsule',
-    text: 'A capsule toy machine with card capsules inside. 20 coins per spin.',
+    text: `A capsule toy machine with card capsules inside. 20 ${T.coins} per spin.`,
     options: [
-      { label: 'Spin (20 coins)', can: (r) => r.coins >= 20, go: (r, api) => {
+      { label: `Spin (20 ${T.coins})`, can: (r) => r.coins >= 20, go: (r, api) => {
         r.coins -= 20;
         const roll = Math.random();
         const rar = roll < 0.12 ? 'rare' : roll < 0.5 ? 'uncommon' : 'common';
@@ -67,10 +68,10 @@ export const EVENTS = [
   {
     id: 'forum',
     title: 'Forum Thread',
-    text: 'Someone left a forum open on a PC. The thread title: "best combo builds??"',
+    text: `Someone left a forum open on a PC. The thread title: "best ${T.combo} builds??"`,
     options: [
       { label: 'Read the guide', note: 'Gain a random uncommon card.', go: (r, api) => `You learned ${api.addCard(api.randomCard('uncommon'))}.` },
-      { label: 'Read the comments', note: 'Lose 4 HP. Gain 50 coins.', go: (r) => { r.hp = Math.max(1, r.hp - 4); r.coins += 50; return 'The comments hurt… but someone tipped you 50 coins.'; } },
+      { label: 'Read the comments', note: `Lose 4 ${T.hp}. Gain 50 ${T.coins}.`, go: (r) => { r.hp = Math.max(1, r.hp - 4); r.coins += 50; return `The comments hurt… but someone tipped you 50 ${T.coins}.`; } },
     ],
   },
   {
@@ -78,8 +79,8 @@ export const EVENTS = [
     title: 'Comfy Booth',
     text: 'An empty booth with a blanket and a reclining chair.',
     options: [
-      { label: 'Short nap', note: 'Heal 25% of max HP.', go: (r) => { const h = Math.round(r.maxHp * 0.25); r.hp = Math.min(r.maxHp, r.hp + h); return `You wake up refreshed. +${h} HP.`; } },
-      { label: 'Stretch', note: '+5 max HP.', go: (r) => { r.maxHp += 5; r.hp += 5; return 'Stretch break. +5 max HP.'; } },
+      { label: 'Short nap', note: `Heal 25% of max ${T.hp}.`, go: (r) => { const h = Math.round(r.maxHp * 0.25); r.hp = Math.min(r.maxHp, r.hp + h); return `You wake up refreshed. +${h} ${T.hp}.`; } },
+      { label: 'Stretch', note: `+5 max ${T.hp}.`, go: (r) => { r.maxHp += 5; r.hp += 5; return `Stretch break. +5 max ${T.hp}.`; } },
     ],
   },
   {

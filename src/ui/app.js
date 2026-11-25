@@ -11,13 +11,14 @@ import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
 import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
+import { GAME, T } from '../game/terms.js';
 
 const app = document.getElementById('app');
 let run = null;
 let battle = null;
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const TYPE_LABEL = { attack: 'Attack', skill: 'Skill', power: 'Power', status: 'Status' };
+const TYPE_LABEL = T.types;
 
 // ---------- shared pieces ----------
 export function cardHTML(c, extra = '') {
@@ -197,10 +198,10 @@ function menu() {
 
 function help() {
   modal(`<h2>How to play</h2><div class="help-text">
-    <p><b>Climb the Net Café Tower.</b> Three floors, each ending with a boss. Pick your path on the map.</p>
+    <p><b>Climb the ${GAME.tower}.</b> Three floors, each ending with a boss. Pick your path on the map.</p>
     <p><b>Every card in your deck shows up twice</b> on the board, face down. Flip two cards: if they match, that card is played.</p>
-    <p><b>Flipping a pair costs 1 energy.</b> You get 3 energy a turn. When it runs out, the enemy does what its bubble says.</p>
-    <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 energy and a fresh board.</p>
+    <p><b>Flipping a pair costs 1 ${T.energy}.</b> You get 3 ${T.energy} a turn. When it runs out, the enemy does what its bubble says.</p>
+    <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 ${T.energy} and a fresh board.</p>
     <p><b>Free peek:</b> every new board starts with 2 cards revealed.</p>
     <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
@@ -214,12 +215,13 @@ function help() {
 // ---------- title ----------
 export function title() {
   battle = null;
+  document.title = `${GAME.name} · Jenny's World`;
   const saved = loadRun();
   const stats = loadStats();
   app.innerHTML = `<main class="title">
     <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
-    <h1 class="logo"><span>SPIRE</span><span>MATCH</span></h1>
-    <p class="tagline">A memory card battler · climb the Net Café Tower</p>
+    <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
+    <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
     <div class="stack narrow">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ${uiIcon('heart')} ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
@@ -250,7 +252,7 @@ function harusGift() {
   const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru').sort(() => Math.random() - 0.5).slice(0, 3);
   app.innerHTML = `<main class="room gift">
     <div class="gift-art">${blobBackdrop()}${jennySVG()}</div>
-    <h1>Haru's Gift</h1>
+    <h1>${GAME.gift}</h1>
     <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
     <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
   </main>`;
@@ -313,7 +315,7 @@ function mapScreen() {
 
   const boss = ENEMIES[ACTS[run.act].boss];
   app.innerHTML = `${header()}<main class="map-screen">
-    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two rest booths.</p></div>
+    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
     <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
     <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${{ fight: 'Fight', elite: 'Elite', event: 'Unknown', shop: 'Shop', rest: 'Rest', treasure: 'Treasure' }[t]}</span></li>`).join('')}</ul>
   </main>`;
@@ -448,8 +450,8 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'status' || it.t === 'atkStatus') parts.push(`<span class="i-debuff">${icon(CARDS[it.card].icon)}+${it.count} ${esc(CARDS[it.card].name)}</span>`);
     if (it.t === 'scramble') parts.push(`<span class="i-debuff">${icon('bounce')}Scramble</span>`);
     const tipText = {
-      atk: 'Will attack.', atkBlock: 'Will attack and gain Block.', block: 'Will gain Block.', buff: 'Will gain Fighting Spirit.', heal: 'Will heal.',
-      debuff: 'Will make you Sleepy or Exposed.', status: 'Will add junk cards to your deck.', atkStatus: 'Will attack and add junk cards to your deck.',
+      atk: 'Will attack.', atkBlock: `Will attack and gain ${T.block}.`, block: `Will gain ${T.block}.`, buff: `Will gain ${T.spirit}.`, heal: 'Will heal.',
+      debuff: `Will make you ${T.sleepy} or ${T.exposed}.`, status: 'Will add junk cards to your deck.', atkStatus: 'Will attack and add junk cards to your deck.',
       scramble: 'Will shuffle every face-down card on the board!',
     }[it.t];
     return `<div class="bubble" data-tip="${esc(tipText)}">${parts.join('')}</div>`;
@@ -463,7 +465,7 @@ function battleScreen(enemyId, kind) {
     $('[data-ehptext]').textContent = `${e.hp}/${e.maxHp}`;
     const blk = $('[data-blk]'); blk.hidden = !b.player.block; blk.textContent = b.player.block;
     const eblk = $('[data-eblk]'); eblk.hidden = !e.block; eblk.textContent = e.block;
-    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} energy each turn.">+${b.powers.energy} energy</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} Glitch each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} Block each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
+    $('[data-pstat]').innerHTML = statusHTML(b.player) + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
@@ -475,9 +477,9 @@ function battleScreen(enemyId, kind) {
     const slots = Math.max(b.turnEnergy, shown);
     const pips = slots <= 8 ? Array.from({ length: slots }, (_, i) => `<i class="pip${i < b.energy ? ' on' : i < shown ? ' using' : ''}">${icon('bolt')}</i>`).join('') : '';
     const out = shown === 0 && !b.over;
-    const label = out ? '<span class="en-empty">Out of energy · enemy turn</span>'
-      : pending ? `<span><b>${b.energy}</b> energy left · pick a second card</span>`
-      : `<span><b>${b.energy}</b> energy left · each pair costs 1</span>`;
+    const label = out ? `<span class="en-empty">Out of ${T.energy} · enemy turn</span>`
+      : pending ? `<span><b>${b.energy}</b> ${T.energy} left · pick a second card</span>`
+      : `<span><b>${b.energy}</b> ${T.energy} left · each pair costs 1</span>`;
     if (en.dataset.last !== String(shown)) {
       const up = Number(en.dataset.last || 0) < shown;
       en.classList.remove('gain', 'spend'); void en.offsetWidth; en.classList.add(up ? 'gain' : 'spend');
@@ -546,7 +548,7 @@ function battleWon(kind, enemyId) {
     app.innerHTML = `${header()}<main class="reward">
       <h1>${esc(ENEMIES[enemyId].name)} defeated!</h1>
       <ul class="loot">
-        <li>${uiIcon('coin')} ${coins} coins</li>
+        <li>${uiIcon('coin')} ${coins} ${T.coins}</li>
         ${healed ? `<li>${uiIcon('heart')} healed ${healed}</li>` : ''}
         ${charm ? `<li>${charmIcon(charm)} ${esc(CHARMS[charm].name)} <small>${esc(CHARMS[charm].desc)}</small></li>` : ''}
       </ul>
@@ -576,7 +578,7 @@ function actCleared() {
   saveRun(run);
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
-    <p>Jenny takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} HP on the way.</p>
+    <p>Jenny takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
   bindHeader(app);
   app.querySelector('[data-go]').addEventListener('click', mapScreen);
@@ -609,7 +611,7 @@ function eventScreen() {
   const api = {
     addCard: (id) => { run.deck.push({ id }); return CARDS[id].name; },
     randomCard: (rar) => drawCard(run, rar || 'common'),
-    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return '50 coins (you have every charm!)'; } gainCharm(run, k); return CHARMS[k].name; },
+    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } gainCharm(run, k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
@@ -636,7 +638,7 @@ function restScreen() {
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
     <div class="stack narrow">
-      <button class="btn option" data-heal>Nap <small>Heal ${heal} HP</small></button>
+      <button class="btn option" data-heal>Nap <small>Heal ${heal} ${T.hp}</small></button>
       <button class="btn option" data-up ${run.deck.some(canUpgrade) ? '' : 'disabled'}>Practice <small>Upgrade a card</small></button>
     </div></main>`;
   bindHeader(app);
@@ -666,7 +668,7 @@ function shopScreen() {
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
-      <h1>Konbini Corner</h1><p class="room-text">Snacks, cards and shiny charms.${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
+      <h1>${GAME.shop}</h1><p class="room-text">Snacks, cards and shiny charms.${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
       <h2>Cards</h2>
       <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
       <h2>Charms</h2>
