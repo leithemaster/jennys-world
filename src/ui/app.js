@@ -4,7 +4,7 @@ import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES } from '../game/battle.js';
 import {
   newRun, generateMap, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
-  afterFightHealing, shopStock, saveRun, loadRun, clearRun, loadStats, recordRun, TOTAL_FLOORS, removeCost,
+  afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
 import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
@@ -12,6 +12,10 @@ import { icon, jennySVG, enemySVG, roomIcon } from './art.js';
 import { LOOKS, getLook, setLook, blobBackdrop } from './chibi.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
+import {
+  getProgress, recordRunEnd, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
+  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet,
+} from '../game/progress.js';
 
 const app = document.getElementById('app');
 let run = null;
@@ -21,6 +25,21 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const TYPE_LABEL = T.types;
 
 // ---------- shared pieces ----------
+// Every card or charm the player gets goes through these, so the progress
+// save (and later the collection book) sees it.
+function takeCard(card) { run.deck.push(card); noteCardTaken(card.id); }
+function takeCharm(id) {
+  if (!id || run.charms.includes(id)) return;
+  gainCharm(run, id);
+  noteCharmTaken(id);
+}
+function startNewRun() {
+  run = newRun();
+  run.deck.forEach((c) => noteCardTaken(c.id));
+  saveRun(run);
+  harusGift();
+}
+
 export function cardHTML(c, extra = '') {
   const def = CARDS[c.id];
   const text = cardText(c);
@@ -230,7 +249,7 @@ export function title() {
   battle = null;
   document.title = `${GAME.name} · Jenny's World`;
   const saved = loadRun();
-  const stats = loadStats();
+  const stats = getProgress().totals;
   app.innerHTML = `<main class="title">
     <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
     <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
@@ -243,8 +262,8 @@ export function title() {
     <dl class="stats">
       <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
       <div><dt>Wins</dt><dd>${stats.wins}</dd></div>
-      <div><dt>Best</dt><dd>${stats.bestFloor}/${TOTAL_FLOORS}</dd></div>
-      <div><dt>Defeated</dt><dd>${stats.kills}</dd></div>
+      <div><dt>Best</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
+      <div><dt>Defeated</dt><dd>${stats.defeated}</dd></div>
     </dl>
     <p class="footnote">Jenny's World</p>
   </main>`;
@@ -253,9 +272,7 @@ export function title() {
   app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) harusGift(); else mapScreen(); });
   app.querySelector('[data-new]').addEventListener('click', () => {
     if (saved && !confirm('Start over? Your current run will be lost.')) return;
-    run = newRun();
-    saveRun(run);
-    harusGift();
+    startNewRun();
   });
 }
 
@@ -263,6 +280,8 @@ export function title() {
 function harusGift() {
   battle = null;
   const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru').sort(() => Math.random() - 0.5).slice(0, 3);
+  noteGuardianMet('haru');
+  ids.forEach(noteCharmSeen);
   app.innerHTML = `<main class="room gift">
     <div class="gift-art">${blobBackdrop()}${jennySVG()}</div>
     <h1>${GAME.gift}</h1>
@@ -270,7 +289,7 @@ function harusGift() {
     <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
   </main>`;
   app.querySelectorAll('[data-gift]').forEach((b) => b.addEventListener('click', () => {
-    gainCharm(run, b.dataset.gift);
+    takeCharm(b.dataset.gift);
     run.giftPending = false;
     saveRun(run);
     if (!localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
@@ -415,6 +434,7 @@ function describeMove(it, dmg = null) {
 
 function battleScreen(enemyId, kind) {
   const def = ENEMIES[enemyId];
+  noteEnemyMet(enemyId);
   app.innerHTML = `${header()}<main class="battle">
     <section class="arena">
       <div class="fighter you" data-who="player">
@@ -646,13 +666,16 @@ function moveBoardFocus(key) {
 function battleWon(kind, enemyId) {
   battle = null;
   run.kills += 1;
+  noteEnemyDefeated(enemyId);
   const healed = afterFightHealing(run);
   const coins = gainCoins(run, kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9));
   const choices = cardChoices(run, kind);
   const charm = kind === 'elite' ? randomCharm(run, 'drop') : null;
-  if (charm) gainCharm(run, charm);
+  if (charm) takeCharm(charm);
   const bossCharms = [];
   if (kind === 'boss') for (let i = 0; i < 3; i++) { const k = drawCharm(run, 'boss', bossCharms); if (k) bossCharms.push(k); }
+  choices.forEach((c) => noteCardSeen(c.id));
+  bossCharms.forEach(noteCharmSeen);
   setTimeout(() => sfx('coin'), 250);
   let pickedCard = false, pickedBoss = !bossCharms.length;
 
@@ -670,9 +693,9 @@ function battleWon(kind, enemyId) {
       ${pickedCard && pickedBoss ? '<button class="btn big yellow" data-go>Continue</button>' : ''}
     </main>`;
     bindHeader(app);
-    app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { run.deck.push({ ...choices[Number(b.dataset.pick)] }); pickedCard = true; render(); }));
+    app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { takeCard({ ...choices[Number(b.dataset.pick)] }); pickedCard = true; render(); }));
     app.querySelector('[data-skip]')?.addEventListener('click', () => { pickedCard = true; render(); });
-    app.querySelectorAll('[data-boss]').forEach((b) => b.addEventListener('click', () => { gainCharm(run, b.dataset.boss); pickedBoss = true; render(); }));
+    app.querySelectorAll('[data-boss]').forEach((b) => b.addEventListener('click', () => { takeCharm(b.dataset.boss); pickedBoss = true; render(); }));
     app.querySelector('[data-go]')?.addEventListener('click', () => (kind === 'boss' ? actCleared() : completeRoom()));
     app.querySelector('main button')?.focus();
   };
@@ -699,7 +722,7 @@ function actCleared() {
 function gameOver(won, abandoned) {
   battle = null;
   clearRun();
-  const stats = recordRun(run, won);
+  const stats = recordRunEnd(runSummary(run, won)).totals;
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
     <div class="title-art">${blobBackdrop()}${jennySVG()}</div>
     <h1>${won ? 'The Tower is cleared!' : abandoned ? 'Run abandoned' : 'Knocked out!'}</h1>
@@ -708,22 +731,23 @@ function gameOver(won, abandoned) {
       <div><dt>Rooms</dt><dd>${run.floorsCleared}</dd></div>
       <div><dt>Defeated</dt><dd>${run.kills}</dd></div>
       <div><dt>Deck</dt><dd>${run.deck.length}</dd></div>
-      <div><dt>Best ever</dt><dd>${stats.bestFloor}/${TOTAL_FLOORS}</dd></div>
+      <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
-  app.querySelector('[data-again]').addEventListener('click', () => { run = newRun(); saveRun(run); harusGift(); });
+  app.querySelector('[data-again]').addEventListener('click', startNewRun);
   app.querySelector('[data-title]').addEventListener('click', title);
 }
 
 // ---------- rooms ----------
 function eventScreen() {
   const ev = drawEvent(run);
+  noteEventMet(ev.id);
   const api = {
-    addCard: (id) => { run.deck.push({ id }); return CARDS[id].name; },
+    addCard: (id) => { takeCard({ id }); return CARDS[id].name; },
     randomCard: (rar) => drawCard(run, rar || 'common'),
-    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } gainCharm(run, k); return CHARMS[k].name; },
+    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } takeCharm(k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
@@ -765,7 +789,7 @@ function restScreen() {
 
 function treasureScreen() {
   const k = randomCharm(run, 'drop');
-  if (k) gainCharm(run, k); else run.coins += 60;
+  if (k) takeCharm(k); else run.coins += 60;
   app.innerHTML = `${header()}<main class="room treasure">
     <div class="room-icon">${roomIcon('treasure')}</div>
     <h1>Prize Locker</h1>
@@ -777,6 +801,8 @@ function treasureScreen() {
 
 function shopScreen() {
   const stock = shopStock(run);
+  stock.cards.forEach((c) => noteCardSeen(c.id));
+  stock.charms.forEach((c) => noteCharmSeen(c.id));
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
@@ -792,11 +818,11 @@ function shopScreen() {
     bindHeader(app);
     app.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.cards[Number(b.dataset.card)];
-      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; run.deck.push({ id: c.id }); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCard({ id: c.id }); sfx('coin'); render();
     }));
     app.querySelectorAll('[data-charm]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.charms[Number(b.dataset.charm)];
-      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; gainCharm(run, c.id); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCharm(c.id); sfx('coin'); render();
     }));
     app.querySelector('[data-remove]').addEventListener('click', async () => {
       const i = await pickFromDeck('Remove a card');

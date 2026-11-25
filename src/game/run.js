@@ -1,11 +1,14 @@
-// Run state: deck, HP, coins, charms, map position. Saved to localStorage
-// whenever you're on the map, so a run can be continued later.
+// Run state: deck, HP, coins, charms, map position. Saved whenever you're on
+// the map, so a run can be continued later.
 import { STARTER_DECK, CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
 import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard } from './loot.js';
 
-const SAVE_KEY = 'sm.run.v3';
-const STATS_KEY = 'sm.stats.v2';
+import { readDoc, writeDoc, removeDoc, readLegacy } from '../platform/storage.js';
+
+const RUN_DOC = 'run';
+const RUN_VERSION = 1;
+const LEGACY_RUN_KEY = 'sm.run.v3';
 export const ROWS = 9; // rows of rooms before the boss
 const COLS = 5;
 
@@ -13,6 +16,7 @@ const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { co
 
 export function newRun() {
   const run = {
+    character: 'jenny',
     hp: 55, maxHp: 55, coins: 99,
     deck: STARTER_DECK.map((id) => ({ id })),
     charms: [],
@@ -222,28 +226,32 @@ export function shopStock(run) {
   return { cards, charms, removed: false };
 }
 
-// ---------- save / stats ----------
-export function saveRun(run) { localStorage.setItem(SAVE_KEY, JSON.stringify(run)); }
+// ---------- save ----------
+// The run in progress is its own save document, separate from progress
+// (see progress.js). Same JSON rules: plain data, stable string ids.
+export function saveRun(run) { writeDoc(RUN_DOC, { version: RUN_VERSION, ...run }); }
 export function loadRun() {
-  try {
-    const r = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (r && r.deck && r.deck.every((c) => CARDS[c.id]) && r.charms.every((k) => CHARMS[k])) return r;
-  } catch { /* ignore */ }
+  const r = readDoc(RUN_DOC) || readLegacy(LEGACY_RUN_KEY);
+  if (r && r.deck && r.deck.every((c) => CARDS[c.id]) && r.charms.every((k) => CHARMS[k])) {
+    delete r.version;
+    r.character ||= 'jenny';
+    return r;
+  }
   return null;
 }
-export function clearRun() { localStorage.removeItem(SAVE_KEY); }
+export function clearRun() { removeDoc(RUN_DOC); try { localStorage.removeItem(LEGACY_RUN_KEY); } catch { /* ignore */ } }
 
-export function loadStats() {
-  try { return { runs: 0, wins: 0, bestFloor: 0, kills: 0, ...JSON.parse(localStorage.getItem(STATS_KEY)) }; } catch { return { runs: 0, wins: 0, bestFloor: 0, kills: 0 }; }
-}
-export function recordRun(run, won) {
-  const s = loadStats();
-  s.runs += 1;
-  if (won) s.wins += 1;
-  s.bestFloor = Math.max(s.bestFloor, run.floorsCleared);
-  s.kills += run.kills;
-  localStorage.setItem(STATS_KEY, JSON.stringify(s));
-  return s;
+// What the progress save keeps about a finished run.
+export function runSummary(run, won) {
+  return {
+    character: run.character || 'jenny',
+    won: !!won,
+    floors: run.floorsCleared,
+    act: run.act,
+    defeated: run.kills,
+    deck: run.deck.map((c) => (c.up ? `${c.id}+` : c.id)),
+    charms: [...run.charms],
+  };
 }
 
 export const TOTAL_FLOORS = (ROWS + 1) * 3;
