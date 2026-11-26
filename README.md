@@ -15,7 +15,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 ## The run
 
-Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in a boss. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
+Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
 
 **Memory Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
 
@@ -53,6 +53,7 @@ Rewards don't come from pure dice rolls. Each source draws from its own shuffled
 - **Conditional items** stay hidden until your deck can use them. Catalyst only shows up once you own Stinger, Glitch Vial needs a Glitch card, Fuzzy Socks needs 3+ Guard/Hoodie Up, and so on.
 - **Events** – every "?" event shows up once before any repeats.
 - **Snacks** – one-use items (like potions) kept in the snack bar in the header, 3 slots to start. Click one to eat it (free, no energy) or toss it; Banana Milk and Birthday Cake can also be eaten on the map. 18 snacks in `src/game/snacks.js`: 2 per card style plus 4 for any deck. After a fight there's a 30% chance of a snack (elites +15%); the chance drops 10% after a drop and rises 10% after a fight without one. Once your deck has a style, half of all snacks come from that style. Shops sell 3. Snack charms: Lunchbox (+2 slots), Snack Coupon (+20% drops), Secret Recipe (snacks work twice), Hamster Cheeks and Pocket Fridge (event only). Snack events: Vending Machine, Free Samples, Snack Swap (trade snacks for cards, charms or coins) and Midnight Konbini Run.
+- **Event snacks** – Cotton Candy and Rainbow Cotton Candy (The Cotton Candy Lady), Roasted Sweet Potato (Sweet Potato Cart) and Dalgona Candy (Dalgona Challenge) only come from those events.
 - **Event-only cards and charms** – 9 cards (rarity `event`) and 4 charms (pool `event`) that never show up in rewards or shops. Events hand them out; each event lists them in `gives`, and the catalog shows which event they come from.
 - **Special events** – 8 conditional "?" events, one per card style plus a Crossover one for hybrid decks. From Floor 2 on, once your deck has 3+ cards of a style (or 2+ hybrid cards), the next "?" room is that special event, at most one per floor. Each offers a boon (a run-long charm that powers up that style), an upgrade for all your cards of that style, or a smaller reward.
 - **Enemies** – you won't meet the same enemy twice until you've seen the rest of that floor's lineup.
@@ -78,6 +79,7 @@ Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in
 - `node tools/sim.mjs 200 chars` compares the characters (and Jenny with no passive).
 - `node tools/sim.mjs 200 styles` plays every character with every card style (the bot only picks cards of that style).
 - `node tools/sim.mjs 200 deaths` shows where runs end.
+- `node tools/sim.mjs 200 bosses` shows how often each boss is beaten by the runs that reach it.
 - `node tools/sim.mjs 200 snacks` compares runs with and without snacks (the bot eats them in elite and boss fights, and heals when low).
 - `node tools/sim.mjs 200 boons` plays each style with and without its special-event boon (add `1` at the end to allow only one boon per run).
 

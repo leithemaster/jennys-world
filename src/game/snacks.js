@@ -2,7 +2,7 @@
 // with SNACK_SLOTS empty slots. Use one any time during your turn in a fight;
 // snacks marked `anytime` can also be eaten on the map.
 //
-// rarity: common | uncommon | rare (drop and shop odds)
+// rarity: common | uncommon | rare (drop and shop odds) | event (only from events, see `gives` in events.js)
 // style: the card style it helps (styled snacks drop more for that style)
 // fx(b): effect inside a Battle; fxRun(run): effect outside a fight (anytime snacks only)
 // icon: a card icon name from src/ui/art.js; color: the badge color
@@ -65,6 +65,18 @@ export const SNACKS = {
     desc: `Heal 25% of your max ${T.hp} and gain 5 max ${T.hp}. Can be eaten on the map.`,
     fx: (b) => { b.run.maxHp += 5; b.heal(Math.round(b.run.maxHp * 0.25)); },
     fxRun: (run) => { run.maxHp += 5; return healRun(run, Math.round(run.maxHp * 0.25)); } },
+
+  // ----- event only: never dropped or sold -----
+  cottonCandy: { name: 'Cotton Candy', icon: 'bubbles', color: '#ffb3d9', rarity: 'event',
+    desc: `Heal 6 and gain 6 ${T.block}.`, fx: (b) => { b.heal(6); b.gainBlock(6); } },
+  rainbowCotton: { name: 'Rainbow Cotton Candy', icon: 'star', color: '#c7a6ff', rarity: 'event',
+    desc: `+1 ${T.energy}, +2 ${T.combo} and reveal 2 hidden cards.`, fx: (b) => { b.gainEnergy(1); b.combo += 2; b.reveal(2); } },
+  sweetPotato: { name: 'Roasted Sweet Potato', icon: 'rice', color: '#b5651d', rarity: 'event', anytime: true,
+    desc: `Heal 12. In a fight, also clear your ${T.sleepy}, ${T.exposed} and ${T.glitch}. Can be eaten on the map.`,
+    fx: (b) => { b.heal(12); b.player.weak = 0; b.player.vuln = 0; b.player.poison = 0; },
+    fxRun: (run) => healRun(run, 12) },
+  dalgona: { name: 'Dalgona Candy', icon: 'crown', color: '#e8a04a', rarity: 'event',
+    desc: `Double your ${T.combo}, then +1 ${T.energy}.`, fx: (b) => { b.combo *= 2; b.gainEnergy(1); } },
 };
 
 export const SNACK_PRICE = { common: 45, uncommon: 65, rare: 90 };

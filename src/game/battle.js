@@ -41,6 +41,7 @@ export class Battle {
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
     this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false };
     this.healedThisFight = 0;
+    this.stolen = 0; // coins an enemy stole this fight (you get them back if you win)
     this.matchesThisFight = 0;
     this.stickerDeck = [];
     this.character = CHARACTERS[run.character] || CHARACTERS.jenny;
@@ -417,6 +418,35 @@ export class Battle {
         this.emit('sfx', 'junk');
         this.log(`${e.name} slips ${it.count} ${CARDS[it.card].name} into your deck.`);
         break;
+      case 'steal': {
+        hitPlayer(it.n);
+        const took = Math.min(this.run.coins, it.coins);
+        this.run.coins -= took; this.stolen += took;
+        this.emit('float', 'player', `-${took} ${T.coins}`, 'vuln');
+        this.log(`${e.name} swipes ${took} ${T.coins}! Win to get them back.`);
+        break;
+      }
+      case 'drain': {
+        const before = this.run.hp;
+        hitPlayer(it.n);
+        const took = before - this.run.hp;
+        if (took > 0) { e.hp = Math.min(e.maxHp, e.hp + took); this.emit('float', 'enemy', `+${took}`, 'heal'); }
+        this.log(`${e.name} drains you${took ? ` and heals ${took}` : ''}.`);
+        break;
+      }
+      case 'ban': {
+        // Bans a card from your deck for the rest of this fight (and attacks, if it has n).
+        if (it.n) hitPlayer(it.n);
+        const pile = this.draw.some((c) => CARDS[c.id].type !== 'status') ? this.draw : this.discard;
+        const ok = pile.filter((c) => CARDS[c.id].type !== 'status');
+        if (ok.length) {
+          const c = ok[Math.floor(Math.random() * ok.length)];
+          pile.splice(pile.indexOf(c), 1); this.exhaust.push(c);
+          this.log(`${e.name} bans ${CARDS[c.id].name} for the rest of this fight!`);
+          this.emit('sfx', 'junk');
+        } else this.log(`${e.name} looks for something to ban, but finds nothing.`);
+        break;
+      }
       case 'scramble': {
         const live = this.board.filter((s) => s.state !== 'gone');
         const cards = shuffle(live.map((s) => s.card));
@@ -468,7 +498,10 @@ export class Battle {
       this.emit('float', 'player', 'Saved!', 'heal');
       this.emit('update');
     }
-    if (this.enemy.hp <= 0) { this.over = true; this.emit('end', 'win'); return true; }
+    if (this.enemy.hp <= 0) {
+      if (this.stolen) { this.run.coins += this.stolen; this.log(`You get your ${this.stolen} ${T.coins} back.`); this.stolen = 0; }
+      this.over = true; this.emit('end', 'win'); return true;
+    }
     if (this.run.hp <= 0) { this.over = true; this.emit('end', 'lose'); return true; }
     return false;
   }

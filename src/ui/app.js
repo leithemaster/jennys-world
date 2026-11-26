@@ -7,7 +7,7 @@ import {
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor,
 } from '../game/run.js';
 import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
-import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop } from '../game/loot.js';
+import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop, bossFor } from '../game/loot.js';
 import { ALL_EVENTS } from '../game/events.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
@@ -502,7 +502,7 @@ function mapScreen() {
   nodes += `<g class="node t-boss${bossA ? ' avail' : ''}" transform="translate(${xOf('boss')} ${H / 2})" ${bossA ? 'tabindex="0" role="button" data-room="boss" aria-label="Boss room"' : ''}>
     <circle r="30"/><g transform="translate(-18 -18) scale(1.125)">${roomIcon('boss').replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
 
-  const boss = ENEMIES[ACTS[run.act].boss];
+  const boss = ENEMIES[bossFor(run)];
   app.innerHTML = `${header()}<main class="map-screen">
     <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
     <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
@@ -586,6 +586,9 @@ function describeMove(it, dmg = null) {
     case 'status': return `Will ${junk(it)}.`;
     case 'atkStatus': return `Will ${atk}, then ${junk(it)}.`;
     case 'scramble': return 'Will shuffle every card left on the board and turn them face down.';
+    case 'steal': return `Will ${atk} and steal up to ${it.coins} ${T.coins}. Win the fight to get them back.`;
+    case 'drain': return `Will ${atk} and heal as much as gets through your ${T.block}.`;
+    case 'ban': return `Will ${it.n ? `${atk} and ` : ''}ban a random card in your draw pile: it sits out the rest of this fight.`;
     default: return '';
   }
 }
@@ -689,13 +692,16 @@ function battleScreen(enemyId, kind) {
     }
     const dmg = battle.intentDamage();
     const parts = [];
-    if (it.t === 'atk' || it.t === 'atkBlock' || it.t === 'atkStatus') parts.push(`<span class="i-atk">${icon('blade')}${dmg}${it.times ? `×${it.times}` : ''}</span>`);
+    if (it.t === 'atk' || it.t === 'atkBlock' || it.t === 'atkStatus' || it.t === 'steal' || it.t === 'drain' || (it.t === 'ban' && it.n)) parts.push(`<span class="i-atk">${icon('blade')}${dmg}${it.times ? `×${it.times}` : ''}</span>`);
     if (it.t === 'block' || it.t === 'atkBlock') parts.push(`<span class="i-def">${icon('shield')}${it.b || it.n}</span>`);
     if (it.t === 'buff') parts.push(`<span class="i-buff">${icon('fire')}Power up</span>`);
     if (it.t === 'heal') parts.push(`<span class="i-buff">${icon('rice')}Heal</span>`);
     if (it.t === 'debuff') parts.push(`<span class="i-debuff">${icon('swirl')}Hex</span>`);
     if (it.t === 'status' || it.t === 'atkStatus') parts.push(`<span class="i-debuff">${icon(CARDS[it.card].icon)}+${it.count} ${esc(CARDS[it.card].name)}</span>`);
     if (it.t === 'scramble') parts.push(`<span class="i-debuff">${icon('bounce')}Scramble</span>`);
+    if (it.t === 'steal') parts.push(`<span class="i-debuff">${uiIcon('coin')}Steal ${it.coins}</span>`);
+    if (it.t === 'drain') parts.push(`<span class="i-buff">${icon('drop')}Drain</span>`);
+    if (it.t === 'ban') parts.push(`<span class="i-debuff">${icon('hammer')}Ban a card</span>`);
     const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : 'Picks its moves at random.';
     return `<div class="bubble" data-tip="${esc(`${describeMove(it, dmg)} ${next}`)}">${parts.join('')}</div>`;
   };

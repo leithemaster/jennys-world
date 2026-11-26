@@ -130,7 +130,7 @@ export function drawSnack(run, rarity) {
   const style = deckStyle(run);
   if (!rarity) { const r = Math.random() * 100; rarity = r < 8 ? 'rare' : r < 38 ? 'uncommon' : 'common'; }
   if (style && Math.random() < 0.5) {
-    const id = drawFrom(run, `snack:${style.arch}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].style === style.arch));
+    const id = drawFrom(run, `snack:${style.arch}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].style === style.arch && SNACKS[k].rarity !== 'event'));
     if (id) return id;
   }
   return drawFrom(run, `snack:${rarity}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === rarity))
@@ -174,9 +174,19 @@ export function drawEvent(run) {
   return EVENTS.find((e) => e.id === id) || EVENTS[0];
 }
 
+// Each floor's boss is picked once per run (so the map can show it ahead of time).
+export function bossFor(run, act = run.act) {
+  run.bossOf ||= {};
+  if (!run.bossOf[act] || !ACTS[act].bosses.includes(run.bossOf[act])) {
+    const list = ACTS[act].bosses;
+    run.bossOf[act] = list[Math.floor(Math.random() * list.length)];
+  }
+  return run.bossOf[act];
+}
+
 export function drawEnemy(run, type) {
   const act = ACTS[run.act];
-  if (type === 'boss') return act.boss;
+  if (type === 'boss') return bossFor(run);
   const list = type === 'elite' ? act.elites : act.normals;
   return drawFrom(run, `enemy:${run.act}:${type}`, () => list);
 }

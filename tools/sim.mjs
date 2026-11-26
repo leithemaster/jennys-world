@@ -10,6 +10,7 @@
 //   node tools/sim.mjs 200 chars      Jenny vs Toni (and Jenny with no passive)
 //   node tools/sim.mjs 200 styles     every character x every card style
 //   node tools/sim.mjs 200 deaths     where runs end
+//   node tools/sim.mjs 200 bosses     win rate against each boss (of the runs that reach it)
 //   node tools/sim.mjs 200 snacks     with and without snacks
 //   node tools/sim.mjs 200 boons      each style with and without its special-event boon
 
@@ -121,7 +122,9 @@ function playRun(skill, stats, opts = {}) {
         else { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
         continue;
       }
-      const won = fight(run, enemyFor(run, room), skill, stats, room);
+      const foe = enemyFor(run, room);
+      const won = fight(run, foe, skill, stats, room);
+      if (room === 'boss') { const bs = (stats.bossRes ||= {})[foe] ||= [0, 0]; bs[0]++; if (won) bs[1]++; }
       if (!won) { stats.deaths[`${act}:${room}`] = (stats.deaths[`${act}:${room}`] || 0) + 1; return act; }
       afterFightHealing(run);
       if (!opts.noSnacks) { const sn = rollSnackDrop(run, room); if (sn) addSnack(run, sn); }
@@ -157,6 +160,16 @@ function batch(skill, opts) {
   let wins = 0;
   for (let i = 0; i < N; i++) if (playRun(skill, stats, opts) === 3) wins++;
   return { stats, wins };
+}
+if (MODE === 'bosses') {
+  const { ENEMIES, ACTS } = await import('../src/game/enemies.js');
+  const res = {};
+  for (const character of Object.keys(CHARACTERS)) {
+    const { stats } = batch(SKILLS.sharp, { character });
+    for (const [id, [f, w]] of Object.entries(stats.bossRes || {})) { const r = (res[id] ||= [0, 0]); r[0] += f; r[1] += w; }
+  }
+  console.table(ACTS.flatMap((a, i) => a.bosses.map((id) => ({ floor: i + 1, boss: ENEMIES[id].name, fights: res[id]?.[0] || 0, 'beaten': res[id] ? `${Math.round((res[id][1] / res[id][0]) * 100)}%` : '-' }))));
+  process.exit(0);
 }
 if (MODE === 'snacks') {
   const out = [];

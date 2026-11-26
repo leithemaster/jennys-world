@@ -19,8 +19,9 @@ import { jennyChibi, toniChibi } from './chibi.js';
 export function buildCatalog() {
   // Which events hand out each event-only card / charm (and each boon).
   const fromEvents = { cards: {}, charms: {} };
+  fromEvents.snacks = {};
   for (const e of ALL_EVENTS) {
-    for (const k of ['cards', 'charms']) for (const id of e.gives?.[k] || []) (fromEvents[k][id] ||= []).push(e.title);
+    for (const k of ['cards', 'charms', 'snacks']) for (const id of e.gives?.[k] || []) (fromEvents[k][id] ||= []).push(e.title);
     if (e.boon) (fromEvents.charms[e.boon] ||= []).push(e.title);
   }
   const fromText = (k, id) => (fromEvents[k][id] ? `Only from: ${fromEvents[k][id].join(', ')}` : '');
@@ -49,10 +50,13 @@ export function buildCatalog() {
       case 'status': return `Add ${m.count} ${CARDS[m.card].name} to your deck`;
       case 'atkStatus': return `Attack ${m.n} + add ${m.count} ${CARDS[m.card].name}`;
       case 'scramble': return 'Scramble the board';
+      case 'steal': return `Attack ${m.n} + steal ${m.coins} ${T.coins} (back if you win)`;
+      case 'drain': return `Attack ${m.n}, heal what gets through`;
+      case 'ban': return `${m.n ? `Attack ${m.n} + ban` : 'Ban'} a card for this fight`;
       default: return m.t;
     }
   };
-  const floorOf = (id) => ACTS.find((a) => a.normals.includes(id) || a.elites.includes(id) || a.boss === id)?.name || '';
+  const floorOf = (id) => ACTS.find((a) => a.normals.includes(id) || a.elites.includes(id) || a.bosses.includes(id))?.name || '';
   const enemies = Object.entries(ENEMIES).map(([id, e]) => ({
     id, name: e.name, kind: e.boss ? 'Boss' : e.elite ? 'Elite' : 'Normal', floor: floorOf(id),
     hp: e.hp[0] === e.hp[1] ? String(e.hp[0]) : `${e.hp[0]}–${e.hp[1]}`, hpMax: e.hp[1],
@@ -65,7 +69,7 @@ export function buildCatalog() {
   const events = ALL_EVENTS.map((e) => ({
     id: e.id, title: e.title, text: e.text, requires: e.needs || '',
     special: !!e.special, style: e.style ? ARCHES[e.style].name : '', boon: e.boon ? CHARMS[e.boon].name : '',
-    gives: [...(e.gives?.cards || []).map((k) => CARDS[k].name), ...(e.gives?.charms || []).map((k) => CHARMS[k].name)],
+    gives: [...(e.gives?.cards || []).map((k) => CARDS[k].name), ...(e.gives?.charms || []).map((k) => CHARMS[k].name), ...(e.gives?.snacks || []).map((k) => SNACKS[k].name)],
     options: e.options.map((o) => ({ label: o.label, note: o.note || '', cond: o.can && coinCost(o.label) ? `${coinCost(o.label)}+ ${T.coins}` : '' })),
   }));
 
@@ -92,14 +96,14 @@ export function buildCatalog() {
 
   const snacks = Object.entries(SNACKS).map(([id, s]) => ({
     id, name: s.name, rarity: s.rarity, style: s.style ? ARCHES[s.style].name : '', desc: s.desc,
-    when: s.anytime ? 'Fights or map' : 'Fights', art: snackIcon(id),
+    when: s.anytime ? 'Fights or map' : 'Fights', from: fromText('snacks', id), art: snackIcon(id),
   }));
   const snackRules = { slots: SNACK_SLOTS, start: SNACK_DROP.start, step: SNACK_DROP.step, elite: SNACK_DROP.elite, coupon: SNACK_DROP.coupon,
     charms: Object.entries(CHARMS).filter(([k]) => ['lunchbox', 'snackCoupon', 'secretRecipe', 'hamsterCheeks', 'pocketFridge'].includes(k)).map(([, c]) => `${c.name}: ${c.desc}`),
     events: ALL_EVENTS.filter((e) => ['vending', 'samples', 'snackswap', 'konbini'].includes(e.id)).map((e) => e.title) };
 
   const rooms = ['fight', 'elite', 'event', 'shop', 'rest', 'treasure', 'boss'].map((type) => ({ type, art: roomIcon(type) }));
-  const acts = ACTS.map((a) => ({ name: a.name, normals: a.normals.map((n) => ENEMIES[n].name), elites: a.elites.map((n) => ENEMIES[n].name), boss: ENEMIES[a.boss].name }));
+  const acts = ACTS.map((a) => ({ name: a.name, normals: a.normals.map((n) => ENEMIES[n].name), elites: a.elites.map((n) => ENEMIES[n].name), bosses: a.bosses.map((n) => ENEMIES[n].name) }));
 
   const rules = {
     sleepAt: RULES.sleepAt, sleepTurns: RULES.sleepTurns, bossSleepTurns: RULES.bossSleepTurns, sleepGrow: RULES.sleepGrow,

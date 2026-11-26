@@ -451,6 +451,91 @@ const ART = {
     <text x="24" y="52" font-size="26" fill="#fff" font-family="sans-serif" font-weight="800">:(</text>
     <rect x="24" y="62" width="58" height="4" rx="2" fill="#fff" opacity=".85"/><rect x="24" y="70" width="38" height="4" rx="2" fill="#fff" opacity=".85"/>
     <rect x="80" y="26" width="20" height="20" rx="2" fill="#fff"/><rect x="84" y="30" width="5" height="5" fill="${c}"/><rect x="91" y="37" width="5" height="5" fill="${c}"/>`,
+
+  // ----- bosses -----
+  // The Ramen Thief: beanie, bandit mask, a stolen bowl of ramen.
+  ramen: (c) => `${shadow(60, 113, 42)}
+    <path d="M20 108 C16 82 30 58 60 58 C90 58 104 82 100 108 Z" ${o(c)}/>
+    <path d="M34 72 C40 66 48 64 56 64" fill="none" stroke="${lighten(c, 0.35)}" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="56" cy="42" r="26" ${o('#f6d6c0')}/>
+    <path d="M30 36 C30 10 82 10 82 36 Z" ${o(darken(c, 0.15))}/>
+    <path d="M28 34 H84" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M28 34 H84" stroke="${lighten(c, 0.2)}" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="56" cy="10" r="6" ${o('#d2493f', 2.6)}/>
+    <path d="M30 40 C40 36 72 36 82 40 L82 50 C72 46 40 46 30 50 Z" fill="${INK}"/>
+    <ellipse cx="45" cy="44" rx="5.5" ry="3.2" fill="#fff"/><ellipse cx="67" cy="44" rx="5.5" ry="3.2" fill="#fff"/>
+    <circle cx="46.5" cy="44" r="2.2" fill="${INK}"/><circle cx="68.5" cy="44" r="2.2" fill="${INK}"/>
+    <path d="M48 58 Q56 63 64 57" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M64 84 H112 C112 98 102 108 88 108 C74 108 64 98 64 84 Z" ${o('#ff6b6b')}/>
+    <path d="M70 92 H106" stroke="#fff" stroke-width="3" stroke-dasharray="4 4"/>
+    <path d="M68 84 q4 -8 8 0 q4 -8 8 0 q4 -8 8 0 q4 -8 8 0 q4 -8 8 0" fill="none" stroke="#f2c94c" stroke-width="4" stroke-linecap="round"/>
+    <path d="M86 82 L104 56 M92 82 L112 60" stroke="${INK}" stroke-width="5.5" stroke-linecap="round"/><path d="M86 82 L104 56 M92 82 L112 60" stroke="#d6ab7b" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M76 74 q-3 -6 0 -12 M100 72 q-3 -6 0 -12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".85"/>`,
+
+  // The Forever Regular: slumped in a café chair all day with one coffee.
+  regular: (c) => `${shadow(60, 113, 48)}
+    <rect x="14" y="40" width="92" height="66" rx="16" ${o('#6b4f9a')}/>
+    <path d="M22 50 C24 46 28 44 32 44" fill="none" stroke="#9d84cc" stroke-width="4" stroke-linecap="round"/>
+    <path d="M26 110 C24 84 38 68 60 68 C82 68 96 84 94 110 Z" ${o(c)}/>
+    <path d="M60 70 V108" stroke="${INK}" stroke-width="2.4"/>
+    <circle cx="60" cy="46" r="24" ${o('#f2c9a8')}/>
+    <path d="M36 46 C30 22 50 14 60 20 C70 12 92 22 84 46 C80 36 74 32 68 36 C62 30 52 32 48 38 C44 34 40 40 36 46 Z" ${o('#3a2f2a')}/>
+    ${face(60, 50, { eyes: 'sly', mouth: 'flat', gap: 10, blush: false })}
+    <path d="M44 56 q6 3 12 0 M64 56 q6 3 12 0" fill="none" stroke="#b58a9a" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M52 66 h2 M58 67 h2 M64 66 h2" stroke="#8a6a5a" stroke-width="2" stroke-linecap="round"/>
+    <path d="M76 80 H98 L95 104 H79 Z" ${o('#fff4e6')}/><rect x="74" y="75" width="26" height="7" rx="3" ${o('#8a5a3c', 2.6)}/>
+    <path d="M80 92 H94" stroke="#d2493f" stroke-width="3"/>
+    <text x="96" y="30" font-size="14" font-weight="900" fill="#fff" stroke="${INK}" stroke-width="1" font-family="sans-serif">…</text>`,
+
+  // The Data Miner: a hard drive in a mining helmet, pickaxe ready.
+  dataminer: (c) => `${shadow(60, 113, 46)}
+    <path d="M60 32 L104 4 L116 24 Z" fill="#fff4a8" opacity=".45"/>
+    <rect x="18" y="46" width="78" height="62" rx="10" ${o(c)}/>
+    <text x="26" y="102" font-size="10" font-family="monospace" font-weight="800" fill="${lighten(c, 0.6)}">0110 1011</text>
+    <rect x="30" y="54" width="54" height="32" rx="8" ${o('#e8f6ff', 3)}/>
+    ${face(57, 66, { eyes: 'angry', mouth: 'grin', gap: 12, size: 0.8, blush: false })}
+    <path d="M22 48 C22 18 92 18 92 48 Z" ${o('#f2c94c')}/>
+    <path d="M30 40 C32 30 38 26 44 24" fill="none" stroke="#fff4a8" stroke-width="4" stroke-linecap="round"/>
+    <rect x="16" y="44" width="82" height="8" rx="4" ${o('#e0b23a', 2.8)}/>
+    <circle cx="57" cy="32" r="7" ${o('#fff4a8', 3)}/>
+    <path d="M110 106 L94 60" stroke="${INK}" stroke-width="8" stroke-linecap="round"/><path d="M110 106 L94 60" stroke="#a0724a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M78 64 Q94 50 112 58" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M78 64 Q94 50 112 58" fill="none" stroke="#b9bdb3" stroke-width="5" stroke-linecap="round"/>`,
+
+  // The Server Admins: two monitors with headsets sharing one desk.
+  admins: (c) => `${shadow(60, 113, 52)}
+    <rect x="22" y="72" width="10" height="22" ${o('#9aa5a0', 2.6)}/><rect x="88" y="72" width="10" height="22" ${o('#9aa5a0', 2.6)}/>
+    <rect x="4" y="92" width="112" height="14" rx="4" ${o('#8a5a3c')}/>
+    <rect x="4" y="30" width="52" height="44" rx="7" ${o(c)}/><rect x="10" y="36" width="40" height="32" rx="4" fill="${lighten(c, 0.6)}"/>
+    <rect x="64" y="26" width="52" height="48" rx="7" ${o(darken(c, 0.15))}/><rect x="70" y="32" width="40" height="36" rx="4" fill="${lighten(c, 0.6)}"/>
+    ${face(30, 49, { eyes: 'angry', mouth: 'flat', gap: 8, size: 0.7, blush: false })}
+    ${face(90, 47, { eyes: 'sly', mouth: 'grin', gap: 8, size: 0.7, blush: false })}
+    <path d="M6 40 C6 14 54 14 54 40" fill="none" stroke="${INK}" stroke-width="4.5"/><path d="M66 36 C66 8 114 8 114 36" fill="none" stroke="${INK}" stroke-width="4.5"/>
+    <rect x="0" y="36" width="9" height="15" rx="3" ${o('#2a2830', 2.2)}/><rect x="51" y="36" width="9" height="15" rx="3" ${o('#2a2830', 2.2)}/>
+    <rect x="60" y="32" width="9" height="15" rx="3" ${o('#2a2830', 2.2)}/><rect x="111" y="32" width="9" height="15" rx="3" ${o('#2a2830', 2.2)}/>
+    <path d="M8 50 Q14 60 22 58" fill="none" stroke="${INK}" stroke-width="2.4"/><circle cx="23" cy="58" r="2.6" fill="${INK}"/>
+    <rect x="40" y="96" width="40" height="7" rx="2" fill="#fff" opacity=".85"/><text x="45" y="102" font-size="6.5" font-weight="900" fill="${INK}" font-family="sans-serif">ADMIN</text>`,
+
+  // The Head Moderator: cap, badge and a big BAN hammer.
+  moderator: (c) => `${shadow(60, 113, 44)}
+    <path d="M18 108 C14 74 30 46 58 46 C86 46 102 74 98 108 Z" ${o(c)}/>
+    <path d="M30 66 C32 56 40 50 50 48" fill="none" stroke="${lighten(c, 0.4)}" stroke-width="5" stroke-linecap="round"/>
+    ${face(58, 64, { eyes: 'angry', mouth: 'frown', gap: 13 })}
+    <path d="M58 82 L72 88 V96 C72 102 64 106 58 108 C52 106 44 102 44 96 V88 Z" ${o('#f2c94c', 3)}/>
+    <text x="52.5" y="101" font-size="12" font-weight="900" fill="${INK}" font-family="sans-serif">M</text>
+    <path d="M28 50 C28 24 88 24 88 50 Z" ${o('#2a2830')}/>
+    <path d="M22 50 H94" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M22 50 H94" stroke="#3d3a4a" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="58" cy="36" r="5.5" ${o('#f2c94c', 2.4)}/>
+    <path d="M112 112 L98 66" stroke="${INK}" stroke-width="8" stroke-linecap="round"/><path d="M112 112 L98 66" stroke="#d6ab7b" stroke-width="4" stroke-linecap="round"/>
+    <g transform="rotate(-16 98 56)"><rect x="80" y="44" width="38" height="22" rx="4" ${o('#d2493f')}/><text x="86" y="60" font-size="11" font-weight="900" fill="#fff" font-family="sans-serif">BAN</text></g>`,
+
+  // The Hive Mind: a network of linked nodes thinking as one.
+  hive: (c) => `${shadow(60, 113, 48)}
+    <path d="M60 60 L20 28 M60 60 L100 28 M60 60 L18 94 M60 60 L102 94 M20 28 L100 28 M18 94 L102 94 M20 28 L18 94 M100 28 L102 94" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M60 60 L20 28 M60 60 L100 28 M60 60 L18 94 M60 60 L102 94 M20 28 L100 28 M18 94 L102 94 M20 28 L18 94 M100 28 L102 94" stroke="${lighten(c, 0.5)}" stroke-width="2" stroke-linecap="round"/>
+    ${[[20, 28], [100, 28], [18, 94], [102, 94]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="13" ${o(lighten(c, 0.25))}/>${face(x, y - 2, { eyes: 'dot', mouth: 'flat', gap: 4.5, size: 0.5, blush: false })}`).join('')}
+    <circle cx="60" cy="60" r="29" ${o(c)}/>
+    ${shine(46, 44, 7, 4, -30)}
+    ${face(60, 56, { eyes: 'sly', mouth: 'grin', gap: 11 })}
+    <circle cx="60" cy="24" r="4" ${o('#f2c94c', 2.2)}/><path d="M60 28 V32" stroke="${INK}" stroke-width="3"/>`,
 };
 
 export function enemyChibi(art, color) {

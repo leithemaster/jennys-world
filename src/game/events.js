@@ -3,7 +3,7 @@
 //        pickRemove(), pickUpgrade(), pickCopy(), addSnack(id?), pickSnack(title) -> name or null }
 //
 // requires(run): the event stays in the deck but is skipped until true; needs: the same rule in plain words.
-// gives: { cards, charms } – the event-only cards/charms it can hand out (the catalog lists where they come from).
+// gives: { cards, charms, snacks } – the event-only cards/charms/snacks it can hand out (the catalog lists where they come from).
 //
 // SPECIAL_EVENTS are conditional: each one waits for a deck that leans into
 // its style. From Floor 2 on, the first "?" room after you qualify is a
@@ -204,6 +204,41 @@ export const EVENTS = [
       { label: `Stock up (35 ${T.coins})`, note: 'Fill all your empty snack slots.', can: (r) => r.coins >= 35 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 35; const got = []; while (snackRoom(r)) got.push(api.addSnack()); return `Your bag is full: ${got.join(', ')}.`; } },
       { label: `Buy a pocket fridge (60 ${T.coins})`, note: 'Gain Pocket Fridge (event charm): fill empty snack slots on each new floor.', can: (r) => r.coins >= 60, go: (r, api) => { r.coins -= 60; return `It even has a tiny light inside. You got ${api.addCharm('pocketFridge')}.`; } },
       { label: 'Go back to bed', note: 'Heal 8.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 8); return `Sleep is free. +8 ${T.hp}.`; } },
+    ],
+  },
+  {
+    id: 'cottoncandy', gives: { snacks: ['cottonCandy', 'rainbowCotton'] },
+    title: 'The Cotton Candy Lady',
+    text: 'A lady with a squeaky cart spins sugar into fluffy clouds. "Pink or rainbow, sweetie?"',
+    options: [
+      { label: `Pink cotton candy (15 ${T.coins})`, note: 'Gain Cotton Candy (event snack).', can: (r) => r.coins >= 15 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 15; return `So fluffy. You got ${api.addSnack('cottonCandy')}.`; } },
+      { label: `Rainbow cotton candy (30 ${T.coins})`, note: 'Gain Rainbow Cotton Candy (event snack).', can: (r) => r.coins >= 30 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 30; return `It's bigger than your head. You got ${api.addSnack('rainbowCotton')}.`; } },
+      { label: 'Help her spin', note: 'Upgrade a card.', go: async (r, api) => `"You're a natural!" ${await api.pickUpgrade()}` },
+    ],
+  },
+  {
+    id: 'sweetpotato', gives: { snacks: ['sweetPotato'] },
+    title: 'Sweet Potato Cart',
+    text: 'A grandpa roasts sweet potatoes in an old drum by the door. The whole floor smells amazing.',
+    options: [
+      { label: `Buy one for later (10 ${T.coins})`, note: 'Gain Roasted Sweet Potato (event snack).', can: (r) => r.coins >= 10 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 10; return `Wrapped in newspaper, still warm. You got ${api.addSnack('sweetPotato')}.`; } },
+      { label: 'Share one with him', note: 'Heal 8.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 8); return `He tells you about the café in the old days. +8 ${T.hp}.`; } },
+    ],
+  },
+  {
+    id: 'dalgona', gives: { snacks: ['dalgona'] },
+    title: 'Dalgona Challenge',
+    text: 'A booth with a sign: "Carve out the shape without breaking it and win a prize!" A needle and a honeycomb candy wait on the table.',
+    options: [
+      { label: 'Try the star (easy)', note: `70%: gain Dalgona Candy (event snack). Fail: lose 3 ${T.hp}.`, can: (r) => snackRoom(r) > 0, go: (r, api) => {
+        if (Math.random() < 0.7) return `Perfect star! You got ${api.addSnack('dalgona')}.`;
+        r.hp = Math.max(1, r.hp - 3); return `Crack. You poke your finger trying to fix it. -3 ${T.hp}.`;
+      } },
+      { label: 'Try the heart (hard)', note: `35%: gain Dalgona Candy and 60 ${T.coins}. Fail: lose 6 ${T.hp}.`, can: (r) => snackRoom(r) > 0, go: (r, api) => {
+        if (Math.random() < 0.35) { r.coins += 60; return `Flawless heart! The booth pays 60 ${T.coins} and you keep ${api.addSnack('dalgona')}.`; }
+        r.hp = Math.max(1, r.hp - 6); return `It snaps right through the middle. -6 ${T.hp}.`;
+      } },
+      { label: 'Walk away', go: () => 'Not today, sugar.' },
     ],
   },
 ];

@@ -300,3 +300,7 @@ One-use items kept in the snack bar (3 slots to start). Eating one costs no ener
 | Fried Chicken | common | Any | Deal 10. | Fights |
 | Ginseng Drink | uncommon | Any | Gain 2 Fighting Spirit for this fight. | Fights |
 | Birthday Cake | rare | Any | Heal 25% of your max HP and gain 5 max HP. Can be eaten on the map. | Fights or map |
+| Cotton Candy | event | Any | Heal 6 and gain 6 Block. | Fights |
+| Rainbow Cotton Candy | event | Any | +1 energy, +2 combo and reveal 2 hidden cards. | Fights |
+| Roasted Sweet Potato | event | Any | Heal 12. In a fight, also clear your Sleepy, Exposed and Glitch. Can be eaten on the map. | Fights or map |
+| Dalgona Candy | event | Any | Double your combo, then +1 energy. | Fights |

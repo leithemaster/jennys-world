@@ -125,7 +125,8 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">Any</span>') },
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Eat it in', key: 'when', cell: (r) => (r.found ? `<span class="small">${esc(r.when)}</span>` : '') },
-    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare']], 'rarity',
+      { label: 'Where from', cell: (r) => (r.found ? `<span class="small">${esc(r.from || 'Drops and shops')}</span>` : '') },
+    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare'], ['event', 'Event only']], 'rarity',
     `Snacks are one-use treats kept in your snack bar (${D.snackRules.slots} slots to start). Eating one is free: no ${'energy'}, and your turn keeps going. After a fight there's a ${D.snackRules.start}% chance of a snack (elites +${D.snackRules.elite}%); the chance goes down ${D.snackRules.step}% after a drop and up ${D.snackRules.step}% after a fight without one. Once your deck has a style, half of all snacks come from that style. Shops sell 3. Snack events: ${esc(D.snackRules.events.join(', '))}.`),
 
     enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss').map((r) => hide(r, ['kind', 'floor', 'art'])), [
@@ -139,7 +140,7 @@ export function catalogScreen(app, { onBack }) {
     ], [['all', 'All'], ['Normal', 'Normal'], ['Elite', 'Elite']], 'kind',
     'Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row.'),
 
-    bosses: () => `<section class="sheet"><p class="note">One boss waits at the end of each floor.</p>
+    bosses: () => `<section class="sheet"><p class="note">Each floor has 3 possible bosses. One is picked when a run reaches the floor, and the map shows which one is waiting. <b>Found ${D.enemies.filter((e) => e.kind === 'Boss' && e.found).length} of ${D.enemies.filter((e) => e.kind === 'Boss').length}</b></p>
       ${D.enemies.filter((e) => e.kind === 'Boss').map((b) => (b.found ? `<div class="tile boss-row"><div class="art enemy boss">${b.art}</div>
         <div class="boss-info"><h3>${esc(b.name)}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)} · <b>${esc(b.hp)} HP</b> · moves ${esc(b.ai.toLowerCase())}</p>
         <ol class="moves">${b.moves.map((m) => `<li>${esc(m)}</li>`).join('')}</ol>${b.extra ? `<p class="small">${esc(b.extra)}</p>` : ''}</div></div>`
@@ -166,7 +167,7 @@ export function catalogScreen(app, { onBack }) {
       const seen = Object.fromEntries(D.enemies.map((e) => [e.name, e.found]));
       const nm = (n) => (seen[n] ? n : HIDDEN);
       return `<section class="sheet"><h3>Floors</h3>
-      <div class="scroll"><table class="slim"><thead><tr><th>Floor</th><th>Normal enemies</th><th>Elites</th><th>Boss</th></tr></thead><tbody>${D.acts.map((a) => `<tr><td><span class="name">${esc(a.name)}</span></td><td>${esc(a.normals.map(nm).join(', '))}</td><td>${esc(a.elites.map(nm).join(', '))}</td><td><b>${esc(nm(a.boss))}</b></td></tr>`).join('')}</tbody></table></div>
+      <div class="scroll"><table class="slim"><thead><tr><th>Floor</th><th>Normal enemies</th><th>Elites</th><th>Bosses</th></tr></thead><tbody>${D.acts.map((a) => `<tr><td><span class="name">${esc(a.name)}</span></td><td>${esc(a.normals.map(nm).join(', '))}</td><td>${esc(a.elites.map(nm).join(', '))}</td><td><b>${esc(a.bosses.map(nm).join(', '))}</b></td></tr>`).join('')}</tbody></table></div>
       <ul class="opts"><li>Every new board starts with ${D.freeReveal} cards revealed for free.</li><li>Reveals that don't fit on a nearly cleared board carry over to the next board.</li><li>The first room is always a fight, the 5th a treasure, and the last room before the boss a rest booth.</li><li>Every path has at least 2 rest booths, at least 1 shop and no more than 2 elites.</li></ul></section>`;
     },
   };
