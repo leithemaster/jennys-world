@@ -6,7 +6,7 @@
 import { CARDS, ARCHES } from '../game/cards.js';
 import { CHARMS } from '../game/charms.js';
 import { ENEMIES, ACTS } from '../game/enemies.js';
-import { EVENTS } from '../game/events.js';
+import { ALL_EVENTS, SPECIAL_NEED } from '../game/events.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { OUTFITS } from '../game/outfits.js';
 import { RULES, STATUS_NAMES, STATUS_HELP, STICKERS } from '../game/battle.js';
@@ -54,8 +54,9 @@ export function buildCatalog() {
 
   // Event option conditions are code; these are the same rules in plain words.
   const coinCost = (label) => label.match(/\((\d+) /)?.[1];
-  const events = EVENTS.map((e) => ({
+  const events = ALL_EVENTS.map((e) => ({
     id: e.id, title: e.title, text: e.text, requires: e.needs || '',
+    special: !!e.special, style: e.style ? ARCHES[e.style].name : '', boon: e.boon ? CHARMS[e.boon].name : '',
     options: e.options.map((o) => ({ label: o.label, note: o.note || '', cond: o.can && coinCost(o.label) ? `${coinCost(o.label)}+ ${T.coins}` : '' })),
   }));
 
@@ -85,7 +86,7 @@ export function buildCatalog() {
 
   const rules = {
     sleepAt: RULES.sleepAt, sleepTurns: RULES.sleepTurns, bossSleepTurns: RULES.bossSleepTurns, sleepGrow: RULES.sleepGrow,
-    stickerEvery: CHARACTERS.jenny.passive.n,
+    stickerEvery: CHARACTERS.jenny.passive.n, specialNeed: SPECIAL_NEED,
   };
 
   return { cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };

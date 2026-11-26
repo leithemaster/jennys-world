@@ -66,7 +66,7 @@ const hybrids = playable.filter((id) => CARDS[id].arch2);
 out.push(`### Hybrids (${hybrids.length})`, '', hybrids.map((id) => `- **${CARDS[id].name}**: ${styles(CARDS[id])}`).join('\n'), '');
 
 out.push('## Charms', '');
-const POOLS = { haru: "Haru's Gift (pick 1 of 3 at the start)", drop: 'Drops (treasure, elites, events)', shop: 'Shop only', boss: 'Boss rewards' };
+const POOLS = { haru: "Haru's Gift (pick 1 of 3 at the start)", drop: 'Drops (treasure, elites, events)', shop: 'Shop only', boss: 'Boss rewards', special: 'Special event boons' };
 for (const [pool, label] of Object.entries(POOLS)) {
   const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === pool);
   out.push(`### ${label} (${ids.length})`, '', '| Charm | Style | Effect | Conditional |', '|---|---|---|---|');

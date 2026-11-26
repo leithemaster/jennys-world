@@ -23,6 +23,16 @@ const I = {
   hotWaterBottle: `<path d="M9 10 H23 C26 10 27 13 27 16 V24 C27 27 25 28 22 28 H10 C7 28 5 27 5 24 V16 C5 13 6 10 9 10 Z" ${s('#ff8f6b')}/><rect x="13" y="5" width="6" height="5" rx="1" ${s('#fff4e6', 1.6)}/>${line('M10 17 q2 -2 4 0 t4 0 t4 0 M10 22 q2 -2 4 0 t4 0 t4 0', 1.4)}`,
   gossipPhone: `<rect x="9" y="3" width="14" height="26" rx="3" ${s('#ff5d8f')}/><rect x="11.5" y="6.5" width="9" height="15" rx="1" fill="#fff4e6"/>${line('M13 11 h6 M13 14 h4', 1.4)}<circle cx="16" cy="25" r="1.4" fill="${K}"/>`,
 
+  // special event boons
+  lucidDream: `<path d="M7 20 C3 20 3 14 7 14 C7 9 14 8 16 12 C18 8 26 9 25 15 C29 15 29 21 25 21 Z" ${s('#a98bf0')}/><path d="M22 3 l1.2 2.6 2.8 .4 -2 2 .5 2.8 -2.5 -1.3 -2.5 1.3 .5 -2.8 -2 -2 2.8 -.4z" ${s('#ffc53d', 1.2)}/>${line('M10 26 q3 2 6 0 M17 28 q3 2 6 0', 1.4)}`,
+  grandmaSoup: `<path d="M4 15 H28 C28 22 23 27 16 27 C9 27 4 22 4 15 Z" ${s('#ff8f6b')}/><ellipse cx="16" cy="15" rx="12" ry="3" fill="#ffe3a8" stroke="${K}" stroke-width="1.6"/>${line('M11 11 q-2 -3 0 -6 M16 11 q-2 -3 0 -6 M21 11 q-2 -3 0 -6', 1.5)}`,
+  rootAccess: `<rect x="5" y="5" width="22" height="22" rx="2" ${s('#4fd1b9')}/><rect x="10" y="5" width="12" height="8" fill="#fff4e6" stroke="${K}" stroke-width="1.4"/><rect x="9" y="17" width="14" height="8" rx="1" fill="#1a1420"/>${line('M12 21 l2 1.5 -2 1.5', 1.3).replace(K, '#4fd1b9')}`,
+  bouncerStance: `<path d="M8 6 H24 L26 12 L16 28 L6 12 Z" ${s('#6ec3ff')}/>${line('M6 12 H26 M16 6 L13 12 L16 28 L19 12 Z', 1.5)}${shine(11, 9)}`,
+  palaceKey: `<circle cx="10" cy="11" r="6.5" ${s('#ffc53d')}/><circle cx="10" cy="11" r="2.4" fill="#fff4e6" stroke="${K}" stroke-width="1.4"/><path d="M14.5 15.5 L27 28 M22 23 L25 20 M25 26 L28 23" stroke="${K}" stroke-width="2.6" stroke-linecap="round"/>`,
+  encore: `<rect x="12" y="3" width="8" height="13" rx="4" ${s('#ff5d8f')}/>${line('M8 12 C8 22 24 22 24 12 M16 20 V27 M11 28 H21')}${shine(15, 7)}`,
+  trending: `<rect x="4" y="5" width="24" height="22" rx="3" ${s('#fff4e6')}/><path d="M7 22 L13 15 L17 18 L25 9" fill="none" stroke="#ff5d8f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>${line('M20 9 H25 V14', 2)}`,
+  crossover: `<circle cx="12" cy="16" r="8" ${s('#a98bf0')}/><circle cx="20" cy="16" r="8" fill="#ffc53d" fill-opacity=".85" stroke="${K}" stroke-width="1.8"/>${line('M12 8 A8 8 0 0 1 12 24', 1.2)}`,
+
   // drops
   luckyCat: `<path d="M8 12 L9 4 L14 9 M24 12 L23 4 L18 9" ${s('#fff4e6')}/><circle cx="16" cy="17" r="10" ${s('#fff4e6')}/>${line('M11 15 q1.5 -1.5 3 0 M18 15 q1.5 -1.5 3 0', 1.5)}<circle cx="16" cy="19" r="1.2" fill="#ff5d8f"/><path d="M24 20 L29 15" stroke="${K}" stroke-width="3" stroke-linecap="round"/>`,
   americano: `<path d="M9 9 H23 L21 28 H11 Z" ${s('#8a5a3c')}/><rect x="8" y="6" width="16" height="4" rx="1.5" ${s('#fff4e6', 1.6)}/>${line('M18 6 L21 1')}${[[13, 16], [18, 19], [14, 23]].map(([x, y]) => `<rect x="${x}" y="${y}" width="3.4" height="3.4" fill="#cfefff" stroke="${K}" stroke-width="1"/>`).join('')}`,

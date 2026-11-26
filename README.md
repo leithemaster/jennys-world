@@ -52,6 +52,7 @@ Rewards don't come from pure dice rolls. Each source draws from its own shuffled
 - **Charms** – three separate decks: *drops* (treasure, elites, events), *shop only* (Member Card, Stamp Card, Shiba Plush, …) and *boss only*.
 - **Conditional items** stay hidden until your deck can use them. Catalyst only shows up once you own Stinger, Glitch Vial needs a Glitch card, Fuzzy Socks needs 3+ Guard/Hoodie Up, and so on.
 - **Events** – every "?" event shows up once before any repeats.
+- **Special events** – 8 conditional "?" events, one per card style plus a Crossover one for hybrid decks. From Floor 2 on, once your deck has 3+ cards of a style (or 2+ hybrid cards), the next "?" room is that special event, at most one per floor. Each offers a boon (a run-long charm that powers up that style), an upgrade for all your cards of that style, or a smaller reward.
 - **Enemies** – you won't meet the same enemy twice until you've seen the rest of that floor's lineup.
 
 ## Map rules
@@ -75,6 +76,7 @@ Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in
 - `node tools/sim.mjs 200 chars` compares the characters (and Jenny with no passive).
 - `node tools/sim.mjs 200 styles` plays every character with every card style (the bot only picks cards of that style).
 - `node tools/sim.mjs 200 deaths` shows where runs end.
+- `node tools/sim.mjs 200 boons` plays each style with and without its special-event boon (add `1` at the end to allow only one boon per run).
 
 ## Run it locally
 

@@ -11,7 +11,7 @@ import { outfitOpen } from '../game/outfits.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
-const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward' };
+const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', special: 'Special event' };
 const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, status: 4, curse: 5 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 const HIDDEN = '???';
@@ -113,7 +113,7 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>') },
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Only shows up if', cell: (r) => (!r.found ? '' : r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>') },
-    ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward']], 'pool',
+    ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['special', 'Special event']], 'pool',
     'Every charm you have been offered or picked up. Charms are passive and last the whole run.'),
 
     enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss').map((r) => hide(r, ['kind', 'floor', 'art'])), [
@@ -134,9 +134,10 @@ export function catalogScreen(app, { onBack }) {
         : `<div class="tile boss-row locked"><div class="art enemy boss unseen">${b.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)}</p><p class="small">Reach the end of this floor to meet it.</p></div></div>`)).join('')}</section>`,
 
     events: () => `<section class="sheet"><p class="note">"?" rooms. You never see the same one twice in a run. <b>Found ${D.events.filter((e) => e.found).length} of ${D.events.length}</b></p>
-      <div class="grid">${D.events.map((e) => (e.found ? `<article class="tile"><h3>${esc(e.title)}</h3>${e.requires ? `<span class="small">Only if you have ${esc(e.requires)}</span>` : ''}<p>${esc(e.text)}</p>
+      <p class="note"><b>Special events</b> wait for your deck: once you own ${D.rules.specialNeed}+ cards of a style (or 2+ hybrid cards), the next "?" room is that style's special event. At most one per floor, each once per run. Their boons only come from there.</p>
+      <div class="grid">${D.events.map((e) => (e.found ? `<article class="tile${e.special ? ' special' : ''}">${e.special ? `<span class="tag ct-special">Special${e.style ? ` · ${esc(e.style)}` : ''}</span>` : ''}<h3>${esc(e.title)}</h3>${e.requires ? `<span class="small">Only if you have ${esc(e.requires)}</span>` : ''}<p>${esc(e.text)}</p>
         <ul class="opts">${e.options.map((o) => `<li><b>${esc(o.label)}</b>${o.note ? ` · ${esc(o.note)}` : ''}${o.cond ? ` <span class="small">(needs ${esc(o.cond)})</span>` : ''}</li>`).join('')}</ul></article>`
-        : `<article class="tile locked"><h3>${HIDDEN}</h3><p class="small">An event you haven't walked into yet.</p></article>`)).join('')}</div></section>`,
+        : `<article class="tile locked${e.special ? ' special' : ''}">${e.special ? '<span class="tag ct-special">Special</span>' : ''}<h3>${HIDDEN}</h3><p class="small">${e.special ? `Needs ${esc(e.requires)}.` : "An event you haven't walked into yet."}</p></article>`)).join('')}</div></section>`,
 
     styles: () => {
       const cardFound = Object.fromEntries(D.cards.map((c) => [c.name, c.found]));
@@ -144,7 +145,7 @@ export function catalogScreen(app, { onBack }) {
       return `<section class="sheet"><p class="note">Every style is open to every character. Once your deck leans into a style, card rewards and shops offer more of it (starter cards don't count). Hybrid cards count toward two styles.</p>
       <ul class="opts"><li><b>Sleepy → Asleep:</b> an enemy that reaches ${D.rules.sleepAt} Sleepy skips its next ${D.rules.sleepTurns} turns (bosses ${D.rules.bossSleepTurns}). It can't get more Sleepy while asleep, and each time it wakes up it takes ${D.rules.sleepGrow} more to fall asleep again.</li><li><b>Cozy:</b> on a Cozy card, healing past your max HP hits the enemy.</li></ul>
       <div class="grid">${D.styles.map((s) => `<article class="tile" style="border-top:10px solid ${s.color}"><h3>${esc(s.name)}</h3><p>${esc(s.desc)}</p>
-        <p class="small"><b>Cards:</b> ${esc(s.cards.map(nm).join(', '))}</p><p class="small"><b>Starter charm:</b> ${esc(s.charms.join(', ') || '—')}</p></article>`).join('')}</div></section>
+        <p class="small"><b>Cards:</b> ${esc(s.cards.map(nm).join(', '))}</p><p class="small"><b>Charms:</b> ${esc(s.charms.join(', ') || '—')}</p></article>`).join('')}</div></section>
       <section class="sheet"><h3>Statuses</h3>
       <div class="scroll"><table class="slim"><thead><tr><th>Name</th><th>What it does</th></tr></thead><tbody>${D.statuses.map((s) => `<tr><td><span class="name">${esc(s.name)}</span></td><td>${esc(cap(s.help))}</td></tr>`).join('')}</tbody></table></div></section>`;
     },

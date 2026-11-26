@@ -57,6 +57,7 @@ export class Battle {
     this.exhaust = [];
     this.board = [];
     this.has = (k) => run.charms.includes(k);
+    this.playing = null; // card definition whose effect is running (style boons read it)
   }
 
   emit(name, ...args) { this.hooks[name]?.(...args); }
@@ -69,6 +70,9 @@ export class Battle {
     if (this.has('neon')) this.enemy.vuln += 2;
     if (this.has('gossipPhone')) this.enemy.vuln += 1;
     if (this.has('sleepMask')) this.enemy.weak += 1;
+    // one-fight buffs from events (e.g. the spicy ramen)
+    const nf = this.run.nextFight;
+    if (nf) { if (nf.strength) this.player.strength += nf.strength; this.run.nextFight = null; }
     this.chooseIntent();
     this.dealBoard();
     this.startTurn();
@@ -105,6 +109,9 @@ export class Battle {
     }
     if (this.has('luckyCat')) this.flash(1400);
   }
+
+  // Is the card being played tagged with this style (either of its two)?
+  playingStyle(arch) { const d = this.playing; return !!d && (d.arch === arch || d.arch2 === arch); }
 
   keyOf(card) { return card.id + (card.up ? '+' : ''); }
 
@@ -171,7 +178,11 @@ export class Battle {
     this.emit('play', card);
     if (def.type === 'power' && this.has('powerBank')) this.gainEnergy(1);
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
+    if (this.has('encore') && (def.arch === 'combo' || def.arch2 === 'combo') && !this.flags.encore) { this.flags.encore = true; this.combo += 1; }
+    if (this.has('crossover') && def.arch2 && !this.crossoverUsed) { this.crossoverUsed = true; this.gainEnergy(2); this.log(`Crossover! +2 ${T.energy}.`); }
+    this.playing = def;
     def.fx(this, !!card.up);
+    this.playing = null;
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.matchesThisFight += 1;
     const pas = this.character.passive;
@@ -217,6 +228,7 @@ export class Battle {
   // Reveal n hidden cards. Any reveals that don't fit on this board (because
   // it's nearly cleared) are saved and used on the next board.
   reveal(n, quiet, noCarry) {
+    if (this.has('palaceKey') && this.playingStyle('memory') && !this.flags.palace) { this.flags.palace = true; n += 1; }
     const hidden = shuffle(this.board.filter((s) => s.state === 'down'));
     const used = Math.min(n, hidden.length);
     hidden.slice(0, used).forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
@@ -236,7 +248,7 @@ export class Battle {
   calcDamage(base, from, to) {
     let d = base + from.strength;
     if (from.weak > 0) d *= 0.75;
-    if (to.vuln > 0) d *= 1.5;
+    if (to.vuln > 0) d *= to === this.enemy && this.has('trending') ? 1.75 : 1.5;
     return Math.max(0, Math.floor(d));
   }
 
@@ -259,6 +271,7 @@ export class Battle {
 
   gainBlock(n) {
     let b = n;
+    if (this.has('bouncerStance') && this.playingStyle('guard')) b += 2;
     this.player.block += b;
     this.emit('float', 'player', `+${b}`, 'block');
   }
@@ -270,6 +283,7 @@ export class Battle {
   heal(n, opts = {}) {
     if (n <= 0) return;
     if (this.character.passive.id === 'comfy') n += this.character.passive.n;
+    if (this.has('grandmaSoup')) opts = { ...opts, cozy: true };
     const before = this.run.hp;
     this.run.hp = Math.min(this.run.maxHp, this.run.hp + n);
     const healed = this.run.hp - before;
@@ -286,6 +300,8 @@ export class Battle {
   }
   applyEnemy(k, n) {
     if (n > 0 && k === 'poison' && this.has('venomVial')) n += 2;
+    if (n > 0 && k === 'poison' && this.has('rootAccess') && this.playingStyle('glitch')) n += 2;
+    if (n > 0 && k === 'weak' && this.has('lucidDream') && this.playingStyle('dreamy') && !this.flags.lucid) { this.flags.lucid = true; n += 1; }
     if (n <= 0) return;
     const e = this.enemy;
     if (k === 'weak' && e.asleep) { this.emit('float', 'enemy', 'Zzz', 'weak'); return; }

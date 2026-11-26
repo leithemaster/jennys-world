@@ -10,11 +10,12 @@
 //   charm:shop                                 shop shelves only
 //   charm:boss                                 boss rewards only
 //   event                                      "?" rooms (no repeats per run)
+//   event:special                              special events (once each per run)
 //   enemy:<act>:normal / enemy:<act>:elite     who you fight
 
 import { CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
-import { EVENTS } from './events.js';
+import { EVENTS, SPECIAL_EVENTS } from './events.js';
 import { ACTS } from './enemies.js';
 
 const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -122,7 +123,23 @@ export function drawCharm(run, pool = 'drop', exclude = []) {
 }
 
 // ---------- events & enemies ----------
+// Special events come first: the first "?" room after your deck qualifies
+// for one is that special event, from Floor 2 on, at most one per floor.
+export const SPECIAL_FROM_ACT = 1;
+export function drawSpecialEvent(run) {
+  run.specialFloors ||= [];
+  if (run.act < SPECIAL_FROM_ACT || run.specialFloors.includes(run.act)) return null;
+  const ok = (id) => SPECIAL_EVENTS.find((e) => e.id === id).requires(run);
+  const id = drawFrom(run, 'event:special', () => SPECIAL_EVENTS.map((e) => e.id).filter((k) => !(run.specialSeen || []).includes(k)), ok);
+  if (!id) return null;
+  run.specialFloors.push(run.act);
+  (run.specialSeen ||= []).push(id);
+  return SPECIAL_EVENTS.find((e) => e.id === id);
+}
+
 export function drawEvent(run) {
+  const sp = drawSpecialEvent(run);
+  if (sp) return sp;
   const ok = (id) => { const ev = EVENTS.find((e) => e.id === id); return !ev.requires || ev.requires(run); };
   const seenAll = () => EVENTS.map((e) => e.id);
   const id = drawFrom(run, 'event', seenAll, ok);

@@ -238,3 +238,16 @@ Stack Exposed and hit where it hurts.
 | Clicky Keyboard |  | Each match adds 2 combo instead of 1. |  |
 | Big Headphones |  | At the start of each turn, reveal 1 card. |  |
 | Giant Plushie |  | Heal 12 after each fight. +8 max HP. |  |
+
+### Special event boons (8)
+
+| Charm | Style | Effect | Conditional |
+|---|---|---|---|
+| Lucid Dream | Dreamy | The first Dreamy card you match each turn applies 1 more Sleepy. |  |
+| Grandma's Soup | Cozy | All your healing is Cozy: extra healing past max HP hits the enemy. |  |
+| Root Access | Glitch | Your Glitch cards apply 2 more Glitch. |  |
+| Bouncer's Stance | Guard | Your Guard cards give 2 more Block. |  |
+| Palace Key | Memory | The first Memory card you match each turn reveals 1 more card. |  |
+| Encore | Combo | The first Combo card you match each turn adds 1 more combo. |  |
+| Trending | Exposed | Exposed enemies take 75% more damage instead of 50%. |  |
+| Crossover |  | The first hybrid card you match in each fight gives +2 energy. |  |

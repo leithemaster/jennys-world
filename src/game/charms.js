@@ -4,6 +4,7 @@
 //   shop – only sold at the Konbini Corner
 //   boss – only offered after beating a boss
 //   haru – Haru's Gift, pick 1 of 3 at the start of a run
+//   special – boons from special events only (see events.js); they power up one style
 // requires(run, h): optional; the charm stays hidden until this is true.
 
 import { T } from './terms.js';
@@ -59,4 +60,14 @@ export const CHARMS = {
   keyboard: { name: 'Clicky Keyboard', icon: '⌨️', pool: 'boss', desc: `Each match adds 2 ${T.combo} instead of 1.` },
   headset: { name: 'Big Headphones', icon: '🎧', pool: 'boss', desc: 'At the start of each turn, reveal 1 card.' },
   plush: { name: 'Giant Plushie', icon: '🧸', pool: 'boss', desc: `Heal 12 after each fight. +8 max ${T.hp}.` },
+
+  // ----- special event boons (only from special events) -----
+  lucidDream: { name: 'Lucid Dream', icon: '🌌', pool: 'special', style: 'dreamy', desc: `The first Dreamy card you match each turn applies 1 more ${T.sleepy}.` },
+  grandmaSoup: { name: "Grandma's Soup", icon: '🍲', pool: 'special', style: 'cozy', desc: `All your healing is ${T.cozy}: extra healing past max ${T.hp} hits the enemy.` },
+  rootAccess: { name: 'Root Access', icon: '💾', pool: 'special', style: 'glitch', desc: `Your Glitch cards apply 2 more ${T.glitch}.` },
+  bouncerStance: { name: "Bouncer's Stance", icon: '🥋', pool: 'special', style: 'guard', desc: `Your Guard cards give 2 more ${T.block}.` },
+  palaceKey: { name: 'Palace Key', icon: '🗝️', pool: 'special', style: 'memory', desc: 'The first Memory card you match each turn reveals 1 more card.' },
+  encore: { name: 'Encore', icon: '🎤', pool: 'special', style: 'combo', desc: `The first Combo card you match each turn adds 1 more ${T.combo}.` },
+  trending: { name: 'Trending', icon: '📈', pool: 'special', style: 'exposed', desc: `${T.exposed} enemies take 75% more damage instead of 50%.` },
+  crossover: { name: 'Crossover', icon: '🔀', pool: 'special', desc: `The first hybrid card you match in each fight gives +2 ${T.energy}.` },
 };

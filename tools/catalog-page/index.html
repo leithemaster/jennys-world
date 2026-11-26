@@ -72,6 +72,7 @@ ul.moves li { margin: 1px 0; }
 .tag.attack { background: var(--coral); } .tag.skill { background: var(--sky); } .tag.power { background: var(--lilac); } .tag.status, .tag.curse { background: var(--grey); }
 .tag.starter { background: #fff; } .tag.common { background: #eee6df; } .tag.uncommon { background: var(--mint); } .tag.rare { background: var(--sun); }
 .tag.haru { background: var(--ring); } .tag.drop { background: #eee6df; } .tag.shop { background: var(--sun); } .tag.boss, .tag.Boss { background: var(--pink); color: #fff; }
+.tag.special { background: #5b6fc9; color: #fff; } .tile.special { border-color: #5b6fc9; box-shadow: 4px 4px 0 #5b6fc9; }
 .tag.Elite { background: var(--lilac); } .tag.Normal { background: #eee6df; }
 .style { font-weight: 800; }
 
@@ -109,7 +110,7 @@ ul.moves li { margin: 1px 0; }
 <script>
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => s ? s[0].toUpperCase() + s.slice(1) : '';
-const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward' };
+const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', special: 'Special event' };
 const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, status: 4, curse: 5 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 let D;
@@ -169,7 +170,7 @@ const VIEWS = {
     { label: 'Style', key: 'style', cell: (r) => r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>' },
     { label: 'Effect', cell: (r) => esc(r.desc) },
     { label: 'Only shows up if', cell: (r) => r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>' },
-  ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward']], 'pool',
+  ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['special', 'Special event']], 'pool',
   `Charms are passive and last the whole run. Haru's Gift offers 3 of the ${D.charms.filter((c) => c.pool === 'haru').length} starters at the start. Shop-only charms never drop anywhere else.`),
 
   enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss'), [
@@ -189,7 +190,8 @@ const VIEWS = {
       <ol class="moves">${b.moves.map((m) => `<li>${esc(m)}</li>`).join('')}</ol>${b.extra ? `<p class="small">${esc(b.extra)}</p>` : ''}</div></div>`).join('')}</section>`,
 
   events: () => `<section class="sheet"><p class="note">"?" rooms. Each run draws events from a shuffled deck, so you never see the same one twice in a run.</p>
-    <div class="grid">${D.events.map((e) => `<article class="tile"><h3>${esc(e.title)}</h3>${e.requires ? `<span class="small">Only if: ${esc(e.requires)}</span>` : ''}<p>${esc(e.text)}</p>
+    <p class="note"><b>Special events</b> wait for your deck: once you own ${D.rules.specialNeed}+ cards of a style (or 2+ hybrid cards), the next "?" room is that style's special event. At most one per floor, each once per run. Their boons only come from there.</p>
+    <div class="grid">${D.events.map((e) => `<article class="tile${e.special ? ' special' : ''}">${e.special ? `<span class="tag special">Special${e.style ? ` · ${esc(e.style)}` : ''}</span>` : ''}<h3>${esc(e.title)}</h3>${e.requires ? `<span class="small">Only if: ${esc(e.requires)}</span>` : ''}<p>${esc(e.text)}</p>
     <ul class="opts">${e.options.map((o) => `<li><b>${esc(o.label)}</b>${o.note ? ` · ${esc(o.note)}` : ''}${o.cond ? ` <span class="small">(needs ${esc(o.cond)})</span>` : ''}</li>`).join('')}</ul></article>`).join('')}</div></section>`,
 
   styles: () => `<section class="sheet"><p class="note">Every style is open to every character. Once your deck leans into a style, card rewards and shops offer more of it (starter cards don't count). Hybrid cards count toward two styles.</p>

@@ -10,6 +10,7 @@
 //   node tools/sim.mjs 200 chars      Jenny vs Toni (and Jenny with no passive)
 //   node tools/sim.mjs 200 styles     every character x every card style
 //   node tools/sim.mjs 200 deaths     where runs end
+//   node tools/sim.mjs 200 boons      each style with and without its special-event boon
 
 // ---- fake clock so battle timeouts resolve instantly ----
 let now = 0;
@@ -28,7 +29,7 @@ globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: 
 
 const { Battle, RULES } = await import('../src/game/battle.js');
 const { newRun, gainCharm, afterFightHealing, enemyFor, cardChoices } = await import('../src/game/run.js');
-const { drawCharm } = await import('../src/game/loot.js');
+const { drawCharm, drawSpecialEvent } = await import('../src/game/loot.js');
 const { CHARMS } = await import('../src/game/charms.js');
 const { canUpgrade, CARDS, ARCHES } = await import('../src/game/cards.js');
 const { CHARACTERS } = await import('../src/game/characters.js');
@@ -95,6 +96,7 @@ function fight(run, enemyId, skill, stats) {
 
 function playRun(skill, stats, opts = {}) {
   const run = newRun(opts.character || 'jenny');
+  stats.runBoons = 0;
   let gifts = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru');
   if (opts.style) { const g = gifts.filter((k) => CHARMS[k].style === opts.style); if (g.length) gifts = g; }
   gainCharm(run, gifts[Math.floor(Math.random() * gifts.length)]);
@@ -103,7 +105,7 @@ function playRun(skill, stats, opts = {}) {
     run.act = act;
     const plan = ['fight', 'fight', 'event', 'fight', 'elite', 'rest', 'fight', 'fight', 'elite', 'fight', 'rest', 'boss'];
     for (const room of plan) {
-      if (room === 'event') continue;
+      if (room === 'event') { if (opts.boon && (stats.runBoons || 0) < (opts.cap || 9)) { const sp = drawSpecialEvent(run); if (sp && sp.boon) { gainCharm(run, sp.boon); stats.boons = (stats.boons || 0) + 1; stats.runBoons = (stats.runBoons || 0) + 1; } } continue; }
       if (room === 'rest') {
         if (run.hp < run.maxHp * 0.6) run.hp = Math.min(run.maxHp, run.hp + Math.round(run.maxHp * 0.3));
         else { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
@@ -144,6 +146,15 @@ function batch(skill, opts) {
   let wins = 0;
   for (let i = 0; i < N; i++) if (playRun(skill, stats, opts) === 3) wins++;
   return { stats, wins };
+}
+if (MODE === 'boons') {
+  const out = [];
+  for (const style of Object.keys(ARCHES)) for (const boon of [false, true]) {
+    const { stats, wins } = batch(SKILLS.sharp, { character: 'jenny', style, boon, cap: Number(process.argv[4] || 9) });
+    out.push(summarize(stats, wins, { setup: `${style}${boon ? ' + boon' : ''}`, 'boons/run': ((stats.boons || 0) / N).toFixed(2) }));
+  }
+  console.table(out);
+  process.exit(0);
 }
 if (MODE === 'chars' || MODE === 'styles') {
   const out = [];

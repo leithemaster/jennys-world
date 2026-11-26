@@ -658,6 +658,7 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .cat .tag.ct-attack { background: var(--coral); } .cat .tag.ct-skill { background: var(--sky); } .cat .tag.ct-power { background: var(--lilac); } .cat .tag.ct-status, .cat .tag.ct-curse { background: #b9b3b0; }
 .cat .tag.ct-common, .cat .tag.ct-drop, .cat .tag.ct-Normal { background: #eee6df; } .cat .tag.ct-uncommon { background: var(--mint); } .cat .tag.ct-rare, .cat .tag.ct-shop { background: var(--sun); }
 .cat .tag.ct-haru { background: var(--ring); } .cat .tag.ct-boss, .cat .tag.ct-Boss { background: var(--pink); color: #fff; } .cat .tag.ct-Elite { background: var(--lilac); }
+.cat .tag.ct-special { background: #5b6fc9; color: #fff; } .cat .tile.special { box-shadow: 4px 4px 0 #5b6fc9; }
 .cat .style { font-weight: 800; }
 .cat .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .cat .tile { border: var(--line); border-radius: 18px; background: #fff; padding: 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; min-width: 0; }
@@ -675,3 +676,9 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .cat .boss-row { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
 .cat .boss-info { display: grid; gap: 8px; min-width: 0; }
 @media (max-width: 520px) { .cat .boss-row { grid-template-columns: 1fr; } }
+
+/* Special events: conditional "?" rooms that power up a style. */
+.room.event.special .room-icon { background: #5b6fc9; box-shadow: 0 0 0 6px rgba(169, 139, 240, .35), var(--shadow); }
+.room.event.special .room-icon svg { width: 66%; height: 66%; }
+.room.event.special .room-text { border-color: #5b6fc9; box-shadow: 4px 4px 0 #5b6fc9; }
+.special-tag { font-weight: 900; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: #5b6fc9; border: var(--line); border-radius: 999px; padding: 4px 14px; box-shadow: var(--shadow-sm); }

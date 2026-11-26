@@ -20,6 +20,12 @@ export const ENEMIES = {
     moves: [{ t: 'atk', n: 11 }, { t: 'scramble' }, { t: 'block', n: 9 }, { t: 'atk', n: 5, times: 2 }] },
   adswarm: { name: 'Ad Swarm', hp: [36, 40], art: 'swarm', color: '#f2c94c', ai: 'cycle', elite: true,
     moves: [{ t: 'status', card: 'spam', count: 2 }, { t: 'atk', n: 3, times: 3 }, { t: 'buff', n: 1 }, { t: 'atk', n: 3, times: 3 }] },
+  bouncer: { name: 'Café Bouncer', hp: [42, 46], art: 'knight', color: '#3d3a4a', ai: 'cycle', elite: true,
+    moves: [{ t: 'block', n: 8 }, { t: 'atk', n: 9 }, { t: 'atkBlock', n: 6, b: 6 }, { t: 'atk', n: 13 }] },
+  printer: { name: 'Paper Jam Printer', hp: [38, 42], art: 'bot', color: '#e8e2f2', ai: 'cycle', elite: true,
+    moves: [{ t: 'status', card: 'lag', count: 2 }, { t: 'atk', n: 4, times: 2 }, { t: 'block', n: 10 }, { t: 'atk', n: 11 }] },
+  clout: { name: 'Clout Chaser', hp: [36, 40], art: 'wraith', color: '#ff8fb0', ai: 'random', elite: true,
+    moves: [{ t: 'debuff', vuln: 2 }, { t: 'atk', n: 6, times: 2 }, { t: 'buff', n: 2 }, { t: 'atk', n: 10 }] },
   // boss
   firewall: { name: 'The Firewall', hp: [74, 74], art: 'wall', color: '#d2493f', ai: 'cycle', boss: true,
     moves: [{ t: 'block', n: 12 }, { t: 'atk', n: 12 }, { t: 'atk', n: 4, times: 3 }, { t: 'scramble' }, { t: 'buff', n: 2 }] },
@@ -38,6 +44,12 @@ export const ENEMIES = {
     moves: [{ t: 'atkBlock', n: 12, b: 10 }, { t: 'status', card: 'lag', count: 2 }, { t: 'atk', n: 16 }, { t: 'buff', n: 2 }] },
   popstorm: { name: 'Notification Storm', hp: [56, 60], art: 'swarm', color: '#e5658f', ai: 'random', elite: true,
     moves: [{ t: 'atk', n: 3, times: 5 }, { t: 'scramble' }, { t: 'debuff', weak: 2, vuln: 2 }, { t: 'atkStatus', n: 8, card: 'spam', count: 2 }] },
+  ddos: { name: 'DDoS Cloud', hp: [56, 60], art: 'swarm', color: '#8fa0b8', ai: 'cycle', elite: true,
+    moves: [{ t: 'atk', n: 2, times: 6 }, { t: 'buff', n: 1 }, { t: 'atk', n: 2, times: 6 }, { t: 'status', card: 'lag', count: 2 }] },
+  bitrot: { name: 'Bit Rot Beast', hp: [60, 64], art: 'crab', color: '#7d9a5a', ai: 'random', elite: true,
+    moves: [{ t: 'atkStatus', n: 9, card: 'bug', count: 2 }, { t: 'heal', n: 10 }, { t: 'atk', n: 14 }, { t: 'debuff', weak: 2 }] },
+  sysadmin: { name: 'Sys Admin', hp: [58, 62], art: 'mimic', color: '#4a6fa5', ai: 'cycle', elite: true,
+    moves: [{ t: 'block', n: 14 }, { t: 'scramble' }, { t: 'atk', n: 15 }, { t: 'atkBlock', n: 10, b: 10 }] },
   // boss
   hydra: { name: 'Server Hydra', hp: [150, 150], art: 'hydra', color: '#55834f', ai: 'cycle', boss: true,
     moves: [{ t: 'atk', n: 6, times: 3 }, { t: 'scramble' }, { t: 'atkStatus', n: 14, card: 'bug', count: 2 }, { t: 'block', n: 20 }, { t: 'buff', n: 4 }] },
@@ -54,13 +66,19 @@ export const ENEMIES = {
     moves: [{ t: 'block', n: 18 }, { t: 'buff', n: 5 }, { t: 'atk', n: 10, times: 2 }, { t: 'atk', n: 25 }] },
   troll: { name: 'Comment Troll', hp: [90, 94], art: 'gremlin', color: '#7a2f3b', ai: 'random', elite: true,
     moves: [{ t: 'atkStatus', n: 12, card: 'bug', count: 2 }, { t: 'debuff', weak: 3, vuln: 2 }, { t: 'atk', n: 5, times: 5 }] },
+  botnet: { name: 'Botnet Hive', hp: [92, 96], art: 'hydra', color: '#9a4f7a', ai: 'cycle', elite: true,
+    moves: [{ t: 'atk', n: 4, times: 4 }, { t: 'status', card: 'spam', count: 3 }, { t: 'buff', n: 3 }, { t: 'atk', n: 4, times: 4 }] },
+  streamer: { name: 'Rage Streamer', hp: [86, 90], art: 'fiend', color: '#ec8a3b', ai: 'cycle', elite: true,
+    moves: [{ t: 'buff', n: 3 }, { t: 'atk', n: 7, times: 3 }, { t: 'debuff', weak: 2, vuln: 2 }, { t: 'atk', n: 22 }] },
+  quantum: { name: 'Quantum Glitch', hp: [94, 98], art: 'null', color: '#a98bf0', ai: 'random', elite: true,
+    moves: [{ t: 'scramble' }, { t: 'atk', n: 20 }, { t: 'block', n: 16 }, { t: 'atkStatus', n: 12, card: 'lag', count: 2 }] },
   // boss
   bluescreen: { name: 'The Blue Screen', hp: [210, 210], art: 'screen', color: '#3f7cc0', ai: 'cycle', boss: true,
     moves: [{ t: 'scramble' }, { t: 'atk', n: 10, times: 3 }, { t: 'status', card: 'lag', count: 3 }, { t: 'atk', n: 32 }, { t: 'block', n: 25 }, { t: 'buff', n: 5 }] },
 };
 
 export const ACTS = [
-  { name: 'Floor 1 · Lobby', normals: ['slime', 'gremlin', 'popup', 'spambot', 'cookie'], elites: ['captcha', 'adswarm'], boss: 'firewall' },
-  { name: 'Floor 2 · Server Room', normals: ['moth', 'hook', 'buffer', 'crab'], elites: ['ransom', 'popstorm'], boss: 'hydra' },
-  { name: 'Floor 3 · The Rooftop', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll'], boss: 'bluescreen' },
+  { name: 'Floor 1 · Lobby', normals: ['slime', 'gremlin', 'popup', 'spambot', 'cookie'], elites: ['captcha', 'adswarm', 'bouncer', 'printer', 'clout'], boss: 'firewall' },
+  { name: 'Floor 2 · Server Room', normals: ['moth', 'hook', 'buffer', 'crab'], elites: ['ransom', 'popstorm', 'ddos', 'bitrot', 'sysadmin'], boss: 'hydra' },
+  { name: 'Floor 3 · The Rooftop', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll', 'botnet', 'streamer', 'quantum'], boss: 'bluescreen' },
 ];

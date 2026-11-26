@@ -6,8 +6,8 @@ import {
   newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
   afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
 } from '../game/run.js';
-import { drawCard, drawCharm, drawEvent, deckStyle } from '../game/loot.js';
-import { EVENTS } from '../game/events.js';
+import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard } from '../game/loot.js';
+import { ALL_EVENTS } from '../game/events.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
@@ -49,7 +49,7 @@ function syncUnlocks() {
     Object.keys(CARDS).filter((id) => !isFound('cards', id)).forEach(noteCardSeen);
     Object.keys(CHARMS).filter((id) => !isFound('charms', id)).forEach(noteCharmSeen);
     Object.keys(ENEMIES).filter((id) => !isFound('enemies', id)).forEach(noteEnemyMet);
-    EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
+    ALL_EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
     if (!isFound('guardians', 'haru')) noteGuardianMet('haru');
     history.replaceState(null, '', location.pathname);
   }
@@ -877,12 +877,16 @@ function eventScreen() {
   const api = {
     addCard: (id) => { takeCard({ id }); return CARDS[id].name; },
     randomCard: (rar) => drawCard(run, rar || 'common'),
-    addCharm: () => { const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } takeCharm(k); return CHARMS[k].name; },
+    styleCard: (arch, rar) => drawStyleCard(run, arch, rar || 'uncommon') || drawCard(run, rar || 'uncommon'),
+    upgradeAll: (pred) => { const ups = run.deck.filter((c) => canUpgrade(c) && pred(CARDS[c.id])); ups.forEach((c) => (c.up = true)); return ups.length; },
+    pickCopy: async () => { const i = await pickFromDeck('Copy a card', (c) => CARDS[c.id].rarity !== 'curse' && CARDS[c.id].rarity !== 'status'); if (i === null) return 'No card copied.'; const c = run.deck[i]; takeCard({ id: c.id, ...(c.up ? { up: true } : {}) }); return `${cardName(c)} copied!`; },
+    addCharm: (id) => { if (id) { takeCharm(id); return CHARMS[id].name; } const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } takeCharm(k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
-  app.innerHTML = `${header()}<main class="room event">
-    <div class="room-icon">${roomIcon('event')}</div>
+  app.innerHTML = `${header()}<main class="room event${ev.special ? ' special' : ''}">
+    <div class="room-icon">${ev.special && ev.boon ? charmIcon(ev.boon) : roomIcon('event')}</div>
+    ${ev.special ? `<span class="special-tag">Special event${ev.style ? ` · ${esc(ARCHES[ev.style].name)}` : ''}</span>` : ''}
     <h1>${esc(ev.title)}</h1><p class="room-text">${esc(ev.text)}</p>
     <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
   </main>`;
