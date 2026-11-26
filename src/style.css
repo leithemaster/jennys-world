@@ -795,3 +795,10 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .pv-base, .pv-up { display: contents; }
 .card-btn .pv-up, .card-btn.show-up .pv-base { display: none; }
 .card-btn.show-up .pv-up { display: contents; }
+
+/* shop card sales */
+.shop-item.on-sale { position: relative; }
+.sale-tag { position: absolute; top: -10px; right: -6px; z-index: 2; transform: rotate(8deg); font-style: normal; font-family: var(--font-display); font-weight: 800; font-size: 13px; background: var(--sun); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 8px; padding: 1px 8px; box-shadow: var(--shadow-sm); pointer-events: none; }
+.sale-50 .sale-tag { background: var(--coral); color: #fff; }
+.price s { opacity: .5; font-weight: 600; margin-right: 4px; }
+.sale-note { color: var(--coral); }

@@ -13,6 +13,7 @@ import { RULES, STATUS_NAMES, STATUS_HELP, STICKERS, COMBO_CHANCE, MAX_ATTACK_RU
 import { T } from '../game/terms.js';
 import { icon, roomIcon, enemySVG, snackIcon } from './art.js';
 import { SNACKS, SNACK_SLOTS, SNACK_DROP } from '../game/snacks.js';
+import { CARD_SALE } from '../game/run.js';
 import { charmIcon } from './charmIcons.js';
 import { jennyChibi, toniChibi } from './chibi.js';
 
@@ -119,5 +120,5 @@ export function buildCatalog() {
   };
 
   const bagRules = { combo: Math.round(COMBO_CHANCE * 100), maxRun: MAX_ATTACK_RUN };
-  return { bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, boardPairs: RULES.boardPairs, rules };
+  return { cardSale: CARD_SALE, bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, boardPairs: RULES.boardPairs, rules };
 }

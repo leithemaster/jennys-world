@@ -218,6 +218,14 @@ export function removeCost(run) {
 }
 
 // Shop shelves: 5 cards from the card decks, 2 shop-only charms + 1 regular charm.
+// Card sales: each card on the shelf (rares too) has a small chance to be
+// marked down. Charms and snacks never go on sale. Chances are in %.
+export const CARD_SALE = { 25: 6, 50: 2 };
+function rollSale() {
+  const r = Math.random() * 100;
+  return r < CARD_SALE[50] ? 50 : r < CARD_SALE[50] + CARD_SALE[25] ? 25 : 0;
+}
+
 export function shopStock(run) {
   const off = run.charms.includes('memberCard') ? 0.8 : 1;
   const price = (n) => Math.round(n * off);
@@ -226,7 +234,10 @@ export function shopStock(run) {
   for (const [i, rar] of ['common', 'common', 'uncommon', 'uncommon', 'rare'].entries()) {
     const ex = cards.map((c) => c.id);
     const id = (style && (i === 1 || i === 3) && drawStyleCard(run, style.arch, rar, ex)) || drawCard(run, rar, ex);
-    if (id) cards.push({ id, price: price({ common: 50, uncommon: 75, rare: 145 }[rar] + Math.floor(Math.random() * 15) - 5) });
+    if (!id) continue;
+    const full = price({ common: 50, uncommon: 75, rare: 145 }[rar] + Math.floor(Math.random() * 15) - 5);
+    const sale = rollSale();
+    cards.push(sale ? { id, price: Math.round(full * (1 - sale / 100)), was: full, sale } : { id, price: full });
   }
   const charms = [];
   for (const pool of ['shop', 'shop', 'drop']) {
