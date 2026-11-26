@@ -15,7 +15,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 ## The run
 
-Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. Bosses don't repeat a fixed pattern: each one draws its moves from a bag of 10 marbles (no repeats until the bag is empty, never its biggest hit first, never 3 attacks in a row while it has anything else, plus combos like "after a Spirit boost, usually an attack"). The marbles under the boss show what's left. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
+Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. Bosses don't repeat a fixed pattern: each one draws its moves from a bag of 10 marbles (no repeats until the bag is empty, never its biggest hit first, never 3 attacks in a row while it has anything else, plus combos like "after a Spirit boost, usually an attack"). The Kioku Catalog lists every boss's marbles. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
 
 **Phones play in landscape:** held upright, a phone shows a "turn your phone sideways" screen (on Android, its Play fullscreen button also locks the screen to landscape; iPhones don't allow a lock, so you rotate by hand). On its side, a phone gets the PC layout (Jenny | board | enemy), squeezed to fit. See `src/ui/orientation.js` and the end of `src/style.css`.
 
@@ -43,6 +43,10 @@ Family who meet you on the climb and offer 3 of their charms to pick 1 (`src/gam
 - **Floor 3:** one of **the Sushi Queen** of the Sushi Palace, **Nyx** (a cute-goth mischief imp: Glitch, Dreamy, Exposed, Memory) or your **partner**: play as Jenny and Toni meets you with thoughtful husband gifts; play as Toni and Jenny brings cute love gifts. 6 strong charms each, made to help a build snowball.
 
 Each guardian mixes style charms with all-round ones, and some charms come with gift cards only that guardian gives (Zoomie, Snuggle, Bark, Sushi Roll, Prank, Love Note, Heart Sticker). The offer is saved, so reloading doesn't reroll it. `node tools/sim.mjs 300 guardians` compares runs with and without the Floor 2/3 gifts.
+
+## Climb levels
+
+Harder runs for after you've won (`src/game/climb.js`). Winning a run unlocks climb level 1 for that climber, and winning at your highest level unlocks the next, up to 10. Each level keeps every twist below it: tougher elites, smaller naps, harder hits, pricier shops, bigger bosses, 2 guardian charms instead of 3, one fewer free reveal, less max HP, a Static curse, and finally elites and bosses starting with 1 Spirit. Pick the level under the climber when you start a run; the header shows a flag with the level, and the Kioku Catalog's Rooms & floors tab lists them all. `node tools/sim.mjs 300 climb` shows the bot's win rate at each level.
 
 ## Play styles
 

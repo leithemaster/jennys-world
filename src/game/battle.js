@@ -5,6 +5,7 @@
 // name (and upgrade) match and play that card. Clearing the board gives
 // +1 energy and draws a fresh board. Unmatched cards stay put between turns,
 // so remembering them pays off. When energy hits 0, the enemy acts.
+import { climbOn, CLIMB_RULES as CR } from './climb.js';
 import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
 import { T } from './terms.js';
@@ -42,7 +43,8 @@ export class Battle {
     this.hooks = hooks;
     const def = ENEMIES[enemyId];
     this.def = def;
-    const hp = randInt(def.hp[0], def.hp[1]);
+    // climb levels 1 and 5: tougher elites and bosses
+    const hp = Math.round(randInt(def.hp[0], def.hp[1]) * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
     this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false };
@@ -87,6 +89,7 @@ export class Battle {
     if (this.has('goodLuckKiss')) this.player.strength += 2;
     if (this.has('loveLetter')) { this.enemy.vuln += 2; this.enemy.weak += 2; }
     // one-fight buffs from events (e.g. the spicy ramen)
+    if (climbOn(this.run, 10) && (this.def.elite || this.def.boss)) this.enemy.strength += CR.bigSpirit;
     const nf = this.run.nextFight;
     if (nf) { if (nf.strength) this.player.strength += nf.strength; this.run.nextFight = null; }
     this.chooseIntent();
@@ -118,7 +121,7 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act);
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0);
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);
@@ -288,6 +291,7 @@ export class Battle {
     if (to.vuln > 0) d *= to === this.enemy && this.has('trending') ? 1.75 : 1.5;
     if (to === this.enemy && to.asleep > 0 && this.has('napBuddy')) d *= 1.3;
     if (from === this.enemy && from.vuln > 0 && this.has('growl')) d *= 0.75;
+    if (from === this.enemy && climbOn(this.run, 3)) d *= CR.enemyDamage;
     return Math.max(0, Math.floor(d));
   }
 

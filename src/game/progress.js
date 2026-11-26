@@ -13,6 +13,7 @@
 // The full format is written down in docs/save-format.md.
 
 import { readDoc, writeDoc, readLegacy } from '../platform/storage.js';
+import { CLIMB_MAX } from './climb.js';
 
 export const PROGRESS_VERSION = 1;
 const DOC = 'progress';
@@ -41,7 +42,7 @@ export function blankProgress() {
 }
 
 function blankCharacter() {
-  return { runs: 0, wins: 0, best_floor: 0 };
+  return { runs: 0, wins: 0, best_floor: 0, climb: 0 }; // climb: highest climb level unlocked
 }
 
 // Each step takes a save at version N-1 and returns it at version N.
@@ -142,6 +143,8 @@ export function isFound(page, id) {
 }
 
 // ---------- unlocks ----------
+export const climbUnlocked = (character) => getProgress().characters[character]?.climb || 0;
+export function setClimb(character, n) { const p = getProgress(); (p.characters[character] ||= blankCharacter()).climb = n; save(); }
 export const isUnlocked = (kind, id) => getProgress().unlocks[kind]?.includes(id) ?? false;
 export function unlock(kind, id) {
   const u = getProgress().unlocks;
@@ -167,6 +170,9 @@ export function recordRunEnd(summary) {
   p.totals.runs += 1;
   ch.runs += 1;
   if (summary.won) { p.totals.wins += 1; ch.wins += 1; }
+  // Winning at your highest climb level unlocks the next one.
+  summary.climbUnlocked = 0;
+  if (summary.won && (summary.climb || 0) >= (ch.climb || 0) && (ch.climb || 0) < CLIMB_MAX) { ch.climb = (summary.climb || 0) + 1; summary.climbUnlocked = ch.climb; }
   p.totals.best_floor = Math.max(p.totals.best_floor, summary.floors);
   ch.best_floor = Math.max(ch.best_floor, summary.floors);
   p.totals.defeated += summary.defeated;

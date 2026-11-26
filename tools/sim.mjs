@@ -33,6 +33,7 @@ globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: 
 const { Battle, RULES } = await import('../src/game/battle.js');
 const { newRun, gainCharm, afterFightHealing, enemyFor, cardChoices } = await import('../src/game/run.js');
 const { drawCharm, drawSpecialEvent, rollSnackDrop } = await import('../src/game/loot.js');
+const { climbOn, CLIMB_RULES, CLIMB_MAX } = await import('../src/game/climb.js');
 const { SNACKS, addSnack, removeSnack } = await import('../src/game/snacks.js');
 const { CHARMS } = await import('../src/game/charms.js');
 const { canUpgrade, CARDS, ARCHES } = await import('../src/game/cards.js');
@@ -111,13 +112,13 @@ function fight(run, enemyId, skill, stats, kind = 'fight') {
 function guardianPick(run, floor, style, opts = {}) {
   const gid = opts.force && GUARDIANS[opts.force].floor === floor ? opts.force : guardianFor(run, floor);
   if (!gid) return;
-  const offer = Object.keys(CHARMS).filter((k) => CHARMS[k].from === gid).sort(() => Math.random() - 0.5).slice(0, 3);
+  const offer = Object.keys(CHARMS).filter((k) => CHARMS[k].from === gid).sort(() => Math.random() - 0.5).slice(0, climbOn(run, 6) ? CLIMB_RULES.guardianChoices : 3);
   const pick = (style && offer.find((k) => CHARMS[k].style === style)) || offer[Math.floor(Math.random() * offer.length)];
   gainCharm(run, pick);
 }
 
 function playRun(skill, stats, opts = {}) {
-  const run = newRun(opts.character || 'jenny');
+  const run = newRun(opts.character || 'jenny', opts.climb || 0);
   stats.runBoons = 0;
   let gifts = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru');
   if (opts.style) { const g = gifts.filter((k) => CHARMS[k].style === opts.style); if (g.length) gifts = g; }
@@ -129,7 +130,7 @@ function playRun(skill, stats, opts = {}) {
     for (const room of plan) {
       if (room === 'event') { if (opts.boon && (stats.runBoons || 0) < (opts.cap || 9)) { const sp = drawSpecialEvent(run); if (sp && sp.boon) { gainCharm(run, sp.boon); stats.boons = (stats.boons || 0) + 1; stats.runBoons = (stats.runBoons || 0) + 1; } } continue; }
       if (room === 'rest') {
-        if (run.hp < run.maxHp * 0.6) run.hp = Math.min(run.maxHp, run.hp + Math.round(run.maxHp * 0.3));
+        if (run.hp < run.maxHp * 0.6) run.hp = Math.min(run.maxHp, run.hp + Math.round(run.maxHp * (climbOn(run, 2) ? CLIMB_RULES.napHeal : 0.3)));
         else { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
         continue;
       }
@@ -181,6 +182,16 @@ if (MODE === 'bosses') {
     for (const [id, [f, w]] of Object.entries(stats.bossRes || {})) { const r = (res[id] ||= [0, 0]); r[0] += f; r[1] += w; }
   }
   console.table(ACTS.flatMap((a, i) => a.bosses.map((id) => ({ floor: i + 1, boss: ENEMIES[id].name, fights: res[id]?.[0] || 0, 'beaten': res[id] ? `${Math.round((res[id][1] / res[id][0]) * 100)}%` : '-' }))));
+  process.exit(0);
+}
+if (MODE === 'climb') {
+  // win rate at each climb level (shops aren't simulated, so level 4 changes nothing here)
+  const out = [];
+  for (const character of Object.keys(CHARACTERS)) for (const [skillName, skill] of Object.entries(SKILLS)) for (let climb = Number(process.argv[4] || 0); climb <= CLIMB_MAX; climb++) {
+    const { stats, wins } = batch(skill, { character, climb });
+    out.push(summarize(stats, wins, { setup: `${character} climb ${climb}`, skill: skillName }));
+  }
+  console.table(out);
   process.exit(0);
 }
 if (MODE === 'guardians') {

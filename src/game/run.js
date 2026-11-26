@@ -4,6 +4,7 @@ import { CARDS } from './cards.js';
 import { CHARACTERS } from './characters.js';
 import { CHARMS } from './charms.js';
 import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard, drawSnack } from './loot.js';
+import { climbOn, CLIMB_RULES as CR, CLIMB_MAX } from './climb.js';
 import { SNACKS, SNACK_SLOTS, SNACK_PRICE, addSnackSlots, addSnack, snackRoom } from './snacks.js';
 
 import { readDoc, writeDoc, removeDoc, readLegacy } from '../platform/storage.js';
@@ -16,9 +17,10 @@ const COLS = 5;
 
 const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-export function newRun(character = 'jenny') {
+export function newRun(character = 'jenny', climb = 0) {
   const ch = CHARACTERS[character] || CHARACTERS.jenny;
   const run = {
+    climb: Math.max(0, Math.min(CLIMB_MAX, climb | 0)), // climb level (see climb.js)
     character: CHARACTERS[character] ? character : 'jenny',
     hp: ch.maxHp, maxHp: ch.maxHp, coins: 99,
     deck: ch.deck.map((id) => ({ id })),
@@ -34,6 +36,8 @@ export function newRun(character = 'jenny') {
     kills: 0,
     loot: { decks: {}, rarePity: -5 },
   };
+  if (climbOn(run, 8)) run.hp = run.maxHp = Math.round(run.maxHp * CR.maxHp);
+  if (climbOn(run, 9)) run.deck.push({ id: CR.curse });
   run.map = generateMap(0);
   return run;
 }
@@ -241,7 +245,7 @@ function rollSale() {
 }
 
 export function shopStock(run) {
-  const off = (run.charms.includes('memberCard') ? 0.8 : 1) * (run.charms.includes('chewToy') ? 0.9 : 1);
+  const off = (run.charms.includes('memberCard') ? 0.8 : 1) * (run.charms.includes('chewToy') ? 0.9 : 1) * (climbOn(run, 4) ? CR.shopPrice : 1);
   const price = (n) => Math.round(n * off);
   const cards = [];
   const style = deckStyle(run);
@@ -289,6 +293,7 @@ export function runSummary(run, won) {
   return {
     character: run.character || 'jenny',
     won: !!won,
+    climb: run.climb || 0,
     floors: run.floorsCleared,
     act: run.act,
     defeated: run.kills,

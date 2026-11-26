@@ -5,7 +5,8 @@
 // using the progress save's collection.
 
 import { buildCatalog } from './catalogData.js';
-import { isFound, isUnlocked } from '../game/progress.js';
+import { isFound, isUnlocked, climbUnlocked } from '../game/progress.js';
+import { CLIMB } from '../game/climb.js';
 import { CHARACTERS } from '../game/characters.js';
 import { outfitOpen } from '../game/outfits.js';
 
@@ -140,7 +141,7 @@ export function catalogScreen(app, { onBack }) {
         : `<ul class="moves${r.bag ? ' bag-moves' : ''}">${r.moves.map((m, i) => `<li>${r.bag ? `<span class="marbles" aria-label="${r.bag[i]} marbles">${`<i class="mb-${r.bagKinds[i]}"></i>`.repeat(r.bag[i])}</span>` : ''}${esc(m)}</li>`).join('')}</ul>${r.combos?.length ? `<p class="small"><b>Combos:</b> ${esc(r.combos.join('. '))}.</p>` : ''}${r.extra ? `<p class="small">${esc(r.extra)}</p>` : ''}`) },
       { label: 'Move order', key: 'ai', cell: (r) => (r.found ? `<span class="small">${esc(r.ai)}</span>` : '') },
     ], [['all', 'All'], ['Normal', 'Normal'], ['Elite', 'Elite'], ['Boss', 'Boss']], 'kind',
-    `Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row. Each floor has 3 possible bosses: one is picked when a run reaches the floor, and the map shows which one is waiting.<br><b>Boss move bags:</b> a boss keeps a bag of 10 marbles, one per move (some moves have more). Each turn it draws one and doesn't put it back; when the bag is empty it refills. Its first move is never its biggest hit, it never attacks ${D.bagRules.maxRun + 1} turns in a row while the bag has anything else, and a combo makes a follow-up move likely (${D.bagRules.combo}%). In battle, the marbles next to its statuses show what's left.`),
+    `Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row. Each floor has 3 possible bosses: one is picked when a run reaches the floor, and the map shows which one is waiting.<br><b>Boss move bags:</b> a boss keeps a bag of 10 marbles, one per move (some moves have more). Each turn it draws one and doesn't put it back; when the bag is empty it refills. Its first move is never its biggest hit, it never attacks ${D.bagRules.maxRun + 1} turns in a row while the bag has anything else, and a combo makes a follow-up move likely (${D.bagRules.combo}%).`),
 
     guardians: () => {
       const charm = Object.fromEntries(D.charms.map((c) => [c.id, c]));
@@ -176,7 +177,10 @@ export function catalogScreen(app, { onBack }) {
       const nm = (n) => (seen[n] ? n : HIDDEN);
       return `<section class="sheet"><h3>Floors</h3>
       <div class="scroll"><table class="slim"><thead><tr><th>Floor</th><th>Normal enemies</th><th>Elites</th><th>Bosses</th></tr></thead><tbody>${D.acts.map((a) => `<tr><td><span class="name">${esc(a.name)}</span></td><td>${esc(a.normals.map(nm).join(', '))}</td><td>${esc(a.elites.map(nm).join(', '))}</td><td><b>${esc(a.bosses.map(nm).join(', '))}</b></td></tr>`).join('')}</tbody></table></div>
-      <ul class="opts"><li>Boards grow as you climb: ${D.boardPairs.map((p) => p * 2).join(' / ')} cards (${D.boardPairs.join(' / ')} pairs) on Floors 1 / 2 / 3.</li><li>Every new board starts with ${D.freeReveal.join(' / ')} cards revealed for free on Floors 1 / 2 / 3.</li><li>Reveals that don't fit on a nearly cleared board carry over to the next board.</li><li>The first room is always a fight, the 5th a treasure, and the last room before the boss a rest booth.</li><li>Every path has at least 2 rest booths, at least 1 shop and no more than 2 elites.</li><li>Shop cards are sometimes on sale: each card (rares too) has a ${D.cardSale[25]}% chance to be 25% off and a ${D.cardSale[50]}% chance to be 50% off. Charms and snacks are never on sale.</li></ul></section>`;
+      <ul class="opts"><li>Boards grow as you climb: ${D.boardPairs.map((p) => p * 2).join(' / ')} cards (${D.boardPairs.join(' / ')} pairs) on Floors 1 / 2 / 3.</li><li>Every new board starts with ${D.freeReveal.join(' / ')} cards revealed for free on Floors 1 / 2 / 3.</li><li>Reveals that don't fit on a nearly cleared board carry over to the next board.</li><li>The first room is always a fight, the 5th a treasure, and the last room before the boss a rest booth.</li><li>Every path has at least 2 rest booths, at least 1 shop and no more than 2 elites.</li><li>Shop cards are sometimes on sale: each card (rares too) has a ${D.cardSale[25]}% chance to be 25% off and a ${D.cardSale[50]}% chance to be 50% off. Charms and snacks are never on sale.</li></ul></section>
+      <section class="sheet"><h3>Climb levels</h3>
+      <p class="small">Win a run to unlock climb level 1 for that climber, then win at your highest level to unlock the next. Each level keeps every twist below it. Pick the level under the climber when you start a run. Unlocked: ${Object.keys(CHARACTERS).map((id) => `${esc(CHARACTERS[id].name)} ${climbUnlocked(id)}/${CLIMB.length - 1}`).join(', ')}.</p>
+      <div class="scroll"><table class="slim"><thead><tr><th>Level</th><th>Twist</th><th>What changes</th></tr></thead><tbody>${CLIMB.slice(1).map((c, i) => `<tr><td>${i + 1}</td><td><span class="name">${esc(c.name)}</span></td><td>${esc(c.text)}</td></tr>`).join('')}</tbody></table></div></section>`;
     },
   };
 

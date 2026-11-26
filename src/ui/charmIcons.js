@@ -138,6 +138,7 @@ export function charmIcon(id, cls = '') {
 export const UI_ICONS = {
   heart: `<path d="M16 28 C6 21 3 16 3 11 C3 7 6 4 9.5 4 C12.5 4 14.5 6 16 8.5 C17.5 6 19.5 4 22.5 4 C26 4 29 7 29 11 C29 16 26 21 16 28 Z" ${s('#ff5d6e', 2.2)}/>${shine(9, 10, 2)}`,
   coin: `<circle cx="16" cy="16" r="12" ${s('#ffc53d', 2.2)}/><circle cx="16" cy="16" r="7" fill="none" stroke="${K}" stroke-width="1.8"/>${shine(10, 10, 2)}`,
+  flag: `<path d="M8 29 V4" stroke="${K}" stroke-width="2.6" stroke-linecap="round"/><path d="M9 5 C14 2 18 8 26 5 V16 C18 19 14 13 9 16 Z" ${s('#a98bf0', 2.2)}/>${shine(13, 8, 1.5)}`,
   gear: `<path d="M14 3 H18 L19 7 L22.5 8.5 L26 6.5 L28.5 9.5 L26.5 13 L28 16 L29 19 L25.5 20 L24 23.5 L26 27 L23 29 L19.5 27 L16 28 L13 29 L12 25.5 L8.5 24 L5 26 L3 23 L5.5 19.5 L4 16 L3 13 L6.5 12 L8 8.5 L6 5 L9 3 L12.5 5 Z" ${s('#fff4e6', 2)}/><circle cx="16" cy="16" r="4.5" ${s('#a98bf0', 1.8)}/>`,
   menu: `<rect x="5" y="7" width="22" height="4" rx="2" fill="${K}"/><rect x="5" y="14" width="22" height="4" rx="2" fill="${K}"/><rect x="5" y="21" width="22" height="4" rx="2" fill="${K}"/>`,
   eye: `<path d="M2 16 C8 7 24 7 30 16 C24 25 8 25 2 16 Z" ${s('#fff4e6', 2)}/><circle cx="16" cy="16" r="5" ${s('#4fd1b9', 1.8)}/><circle cx="16" cy="16" r="2" fill="${K}"/>`,

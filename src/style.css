@@ -707,10 +707,6 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 @media (max-width: 999px) { .snack { width: 28px; height: 28px; } .snack.empty { width: 22px; height: 22px; } }
 
 /* boss move bag */
-.bag-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 999px; background: var(--paper); border: var(--line); cursor: help; }
-.mb { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--ink); display: inline-block; }
-.mb-atk { background: var(--coral); } .mb-def { background: var(--sky); } .mb-buff { background: var(--sun); } .mb-hex { background: var(--lilac); }
-.mb.used { background: transparent; opacity: .35; }
 .bag-moves { list-style: none; padding-left: 0; }
 .bag-moves li { display: flex; align-items: center; gap: 8px; }
 .marbles { display: inline-flex; gap: 2px; min-width: 46px; }
@@ -817,3 +813,14 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .cat .guardian-charms:not([open]) summary { margin-bottom: 0; }
 .cat .guardian-row .guardian-charms .art { width: 40px; height: 40px; }
 .cat .guardian-row .guardian-charms td:nth-child(4) { min-width: 220px; }
+
+/* climb levels */
+.hero-slot { display: flex; flex-direction: column; align-items: center; gap: var(--s2); }
+.hero-slot > .hero-card { flex: 1; }
+.climb-pick { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 3px solid var(--ink); border-radius: 14px; background: #efe6ff; color: var(--ink); cursor: help; }
+.climb-pick span { display: flex; flex-direction: column; align-items: center; min-width: 140px; line-height: 1.15; }
+.climb-pick small { font-size: 12px; opacity: .8; }
+.climb-pick .btn { min-width: 34px; font-weight: 800; }
+.pill.climb { background: #efe6ff; cursor: help; }
+.climb-note .ui-i { width: 44px; height: 44px; flex: none; }
+.end .unlock-note p, .end .unlock-note small { color: var(--ink); }

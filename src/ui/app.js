@@ -13,7 +13,6 @@ import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
-import { moveText, comboText } from './catalogData.js';
 import { blobBackdrop, guardianChibi } from './chibi.js';
 import { GUARDIANS, guardianFor, guardiansOn } from '../game/guardians.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
@@ -21,8 +20,9 @@ import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
   getProgress, recordRunEnd, isUnlocked, isFound, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
-  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet, noteSnackSeen, noteSnackTaken,
+  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet, noteSnackSeen, noteSnackTaken, climbUnlocked, setClimb,
 } from '../game/progress.js';
+import { CLIMB, CLIMB_MAX, CLIMB_RULES, climbOn } from '../game/climb.js';
 
 const app = document.getElementById('app');
 let run = null;
@@ -56,6 +56,7 @@ function syncUnlocks() {
     ALL_EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
     Object.keys(SNACKS).filter((id) => !isFound('snacks', id)).forEach(noteSnackSeen);
     Object.keys(GUARDIANS).filter((id) => !isFound('guardians', id)).forEach(noteGuardianMet);
+    Object.keys(CHARACTERS).forEach((id) => setClimb(id, CLIMB_MAX));
     history.replaceState(null, '', location.pathname);
   }
   syncOutfitUnlocks();
@@ -68,8 +69,8 @@ function unlockAfterBoss(floor) {
   return Object.entries(CHARACTERS).filter(([id, ch]) => ch.unlock?.bossFloor === floor && unlock('characters', id)).map(([, ch]) => ch.name);
 }
 const heroOpen = (id) => !CHARACTERS[id].unlock || isUnlocked('characters', id);
-function beginRun(character) {
-  run = newRun(character);
+function beginRun(character, climb = 0) {
+  run = newRun(character, climb);
   run.deck.forEach((c) => noteCardTaken(c.id));
   saveRun(run);
   guardianGift();
@@ -101,6 +102,7 @@ function header() {
       <span class="pill hp" aria-label="Health">${uiIcon('heart')}<b>${run.hp}</b>/${run.maxHp}</span>
       <span class="pill coins" aria-label="Coins">${uiIcon('coin')}<b>${run.coins}</b></span>
       <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/10</small></span>
+      ${run.climb ? `<span class="pill climb" data-tip="${esc(climbTip(run.climb))}" aria-label="Climb level ${run.climb}">${uiIcon('flag')}<b>${run.climb}</b></span>` : ''}
     </div>
     <div class="bar-snacks" aria-label="Snack bar">${snackBar(run).map((id, i) => (id ? `<button class="snack" data-snack="${i}" data-tip="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}" aria-label="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}">${snackIcon(id)}</button>` : '<span class="snack empty" title="Empty snack slot"></span>')).join('')}</div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
@@ -221,7 +223,8 @@ function showTip(el) {
 }
 document.addEventListener('pointerover', (e) => { const el = e.target.closest?.('[data-tip]'); if (el && e.pointerType === 'mouse') showTip(el); });
 document.addEventListener('pointerout', (e) => { if (e.target.closest?.('[data-tip]') && e.pointerType === 'mouse') tip.hidden = true; });
-document.addEventListener('click', (e) => { const el = e.target.closest?.('[data-tip]'); if (el) { showTip(el); clearTimeout(showTip.t); showTip.t = setTimeout(() => (tip.hidden = true), 2600); } else tip.hidden = true; });
+// (isConnected: a click that re-rendered its own element leaves nothing to point at)
+document.addEventListener('click', (e) => { const el = e.target.closest?.('[data-tip]'); if (el?.isConnected) { showTip(el); clearTimeout(showTip.t); showTip.t = setTimeout(() => (tip.hidden = true), 2600); } else tip.hidden = true; });
 document.addEventListener('focusin', (e) => { const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); });
 document.addEventListener('focusout', () => (tip.hidden = true));
 
@@ -414,26 +417,47 @@ function outfitScreen() {
 }
 
 // ---------- character pick ----------
+// ---------- climb levels ----------
+// Everything active at climb level n (each level keeps the ones below it).
+const climbTip = (n) => [`Climb level ${n}:`, ...CLIMB.slice(1, n + 1).map((c, i) => `${i + 1}. ${c.name}: ${c.text}`)].join('\n');
+const climbSel = {}; // level picked per character on the climber screen (defaults to the highest unlocked)
+function climbPicker(id) {
+  const max = heroOpen(id) ? climbUnlocked(id) : 0;
+  if (!max) return '</div>';
+  const n = climbSel[id] ?? (climbSel[id] = max);
+  return `<div class="climb-pick"${n ? ` data-tip="${esc(climbTip(n))}"` : ''}>
+    <button class="btn small" data-climb="${id}" data-step="-1" ${n <= 0 ? 'disabled' : ''} aria-label="Lower climb level">−</button>
+    <span><b>${n ? `Climb level ${n}` : 'Normal climb'}</b><small>${n ? esc(CLIMB[n].name) : `Up to level ${max} unlocked`}</small></span>
+    <button class="btn small" data-climb="${id}" data-step="1" ${n >= max ? 'disabled' : ''} aria-label="Raise climb level">+</button>
+  </div></div>`;
+}
+
 function pickCharacter() {
   battle = null;
   app.innerHTML = `<main class="room pick-hero">
     <h1>Who's climbing?</h1>
     <p class="room-text">Every card style is open to everyone. Each climber starts a little differently.</p>
-    <div class="hero-choices">${Object.entries(CHARACTERS).map(([id, ch]) => !heroOpen(id) ? `<button class="hero-card locked" disabled>
+    <div class="hero-choices">${Object.entries(CHARACTERS).map(([id, ch]) => !heroOpen(id) ? `<div class="hero-slot"><button class="hero-card locked" disabled>
       <span class="hero-art">${heroSVG(id, { crop: true })}</span>
       <b>???</b>
       <small>${esc(ch.unlock.text)}</small>
-    </button>` : `<button class="hero-card" data-hero="${id}">
+    </button>` : `<div class="hero-slot"><button class="hero-card" data-hero="${id}">
       <span class="hero-art">${heroSVG(id, { crop: true })}</span>
       <b>${esc(ch.name)}</b>
       <small>${esc(ch.blurb)}</small>
       <span class="hero-stats">${uiIcon('heart')} ${ch.maxHp} max ${T.hp}</span>
       <em class="hero-passive">${esc(passiveText(ch))}</em>
       <span class="hero-deck">Starts with ${esc([...new Set(ch.deck)].map((c) => { const n = ch.deck.filter((x) => x === c).length; return `${n > 1 ? `${n} ` : ''}${CARDS[c].name}`; }).join(', '))}</span>
-    </button>`).join('')}</div>
+    </button>${climbPicker(id)}`).join('')}</div>
     <button class="btn ghost" data-back>Back</button>
   </main>`;
-  app.querySelectorAll('[data-hero]').forEach((b) => b.addEventListener('click', () => beginRun(b.dataset.hero)));
+  app.querySelectorAll('[data-hero]').forEach((b) => b.addEventListener('click', () => beginRun(b.dataset.hero, climbSel[b.dataset.hero] || 0)));
+  app.querySelectorAll('[data-climb]').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.climb, max = climbUnlocked(id);
+    climbSel[id] = Math.max(0, Math.min(max, (climbSel[id] ?? max) + Number(b.dataset.step)));
+    pickCharacter();
+    app.querySelector(`[data-climb="${id}"][data-step="${b.dataset.step}"]:not(:disabled)`)?.focus();
+  }));
   app.querySelector('[data-back]').addEventListener('click', title);
   app.querySelector('[data-hero]').focus();
 }
@@ -448,7 +472,7 @@ function guardianGift() {
   const g = GUARDIANS[gid];
   const mine = (k) => (gid === 'haru' ? CHARMS[k].pool === 'haru' : CHARMS[k].pool === 'guardian' && CHARMS[k].from === gid);
   // the offer is saved, so reloading the page doesn't reroll it
-  if (!run.giftOffer?.length) run.giftOffer = Object.keys(CHARMS).filter((k) => mine(k) && !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3);
+  if (!run.giftOffer?.length) run.giftOffer = Object.keys(CHARMS).filter((k) => mine(k) && !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, climbOn(run, 6) ? CLIMB_RULES.guardianChoices : 3);
   const ids = run.giftOffer;
   saveRun(run);
   noteGuardianMet(gid);
@@ -721,21 +745,8 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'steal') parts.push(`<span class="i-debuff">${uiIcon('coin')}Steal ${it.coins}</span>`);
     if (it.t === 'drain') parts.push(`<span class="i-buff">${icon('drop')}Drain</span>`);
     if (it.t === 'ban') parts.push(`<span class="i-debuff">${icon('hammer')}Ban a card</span>`);
-    const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : battle.def.ai === 'bag' ? 'Draws its next move from its bag (see the marbles below it).' : 'Picks its moves at random.';
+    const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : battle.def.ai === 'bag' ? 'Draws its next move from a bag of moves (see the Kioku Catalog).' : 'Picks its moves at random.';
     return `<div class="bubble" data-tip="${esc(`${describeMove(it, dmg)} ${next}`)}">${parts.join('')}</div>`;
-  };
-
-  // Boss move bag: one marble per move left (hollow = already drawn this bag).
-  const marbleKind = (m) => (['atk', 'steal', 'drain'].includes(m.t) || (m.t === 'ban' && m.n) || m.t === 'atkBlock' || m.t === 'atkStatus' ? 'atk' : m.t === 'block' || m.t === 'heal' ? 'def' : m.t === 'buff' ? 'buff' : 'hex');
-  const bagHTML = () => {
-    const bag = battle.bagLeft(); if (!bag || battle.enemy.hp <= 0) return '';
-    const left = bag.reduce((a, r) => a + r.left, 0), total = bag.reduce((a, r) => a + r.total, 0);
-    const shown = left || total; // an empty bag refills before the next draw
-    const lines = bag.map((r) => `${left ? r.left : r.total}/${r.total} ${moveText(r.move)}`);
-    const combos = comboText(battle.def);
-    const tip = `Move bag: ${shown} of ${total} marbles left${left ? '' : ' (refills now)'}. Each turn the boss draws one and doesn't put it back.\n${lines.join('\n')}${combos.length ? `\n${combos.join('. ')}.` : ''}`;
-    const dots = bag.flatMap((r) => Array.from({ length: r.total }, (_, i) => `<i class="mb mb-${marbleKind(r.move)}${(left ? i >= r.left : false) ? ' used' : ''}"></i>`)).join('');
-    return `<div class="bag-chip" data-tip="${esc(tip)}" aria-label="${esc(`Move bag, ${shown} of ${total} left`)}">${dots}</div>`;
   };
 
   const update = () => {
@@ -751,7 +762,7 @@ function battleScreen(enemyId, kind) {
     const pasTip = pas.id === 'stickerBook' ? `${passiveText(b.character)} Next: ${STICKERS[b.nextSticker()].name} sticker (${STICKERS[b.nextSticker()].text}) in ${b.stickersIn()} match${b.stickersIn() > 1 ? 'es' : ''}.` : passiveText(b.character);
     $('[data-pstat]').innerHTML = `<span class="status s-power" data-tip="${esc(pasTip)}">${pasLabel}</span>` + statusHTML(b.player) + (b.powers.bedtime ? `<span class="status s-power" data-tip="Bedtime Story: apply ${b.powers.bedtime} ${T.sleepy} each turn.">Story ${b.powers.bedtime}</span>` : '') + (b.powers.deepSleep ? `<span class="status s-power" data-tip="Deep Sleep: enemies stay ${T.asleep} ${b.powers.deepSleep} turn longer.">Deep Sleep</span>` : '') + (b.powers.sweetDreams ? '<span class="status s-power" data-tip="Sweet Dreams: whenever you heal, deal that much damage.">Sweet Dreams</span>' : '') + (b.powers.roast ? `<span class="status s-power" data-tip="Roast Battle: ${T.exposed} on enemies no longer wears off.">Roast</span>` : '') + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
-    $('[data-estat]').innerHTML = statusHTML(e) + bagHTML(); // the boss's marble bag sits in its status row so both fighters line up
+    $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
     const en = $('[data-energy]');
     // While the first card of a pair is face up, its energy is "in use", not spent:
@@ -956,7 +967,8 @@ function actCleared() {
 function gameOver(won, abandoned) {
   battle = null;
   clearRun();
-  const stats = recordRunEnd(runSummary(run, won)).totals;
+  const summary = runSummary(run, won);
+  const stats = recordRunEnd(summary).totals;
   const newOutfits = outfitsForRunEnd();
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
     <div class="title-art" data-hero-art="${run.character}">${blobBackdrop()}${heroSVG(run.character)}</div>
@@ -964,11 +976,13 @@ function gameOver(won, abandoned) {
     <p>${won ? `${esc(hero().name)} beat ${esc(ENEMIES[run.bossOf?.[run.act]]?.name || 'the final boss')}. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
       <div><dt>Rooms</dt><dd>${run.floorsCleared}</dd></div>
+      ${run.climb ? `<div><dt>Climb</dt><dd>${run.climb}</dd></div>` : ''}
       <div><dt>Defeated</dt><dd>${run.kills}</dd></div>
       <div><dt>Deck</dt><dd>${run.deck.length}</dd></div>
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
+    ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Climb level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
     ${newOutfits.map(outfitNote).join('')}
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
@@ -1039,7 +1053,7 @@ function eventScreen() {
 }
 
 function restScreen() {
-  const heal = run.charms.includes('footRub') ? run.maxHp : Math.round(run.maxHp * (0.3 + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
+  const heal = run.charms.includes('footRub') ? run.maxHp : Math.round(run.maxHp * ((climbOn(run, 2) ? CLIMB_RULES.napHeal : 0.3) + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
   app.innerHTML = `${header()}<main class="room rest">
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
