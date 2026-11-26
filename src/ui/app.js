@@ -946,7 +946,7 @@ function gameOver(won, abandoned) {
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
     <div class="title-art" data-hero-art="${run.character}">${blobBackdrop()}${heroSVG(run.character)}</div>
     <h1>${won ? 'The Tower is cleared!' : abandoned ? 'Run abandoned' : 'Knocked out!'}</h1>
-    <p>${won ? `${esc(hero().name)} beat The Blue Screen. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
+    <p>${won ? `${esc(hero().name)} beat ${esc(ENEMIES[run.bossOf?.[run.act]]?.name || 'the final boss')}. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
       <div><dt>Rooms</dt><dd>${run.floorsCleared}</dd></div>
       <div><dt>Defeated</dt><dd>${run.kills}</dd></div>
