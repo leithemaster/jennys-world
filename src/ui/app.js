@@ -327,6 +327,35 @@ function help() {
 }
 
 // ---------- title ----------
+// ---------- title secret ----------
+// Click the KIOKU TOWER logo 20 times and her shibas, Haru and Issei, come
+// running onto the main menu (and stay there until the page is reloaded).
+const SECRET_CLICKS = 20;
+let logoClicks = 0, shibasHere = false;
+const shibaHTML = (running) => ['haru', 'issei'].map((id) => `<span class="title-shiba ${id}${running ? ' run-in' : ''} pettable" role="button" tabindex="0" aria-label="Pet ${GUARDIANS[id].name}" data-shiba="${id}">${guardianChibi(id)}</span>`).join('');
+function bindShibas() {
+  app.querySelectorAll('[data-shiba]').forEach((el) => bindPet(el, GUARDIANS[el.dataset.shiba]));
+}
+function bindLogoSecret() {
+  const logo = app.querySelector('.logo');
+  if (!logo) return;
+  logo.classList.add('secret');
+  logo.addEventListener('click', () => {
+    logo.classList.remove('boing'); void logo.offsetWidth; logo.classList.add('boing');
+    if (shibasHere) { sfx('bark', Math.random() < 0.5); return; }
+    logoClicks += 1;
+    sfx('click');
+    if (logoClicks === 10) sfx('bark', true); // a faint yip from somewhere...
+    if (logoClicks < SECRET_CLICKS) return;
+    shibasHere = true;
+    app.querySelector('.home-art').insertAdjacentHTML('beforeend', shibaHTML(true));
+    bindShibas();
+    sfx('bark'); setTimeout(() => sfx('bark', true), 260); setTimeout(() => sfx('win'), 700);
+    setTimeout(() => app.querySelectorAll('[data-shiba]').forEach((el) => petFx(el, GUARDIANS[el.dataset.shiba])), 1300);
+  });
+  bindShibas();
+}
+
 // ---------- run history ----------
 // The progress save keeps the last runs (newest first). Older entries may be
 // missing the guardians / bosses / knocked-out-by fields.
@@ -389,7 +418,7 @@ export function title() {
       <h1 class="logo">${GAME.name.split(' ').map((w) => `<span>${esc(w.toUpperCase())}</span>`).join('')}</h1>
       <p class="tagline">${GAME.tagline} · climb the ${GAME.tower}</p>
     </div>
-    <div class="home-art${couple.length > 1 ? ' couple' : ''}">${blobBackdrop()}${couple.map((c) => `<span class="home-hero" data-hero-art="${c}">${heroSVG(c)}</span>`).join('')}</div>
+    <div class="home-art${couple.length > 1 ? ' couple' : ''}">${blobBackdrop()}${couple.map((c) => `<span class="home-hero" data-hero-art="${c}">${heroSVG(c)}</span>`).join('')}${shibasHere ? shibaHTML(false) : ''}</div>
     <div class="home-menu">
       ${saved ? `<button class="btn big yellow" data-continue>Continue <small>${esc(ACTS[saved.act].name)} · ${uiIcon('heart')} ${saved.hp}</small></button>` : ''}
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
@@ -410,6 +439,7 @@ export function title() {
   app.querySelector('[data-catalog]').addEventListener('click', () => catalogScreen(app, { onBack: title }));
   app.querySelector('[data-help]').addEventListener('click', help);
   app.querySelector('[data-history]').addEventListener('click', () => historyScreen());
+  bindLogoSecret();
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
   app.querySelector('[data-outfits]').addEventListener('click', outfitScreen);
   app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) guardianGift(); else mapScreen(); });
@@ -512,6 +542,30 @@ function pickCharacter() {
   app.querySelector('[data-hero]').focus();
 }
 
+// ---------- petting ----------
+// Click (or Enter/Space on) a guardian: a wiggle, floating hearts, a line and a bark or chime.
+function petFx(el, g) {
+  if (!el) return;
+  el.classList.remove('petted'); void el.offsetWidth; el.classList.add('petted');
+  el.petN = (el.petN || 0) + 1;
+  sfx(g.dog ? 'bark' : 'pet', g.small);
+  for (let i = 0; i < 3; i++) {
+    const h = document.createElement('span');
+    h.className = 'pet-heart'; h.textContent = '♥';
+    h.style.left = `${30 + Math.random() * 40}%`; h.style.animationDelay = `${i * 0.12}s`;
+    el.appendChild(h); setTimeout(() => h.remove(), 1600);
+  }
+  const lines = g.pets || ['♥'];
+  let b = el.querySelector('.pet-bubble');
+  if (!b) { b = document.createElement('span'); b.className = 'pet-bubble'; el.appendChild(b); }
+  b.textContent = lines[(el.petN - 1) % lines.length];
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+function bindPet(el, g) {
+  el?.addEventListener('click', () => petFx(el, g));
+  el?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petFx(el, g); } });
+}
+
 // ---------- guardian gifts ----------
 // A guardian's gift: Haru at the start of a run, then the guardian waiting on
 // floors 2 and 3 (see guardians.js). Pick 1 of 3 charms from their set.
@@ -529,14 +583,16 @@ function guardianGift() {
   ids.forEach(noteCharmSeen);
   const tags = (k) => `${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}${CHARMS[k].gives ? `<em class="tag gift-cards">+${CHARMS[k].gives.length} ${esc(CARDS[CHARMS[k].gives[0]].name)} cards</em>` : ''}`;
   app.innerHTML = `${gid === 'haru' ? '' : header()}<main class="room gift">
-    <div class="gift-art guardian-art">${blobBackdrop('#f6b74a', '#ffe08a')}${guardianChibi(g.art)}</div>
+    <div class="gift-art guardian-art pettable" role="button" tabindex="0" aria-label="Pet ${esc(g.name)}" data-pet>${blobBackdrop('#f6b74a', '#ffe08a')}${guardianChibi(g.art)}</div>
     ${gid === 'haru' ? '' : `<span class="special-tag">${esc(ACTS[run.act].name)} guardian</span>`}
     <h1>${gid === 'haru' ? GAME.gift : `${esc(g.name)}'s Gift`}</h1>
     <p class="room-text">${esc(g.line)}</p>
+    <p class="pet-hint">Click ${esc(g.name)} to say hi.</p>
     <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${tags(k)}</button>`).join('')}</div>
     ${ids.length ? '' : `<p class="room-text">${esc(g.name)} has nothing left to give you.</p><button class="btn big yellow" data-skip-gift>Keep climbing</button>`}
   </main>`;
   if (gid !== 'haru') bindHeader(app);
+  bindPet(app.querySelector('[data-pet]'), g);
   const done = () => {
     run.giftPending = false; run.giftOffer = null;
     saveRun(run);

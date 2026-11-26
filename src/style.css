@@ -848,3 +848,35 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .run-charms .charm { width: 30px; height: 30px; }
 .run-charms small { opacity: .6; }
 @media (max-width: 640px) { .run-row { grid-template-columns: 44px 1fr; } .run-row > .btn { grid-column: 2; justify-self: start; } .run-row .hero-art { width: 44px; height: 44px; } }
+
+/* petting guardians (gift screen and the title shibas) */
+.pettable { cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; }
+.pettable:focus-visible { outline: 3px dashed var(--sun); outline-offset: 6px; border-radius: 50%; }
+.pettable.petted > svg { animation: petWiggle .5s ease-out; transform-origin: 50% 90%; }
+@keyframes petWiggle { 20% { transform: rotate(-7deg) scale(1.05, .95); } 45% { transform: rotate(6deg) scale(.97, 1.04); } 70% { transform: rotate(-3deg); } }
+.pet-heart { position: absolute; top: 18%; color: #ff5d8f; font-size: 22px; font-weight: 900; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; pointer-events: none; opacity: 0; animation: petHeart 1.2s ease-out forwards; z-index: 3; }
+@keyframes petHeart { from { opacity: 0; transform: translateY(0) scale(.5); } 15% { opacity: 1; transform: translateY(-10px) scale(1.1); } to { opacity: 0; transform: translateY(-70px) scale(.9); } }
+.pet-bubble { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); white-space: nowrap; background: var(--paper); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 14px; padding: 3px 10px; font-size: 13px; font-weight: 800; opacity: 0; pointer-events: none; z-index: 4; }
+.pet-bubble.show { animation: petBubble 2.2s ease-out forwards; }
+@keyframes petBubble { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.8); } 10%, 80% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
+
+/* title secret: Haru and Issei on the main menu */
+.logo.secret { cursor: pointer; user-select: none; }
+.logo.boing span { animation: boing .35s ease-out; }
+.logo.boing span + span { animation-delay: .05s; }
+@keyframes boing { 40% { scale: 1.06 .94; } 70% { scale: .98 1.03; } }
+.title-shiba { position: absolute; bottom: -34px; width: 88px; height: 88px; z-index: 2; }
+.title-shiba > svg { width: 100%; height: 100%; animation: bob 2.4s ease-in-out infinite; }
+.title-shiba.haru { left: 8px; }
+.title-shiba.issei { right: 14px; width: 76px; height: 76px; }
+.title-shiba.issei > svg { animation-delay: -1.2s; }
+.title-shiba.run-in.haru { animation: shibaRunL 1.1s cubic-bezier(.2, .7, .3, 1) both; }
+.title-shiba.run-in.issei { animation: shibaRunR 1.1s .15s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes shibaRunL { 0% { transform: translateX(-60vw); } 30% { transform: translateX(-20vw) translateY(-14px); } 60% { transform: translateX(-4vw); } 80% { transform: translateY(-10px); } 100% { transform: none; } }
+@keyframes shibaRunR { 0% { transform: translateX(60vw); } 30% { transform: translateX(20vw) translateY(-14px); } 60% { transform: translateX(4vw); } 80% { transform: translateY(-10px); } 100% { transform: none; } }
+.title-shiba .pet-bubble { font-size: 11px; }
+@media (prefers-reduced-motion: reduce) { .pettable.petted > svg, .logo.boing span, .title-shiba.run-in { animation: none !important; } .pet-heart { display: none; } }
+.title-shiba.haru .pet-bubble { left: 20%; }
+.title-shiba.haru .pet-bubble.show { animation-name: petBubbleL; }
+@keyframes petBubbleL { 0% { opacity: 0; transform: translate(0, 6px) scale(.8); } 10%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
+.pet-hint { margin: -6px 0 0; font-size: 12px; font-weight: 800; color: var(--on-ground-muted); }

@@ -108,6 +108,9 @@ const SFX = {
   click: () => { tone({ freq: 420, to: 880, type: 'sine', dur: 0.07, vol: 0.32, attack: 0.003 }); tone({ freq: 1760, type: 'sine', dur: 0.03, vol: 0.05, delay: 0.02 }); },
   // card flip: a gentle wooden-tile tok
   flip: () => { tone({ freq: 1150, to: 980, type: 'triangle', dur: 0.045, vol: 0.22, attack: 0.002 }); tone({ freq: 310, to: 240, type: 'sine', dur: 0.06, vol: 0.3, attack: 0.002 }); noise({ dur: 0.02, vol: 0.12, filter: 2500, type: 'bandpass', q: 3 }); },
+  // petting: a little bark for the pups (small = higher yip), a soft heart chime for everyone else
+  bark: (small) => { const k = small ? 1.35 : 1; tone({ freq: 560 * k, to: 330 * k, type: 'sawtooth', dur: 0.09, vol: 0.14, attack: 0.004 }); tone({ freq: 760 * k, to: 420 * k, type: 'square', dur: 0.07, vol: 0.06 }); noise({ dur: 0.05, vol: 0.12, filter: 1300, type: 'bandpass', q: 2 }); },
+  pet: () => { [880, 1175, 1568].forEach((f, i) => tone({ freq: f, type: 'sine', dur: 0.14, vol: 0.12, delay: i * 0.05 })); },
   match: (combo = 1) => {
     const base = 523 * Math.pow(2, Math.min(combo - 1, 7) / 12 * 2);
     tone({ freq: base, type: 'triangle', dur: 0.12, vol: 0.32 });
