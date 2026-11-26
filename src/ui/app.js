@@ -1010,11 +1010,16 @@ function fitBoard() {
   const cw = Math.floor(widthFor(ref));
   // this board: a layout that fits at that size, as close in shape to the biggest board as possible
   const shape = ({ c, r }) => Math.log((c * cw) / (r * cw * CARD_RATIO));
-  const fits = layouts(n).filter((l) => widthFor(l) >= cw);
+  // Even rows first. If none fits at that size (Floor 2's 18 cards only split 3 or 6 wide),
+  // allow a short last row, which sits centred. The biggest board's column count always fits.
+  const ragged = COLS.map((c) => ({ c, r: Math.ceil(n / c) }));
+  let fits = layouts(n).filter((l) => widthFor(l) >= cw);
+  if (!fits.length) fits = ragged.filter((l) => widthFor(l) >= cw);
   const pick = fits.length ? fits.reduce((a, l) => (Math.abs(shape(l) - shape(ref)) < Math.abs(shape(a) - shape(ref)) ? l : a)) : bestFor(n);
+  const size = Math.min(cw, Math.floor(widthFor(pick))); // never wider than the space, whatever happens
   board.style.setProperty('--cols', pick.c);
-  board.style.setProperty('--cw', cw);
-  board.style.width = `${pick.c * cw + gap * (pick.c - 1) + pad}px`;
+  board.style.setProperty('--cw', size);
+  board.style.width = `${pick.c * size + gap * (pick.c - 1) + pad}px`;
 }
 window.addEventListener('resize', () => fitBoard());
 
