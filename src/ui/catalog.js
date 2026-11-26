@@ -140,10 +140,12 @@ export function catalogScreen(app, { onBack }) {
     ], [['all', 'All'], ['Normal', 'Normal'], ['Elite', 'Elite']], 'kind',
     'Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row.'),
 
-    bosses: () => `<section class="sheet"><p class="note">Each floor has 3 possible bosses. One is picked when a run reaches the floor, and the map shows which one is waiting. <b>Found ${D.enemies.filter((e) => e.kind === 'Boss' && e.found).length} of ${D.enemies.filter((e) => e.kind === 'Boss').length}</b></p>
+    bosses: () => `<section class="sheet"><p class="note">Each floor has 3 possible bosses. One is picked when a run reaches the floor, and the map shows which one is waiting.</p>
+      <p class="note"><b>Move bags:</b> a boss keeps a bag of 10 marbles, one per move (some moves have more). Each turn it draws one and doesn't put it back; when the bag is empty it refills. Its first move is never its biggest hit, it never attacks ${D.bagRules.maxRun + 1} turns in a row while the bag has anything else, and a combo makes a follow-up move likely (${D.bagRules.combo}%). In battle, the marbles under its intent show what's left.</p>
+      <p class="note"><b>Found ${D.enemies.filter((e) => e.kind === 'Boss' && e.found).length} of ${D.enemies.filter((e) => e.kind === 'Boss').length}</b></p>
       ${D.enemies.filter((e) => e.kind === 'Boss').map((b) => (b.found ? `<div class="tile boss-row"><div class="art enemy boss">${b.art}</div>
         <div class="boss-info"><h3>${esc(b.name)}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)} · <b>${esc(b.hp)} HP</b> · moves ${esc(b.ai.toLowerCase())}</p>
-        <ol class="moves">${b.moves.map((m) => `<li>${esc(m)}</li>`).join('')}</ol>${b.extra ? `<p class="small">${esc(b.extra)}</p>` : ''}</div></div>`
+        <ul class="moves bag-moves">${b.moves.map((m, i) => `<li>${b.bag ? `<span class="marbles" aria-label="${b.bag[i]} marbles">${`<i class="mb-${b.bagKinds[i]}"></i>`.repeat(b.bag[i])}</span>` : ''}${esc(m)}</li>`).join('')}</ul>${b.combos?.length ? `<p class="small"><b>Combos:</b> ${esc(b.combos.join('. '))}.</p>` : ''}${b.extra ? `<p class="small">${esc(b.extra)}</p>` : ''}</div></div>`
         : `<div class="tile boss-row locked"><div class="art enemy boss unseen">${b.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)}</p><p class="small">Reach the end of this floor to meet it.</p></div></div>`)).join('')}</section>`,
 
     events: () => `<section class="sheet"><p class="note">"?" rooms. You never see the same one twice in a run. <b>Found ${D.events.filter((e) => e.found).length} of ${D.events.length}</b></p>

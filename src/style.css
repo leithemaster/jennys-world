@@ -146,7 +146,7 @@ b { font-weight: 800; }
 .tip {
   position: fixed; z-index: 50; background: var(--paper); color: var(--ink);
   border: 2.5px solid var(--ink); border-radius: 12px; box-shadow: var(--shadow);
-  padding: var(--s2) var(--s3); font-size: 13px; font-weight: 800; line-height: 1.4; pointer-events: none;
+  padding: var(--s2) var(--s3); font-size: 13px; font-weight: 800; line-height: 1.4; pointer-events: none; white-space: pre-line;
 }
 
 /* ---------- title + end screens ---------- */
@@ -704,3 +704,15 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .loot li .snack-ic { width: 26px; height: 26px; vertical-align: middle; }
 .charm-card .big-icon .snack-ic { width: 48px; height: 48px; }
 @media (max-width: 999px) { .snack { width: 28px; height: 28px; } .snack.empty { width: 22px; height: 22px; } }
+
+/* boss move bag */
+.bag-row { display: flex; justify-content: center; min-height: 18px; margin-top: 6px; }
+.bag-chip { display: inline-flex; gap: 3px; padding: 3px 8px; border-radius: 999px; background: var(--paper); border: var(--line); cursor: help; }
+.mb { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--ink); display: inline-block; }
+.mb-atk { background: var(--coral); } .mb-def { background: var(--sky); } .mb-buff { background: var(--sun); } .mb-hex { background: var(--lilac); }
+.mb.used { background: transparent; opacity: .35; }
+.bag-moves { list-style: none; padding-left: 0; }
+.bag-moves li { display: flex; align-items: center; gap: 8px; }
+.marbles { display: inline-flex; gap: 2px; min-width: 46px; }
+.marbles i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink); }
+.marbles .mb-atk { background: var(--coral); } .marbles .mb-def { background: var(--sky); } .marbles .mb-buff { background: var(--sun); } .marbles .mb-hex { background: var(--lilac); }

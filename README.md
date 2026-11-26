@@ -15,7 +15,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 ## The run
 
-Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
+Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. Bosses don't repeat a fixed pattern: each one draws its moves from a bag of 10 marbles (no repeats until the bag is empty, never its biggest hit first, never 3 attacks in a row while it has anything else, plus combos like "after a Spirit boost, usually an attack"). The marbles under the boss show what's left. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
 
 **Memory Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
 
@@ -80,6 +80,7 @@ Music: "Her Shiba Are Her Knights" (default 25%). Sound effects are generated in
 - `node tools/sim.mjs 200 styles` plays every character with every card style (the bot only picks cards of that style).
 - `node tools/sim.mjs 200 deaths` shows where runs end.
 - `node tools/sim.mjs 200 bosses` shows how often each boss is beaten by the runs that reach it.
+- `node tools/bossbag.mjs 20000` shows each boss's move bag without a player: damage per turn, worst 3-turn stretch and how often it attacks 3 times in a row.
 - `node tools/sim.mjs 200 snacks` compares runs with and without snacks (the bot eats them in elite and boss fights, and heals when low).
 - `node tools/sim.mjs 200 boons` plays each style with and without its special-event boon (add `1` at the end to allow only one boon per run).
 

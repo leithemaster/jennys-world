@@ -9,12 +9,36 @@ import { ENEMIES, ACTS } from '../game/enemies.js';
 import { ALL_EVENTS, SPECIAL_NEED } from '../game/events.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { OUTFITS } from '../game/outfits.js';
-import { RULES, STATUS_NAMES, STATUS_HELP, STICKERS } from '../game/battle.js';
+import { RULES, STATUS_NAMES, STATUS_HELP, STICKERS, COMBO_CHANCE, MAX_ATTACK_RUN, moveDamage } from '../game/battle.js';
 import { T } from '../game/terms.js';
 import { icon, roomIcon, enemySVG, snackIcon } from './art.js';
 import { SNACKS, SNACK_SLOTS, SNACK_DROP } from '../game/snacks.js';
 import { charmIcon } from './charmIcons.js';
 import { jennyChibi, toniChibi } from './chibi.js';
+
+export function moveText(m) {
+  switch (m.t) {
+    case 'atk': return `Attack ${m.n}${m.times ? `×${m.times}` : ''}`;
+    case 'atkBlock': return `Attack ${m.n} + Block ${m.b}`;
+    case 'block': return `Block ${m.n}`;
+    case 'buff': return `+${m.n} ${T.spirit}`;
+    case 'heal': return `Heal ${m.n}`;
+    case 'debuff': return [m.weak && `Apply ${m.weak} ${T.sleepy}`, m.vuln && `Apply ${m.vuln} ${T.exposed}`].filter(Boolean).join(' + ');
+    case 'status': return `Add ${m.count} ${CARDS[m.card].name} to your deck`;
+    case 'atkStatus': return `Attack ${m.n} + add ${m.count} ${CARDS[m.card].name}`;
+    case 'scramble': return 'Scramble the board';
+    case 'steal': return `Attack ${m.n} + steal ${m.coins} ${T.coins} (back if you win)`;
+    case 'drain': return `Attack ${m.n}, heal what gets through`;
+    case 'ban': return `${m.n ? `Attack ${m.n} + ban` : 'Ban'} a card for this fight`;
+    default: return m.t;
+  }
+}
+
+// "after X, usually Y" lines for a boss's combos
+const COMBO_KIND = { attack: 'an attack', buff: `a ${T.spirit} boost`, debuff: 'a hex', block: 'a block', atkBlock: 'an attack + block', atkStatus: 'an attack + junk', steal: 'a steal', drain: 'a drain', ban: 'a ban', scramble: 'a scramble', status: 'junk cards', heal: 'a heal' };
+export function comboText(def) {
+  return Object.entries(def.combo || {}).map(([a, b]) => `After ${COMBO_KIND[a] || a}, usually ${COMBO_KIND[b] || b} next`);
+}
 
 export function buildCatalog() {
   // Which events hand out each event-only card / charm (and each boon).
@@ -39,28 +63,12 @@ export function buildCatalog() {
     id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc, requires: c.needs || fromText('charms', id), art: charmIcon(id),
   }));
 
-  const moveText = (m) => {
-    switch (m.t) {
-      case 'atk': return `Attack ${m.n}${m.times ? `×${m.times}` : ''}`;
-      case 'atkBlock': return `Attack ${m.n} + Block ${m.b}`;
-      case 'block': return `Block ${m.n}`;
-      case 'buff': return `+${m.n} ${T.spirit}`;
-      case 'heal': return `Heal ${m.n}`;
-      case 'debuff': return [m.weak && `Apply ${m.weak} ${T.sleepy}`, m.vuln && `Apply ${m.vuln} ${T.exposed}`].filter(Boolean).join(' + ');
-      case 'status': return `Add ${m.count} ${CARDS[m.card].name} to your deck`;
-      case 'atkStatus': return `Attack ${m.n} + add ${m.count} ${CARDS[m.card].name}`;
-      case 'scramble': return 'Scramble the board';
-      case 'steal': return `Attack ${m.n} + steal ${m.coins} ${T.coins} (back if you win)`;
-      case 'drain': return `Attack ${m.n}, heal what gets through`;
-      case 'ban': return `${m.n ? `Attack ${m.n} + ban` : 'Ban'} a card for this fight`;
-      default: return m.t;
-    }
-  };
   const floorOf = (id) => ACTS.find((a) => a.normals.includes(id) || a.elites.includes(id) || a.bosses.includes(id))?.name || '';
   const enemies = Object.entries(ENEMIES).map(([id, e]) => ({
     id, name: e.name, kind: e.boss ? 'Boss' : e.elite ? 'Elite' : 'Normal', floor: floorOf(id),
     hp: e.hp[0] === e.hp[1] ? String(e.hp[0]) : `${e.hp[0]}–${e.hp[1]}`, hpMax: e.hp[1],
-    ai: e.ai === 'cycle' ? 'In order' : 'Random', moves: e.moves.map(moveText),
+    ai: e.ai === 'cycle' ? 'In order' : e.ai === 'bag' ? 'From a bag' : 'Random', moves: e.moves.map(moveText),
+    bag: e.ai === 'bag' ? e.moves.map((m) => m.w || 1) : null, bagKinds: e.moves.map((m) => (moveDamage(m) ? 'atk' : m.t === 'block' || m.t === 'heal' ? 'def' : m.t === 'buff' ? 'buff' : 'hex')), combos: comboText(e),
     extra: e.boss ? `Can be put to sleep for ${RULES.bossSleepTurns} turn at a time.` : '', art: enemySVG(e.art, e.color),
   }));
 
@@ -110,5 +118,6 @@ export function buildCatalog() {
     stickerEvery: CHARACTERS.jenny.passive.n, specialNeed: SPECIAL_NEED,
   };
 
-  return { snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };
+  const bagRules = { combo: Math.round(COMBO_CHANCE * 100), maxRun: MAX_ATTACK_RUN };
+  return { bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };
 }

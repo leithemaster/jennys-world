@@ -13,6 +13,7 @@ import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
+import { moveText, comboText } from './catalogData.js';
 import { blobBackdrop } from './chibi.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
@@ -612,6 +613,7 @@ function battleScreen(enemyId, kind) {
         <div class="f-name">${esc(def.name)}</div>
         <div class="hpbar enemy"><i data-ehpbar></i><span data-ehptext></span><em class="blk" data-eblk hidden></em></div>
         <div class="statuses" data-estat></div>
+        <div class="bag-row" data-ebag></div>
       </div>
     </section>
     <section class="energy-bar" data-energy aria-live="polite"></section>
@@ -702,8 +704,21 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'steal') parts.push(`<span class="i-debuff">${uiIcon('coin')}Steal ${it.coins}</span>`);
     if (it.t === 'drain') parts.push(`<span class="i-buff">${icon('drop')}Drain</span>`);
     if (it.t === 'ban') parts.push(`<span class="i-debuff">${icon('hammer')}Ban a card</span>`);
-    const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : 'Picks its moves at random.';
+    const next = battle.def.ai === 'cycle' ? `Next turn: ${describeMove(battle.def.moves[battle.enemy.step % battle.def.moves.length])}` : battle.def.ai === 'bag' ? 'Draws its next move from its bag (see the marbles below it).' : 'Picks its moves at random.';
     return `<div class="bubble" data-tip="${esc(`${describeMove(it, dmg)} ${next}`)}">${parts.join('')}</div>`;
+  };
+
+  // Boss move bag: one marble per move left (hollow = already drawn this bag).
+  const marbleKind = (m) => (['atk', 'steal', 'drain'].includes(m.t) || (m.t === 'ban' && m.n) || m.t === 'atkBlock' || m.t === 'atkStatus' ? 'atk' : m.t === 'block' || m.t === 'heal' ? 'def' : m.t === 'buff' ? 'buff' : 'hex');
+  const bagHTML = () => {
+    const bag = battle.bagLeft(); if (!bag || battle.enemy.hp <= 0) return '';
+    const left = bag.reduce((a, r) => a + r.left, 0), total = bag.reduce((a, r) => a + r.total, 0);
+    const shown = left || total; // an empty bag refills before the next draw
+    const lines = bag.map((r) => `${left ? r.left : r.total}/${r.total} ${moveText(r.move)}`);
+    const combos = comboText(battle.def);
+    const tip = `Move bag: ${shown} of ${total} marbles left${left ? '' : ' (refills now)'}. Each turn the boss draws one and doesn't put it back.\n${lines.join('\n')}${combos.length ? `\n${combos.join('. ')}.` : ''}`;
+    const dots = bag.flatMap((r) => Array.from({ length: r.total }, (_, i) => `<i class="mb mb-${marbleKind(r.move)}${(left ? i >= r.left : false) ? ' used' : ''}"></i>`)).join('');
+    return `<div class="bag-chip" data-tip="${esc(tip)}" aria-label="${esc(`Move bag, ${shown} of ${total} left`)}">${dots}</div>`;
   };
 
   const update = () => {
@@ -721,6 +736,7 @@ function battleScreen(enemyId, kind) {
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
     $('[data-estat]').innerHTML = statusHTML(e);
     $('[data-intent]').innerHTML = intentHTML();
+    $('[data-ebag]').innerHTML = bagHTML();
     const en = $('[data-energy]');
     // While the first card of a pair is face up, its energy is "in use", not spent:
     // the pip glows and nothing says "out of energy" until the pair is finished.

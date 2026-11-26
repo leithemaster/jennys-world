@@ -3,6 +3,18 @@
 //   status card count | atkStatus n card count | scramble | heal n
 //   steal n coins (attack + take coins, returned if you win) | drain n (attack, heal what got through) | ban [n] (a card sits out this fight; with n, also attacks)
 // ai: 'cycle' walks the move list in order; 'random' picks (never the same move 3x).
+// ai: 'bag' (bosses) draws from a marble bag: each move has w marbles (10 in all), drawn
+//   without putting them back, refilled when empty. combo: { after: next } means that after
+//   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
+//   ('attack' = any move that deals damage), if the bag still has one.
+// ai: 'bag' (bosses) draws from a marble bag: each move has w marbles (10 in all), drawn
+//   without putting them back, refilled when empty. combo: { after: next } means that after
+//   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
+//   ('attack' = any move that deals damage), if the bag still has one.
+// ai: 'bag' (bosses) draws from a marble bag: each move has w marbles (10 in all), drawn
+//   without putting them back, refilled when empty. combo: { after: next } means that after
+//   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
+//   ('attack' = any move that deals damage), if the bag still has one.
 
 export const ENEMIES = {
   // ----- Floor 1 -----
@@ -28,12 +40,12 @@ export const ENEMIES = {
   clout: { name: 'Clout Chaser', hp: [36, 40], art: 'wraith', color: '#ff8fb0', ai: 'random', elite: true,
     moves: [{ t: 'debuff', vuln: 2 }, { t: 'atk', n: 6, times: 2 }, { t: 'buff', n: 2 }, { t: 'atk', n: 10 }] },
   // bosses (one per run is picked for each floor; the map shows which)
-  firewall: { name: 'The Firewall', hp: [74, 74], art: 'wall', color: '#d2493f', ai: 'cycle', boss: true,
-    moves: [{ t: 'block', n: 12 }, { t: 'atk', n: 12 }, { t: 'atk', n: 4, times: 3 }, { t: 'scramble' }, { t: 'buff', n: 2 }] },
-  ramenThief: { name: 'The Ramen Thief', hp: [72, 72], art: 'ramen', color: '#3d3a4a', ai: 'cycle', boss: true,
-    moves: [{ t: 'steal', n: 7, coins: 15 }, { t: 'atk', n: 4, times: 3 }, { t: 'atkBlock', n: 6, b: 8 }, { t: 'buff', n: 2 }, { t: 'atk', n: 14 }] },
-  regular: { name: 'The Forever Regular', hp: [80, 80], art: 'regular', color: '#7a8c6b', ai: 'cycle', boss: true,
-    moves: [{ t: 'debuff', weak: 2, vuln: 1 }, { t: 'atk', n: 9 }, { t: 'heal', n: 10 }, { t: 'status', card: 'spam', count: 2 }, { t: 'atk', n: 5, times: 3 }, { t: 'buff', n: 2 }] },
+  firewall: { name: 'The Firewall', hp: [74, 74], art: 'wall', color: '#d2493f', ai: 'bag', boss: true,
+    moves: [{ w: 3, t: 'block', n: 12 }, { w: 2, t: 'atk', n: 12 }, { w: 1, t: 'atk', n: 4, times: 3 }, { w: 2, t: 'scramble' }, { w: 2, t: 'buff', n: 2 }], combo: { buff: 'attack', block: 'attack' } },
+  ramenThief: { name: 'The Ramen Thief', hp: [72, 72], art: 'ramen', color: '#3d3a4a', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'steal', n: 7, coins: 15 }, { w: 2, t: 'atk', n: 4, times: 3 }, { w: 3, t: 'atkBlock', n: 6, b: 8 }, { w: 1, t: 'buff', n: 2 }, { w: 2, t: 'atk', n: 14 }], combo: { buff: 'attack', steal: 'atkBlock' } },
+  regular: { name: 'The Forever Regular', hp: [80, 80], art: 'regular', color: '#7a8c6b', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'debuff', weak: 2, vuln: 1 }, { w: 2, t: 'atk', n: 9 }, { w: 2, t: 'heal', n: 10 }, { w: 1, t: 'status', card: 'spam', count: 2 }, { w: 1, t: 'atk', n: 5, times: 3 }, { w: 2, t: 'buff', n: 2 }], combo: { buff: 'attack', debuff: 'attack' } },
 
   // ----- Floor 2 -----
   moth: { name: 'Troll Moth', hp: [38, 42], art: 'moth', color: '#b8a3d9', ai: 'random',
@@ -56,12 +68,12 @@ export const ENEMIES = {
   sysadmin: { name: 'Sys Admin', hp: [58, 62], art: 'mimic', color: '#4a6fa5', ai: 'cycle', elite: true,
     moves: [{ t: 'block', n: 14 }, { t: 'scramble' }, { t: 'atk', n: 15 }, { t: 'atkBlock', n: 10, b: 10 }] },
   // bosses
-  hydra: { name: 'Server Hydra', hp: [150, 150], art: 'hydra', color: '#55834f', ai: 'cycle', boss: true,
-    moves: [{ t: 'atk', n: 6, times: 3 }, { t: 'scramble' }, { t: 'atkStatus', n: 14, card: 'bug', count: 2 }, { t: 'block', n: 20 }, { t: 'buff', n: 4 }] },
-  dataMiner: { name: 'The Data Miner', hp: [160, 160], art: 'dataminer', color: '#4a6fa5', ai: 'cycle', boss: true,
-    moves: [{ t: 'drain', n: 14 }, { t: 'debuff', vuln: 2 }, { t: 'atk', n: 6, times: 3 }, { t: 'block', n: 18 }, { t: 'drain', n: 20 }, { t: 'buff', n: 3 }] },
-  serverAdmins: { name: 'The Server Admins', hp: [165, 165], art: 'admins', color: '#5b6fc9', ai: 'cycle', boss: true,
-    moves: [{ t: 'ban', n: 8 }, { t: 'atkBlock', n: 12, b: 12 }, { t: 'scramble' }, { t: 'atk', n: 10, times: 2 }, { t: 'buff', n: 4 }, { t: 'atk', n: 24 }] },
+  hydra: { name: 'Server Hydra', hp: [150, 150], art: 'hydra', color: '#55834f', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'atk', n: 6, times: 3 }, { w: 2, t: 'scramble' }, { w: 2, t: 'atkStatus', n: 14, card: 'bug', count: 2 }, { w: 3, t: 'block', n: 20 }, { w: 1, t: 'buff', n: 4 }], combo: { buff: 'attack', scramble: 'atkStatus' } },
+  dataMiner: { name: 'The Data Miner', hp: [160, 160], art: 'dataminer', color: '#4a6fa5', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'drain', n: 14 }, { w: 2, t: 'debuff', vuln: 2 }, { w: 2, t: 'atk', n: 6, times: 3 }, { w: 2, t: 'block', n: 18 }, { w: 1, t: 'drain', n: 20 }, { w: 1, t: 'buff', n: 3 }], combo: { buff: 'attack', debuff: 'drain' } },
+  serverAdmins: { name: 'The Server Admins', hp: [165, 165], art: 'admins', color: '#5b6fc9', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'ban', n: 8 }, { w: 2, t: 'atkBlock', n: 12, b: 12 }, { w: 2, t: 'scramble' }, { w: 2, t: 'atk', n: 10, times: 2 }, { w: 1, t: 'buff', n: 4 }, { w: 1, t: 'atk', n: 24 }], combo: { buff: 'attack', scramble: 'ban' } },
 
   // ----- Floor 3 -----
   mimic: { name: 'Deepfake Mimic', hp: [56, 60], art: 'mimic', color: '#c7a6ff', ai: 'random',
@@ -82,12 +94,12 @@ export const ENEMIES = {
   quantum: { name: 'Quantum Glitch', hp: [94, 98], art: 'null', color: '#a98bf0', ai: 'random', elite: true,
     moves: [{ t: 'scramble' }, { t: 'atk', n: 20 }, { t: 'block', n: 16 }, { t: 'atkStatus', n: 12, card: 'lag', count: 2 }] },
   // bosses
-  moderator: { name: 'The Head Moderator', hp: [215, 215], art: 'moderator', color: '#c2417a', ai: 'cycle', boss: true,
-    moves: [{ t: 'ban', n: 12 }, { t: 'atk', n: 14, times: 2 }, { t: 'debuff', weak: 2, vuln: 2 }, { t: 'ban', n: 12 }, { t: 'atk', n: 36 }, { t: 'buff', n: 5 }] },
-  hivemind: { name: 'The Hive Mind', hp: [215, 215], art: 'hive', color: '#4f8a55', ai: 'cycle', boss: true,
-    moves: [{ t: 'atk', n: 3, times: 6 }, { t: 'status', card: 'spam', count: 3 }, { t: 'buff', n: 3 }, { t: 'drain', n: 14 }, { t: 'scramble' }, { t: 'atk', n: 3, times: 8 }] },
-  bluescreen: { name: 'The Blue Screen', hp: [210, 210], art: 'screen', color: '#3f7cc0', ai: 'cycle', boss: true,
-    moves: [{ t: 'scramble' }, { t: 'atk', n: 10, times: 3 }, { t: 'status', card: 'lag', count: 3 }, { t: 'atk', n: 32 }, { t: 'block', n: 25 }, { t: 'buff', n: 5 }] },
+  moderator: { name: 'The Head Moderator', hp: [215, 215], art: 'moderator', color: '#c2417a', ai: 'bag', boss: true,
+    moves: [{ w: 3, t: 'ban', n: 12 }, { w: 2, t: 'atk', n: 14, times: 2 }, { w: 3, t: 'debuff', weak: 2, vuln: 2 }, { w: 1, t: 'atk', n: 36 }, { w: 1, t: 'buff', n: 5 }], combo: { buff: 'attack', debuff: 'ban' } },
+  hivemind: { name: 'The Hive Mind', hp: [215, 215], art: 'hive', color: '#4f8a55', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'atk', n: 3, times: 6 }, { w: 2, t: 'status', card: 'spam', count: 3 }, { w: 2, t: 'buff', n: 3 }, { w: 2, t: 'drain', n: 14 }, { w: 1, t: 'scramble' }, { w: 1, t: 'atk', n: 3, times: 8 }], combo: { buff: 'attack', status: 'attack' } },
+  bluescreen: { name: 'The Blue Screen', hp: [210, 210], art: 'screen', color: '#3f7cc0', ai: 'bag', boss: true,
+    moves: [{ w: 2, t: 'scramble' }, { w: 2, t: 'atk', n: 10, times: 3 }, { w: 2, t: 'status', card: 'lag', count: 3 }, { w: 1, t: 'atk', n: 32 }, { w: 2, t: 'block', n: 25 }, { w: 1, t: 'buff', n: 5 }], combo: { buff: 'attack', scramble: 'attack' } },
 };
 
 export const ACTS = [

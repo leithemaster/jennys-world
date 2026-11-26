@@ -12,6 +12,11 @@ import { CHARACTERS } from './characters.js';
 import { SNACKS } from './snacks.js';
 
 // Tunable rules. freeReveal = cards revealed for free on every new board.
+export const COMBO_CHANCE = 0.7;
+export const MAX_ATTACK_RUN = 2;
+const DAMAGING = ['atk', 'atkBlock', 'atkStatus', 'steal', 'drain'];
+export const moveDamage = (m) => (DAMAGING.includes(m.t) || (m.t === 'ban' && m.n) ? m.n * (m.times || 1) : 0);
+export const moveIs = (m, kind) => (kind === 'attack' ? moveDamage(m) > 0 : m.t === kind);
 export const RULES = { freeReveal: 3, boardPairs: 9, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
@@ -467,13 +472,42 @@ export class Battle {
   chooseIntent() {
     const e = this.enemy, moves = this.def.moves;
     let idx;
-    if (this.def.ai === 'cycle') idx = e.step % moves.length;
+    if (this.def.ai === 'bag') idx = this.drawMarble();
+    else if (this.def.ai === 'cycle') idx = e.step % moves.length;
     else {
       do { idx = Math.floor(Math.random() * moves.length); } while (e.last.length >= 2 && e.last[0] === idx && e.last[1] === idx && moves.length > 1);
     }
     e.last = [idx, ...e.last].slice(0, 2);
     e.step += 1;
     this.intent = moves[idx];
+  }
+
+  // Boss marble bag: each move has `w` marbles. Draw one without putting it
+  // back; refill when the bag is empty. A combo makes the next draw come from
+  // a certain kind of marble most of the time. The opening move is never the
+  // boss's biggest hit.
+  drawMarble() {
+    const e = this.enemy, moves = this.def.moves;
+    if (!e.bag || !e.bag.length) e.bag = moves.flatMap((m, i) => Array(m.w || 1).fill(i));
+    let pool = e.bag.map((_, k) => k);
+    const keep = (ok) => { const p = pool.filter((k) => ok(moves[e.bag[k]])); if (p.length) pool = p; };
+    if (e.step === 0) { const big = Math.max(...moves.map(moveDamage)); keep((m) => moveDamage(m) < big); }
+    // never a third attack in a row while the bag still has something else
+    const capped = (e.atkRun || 0) >= MAX_ATTACK_RUN;
+    if (capped) keep((m) => !moveDamage(m));
+    const combo = this.intent && this.def.combo?.[this.intent.t];
+    if (combo && !(capped && combo === 'attack') && Math.random() < COMBO_CHANCE) keep((m) => moveIs(m, combo));
+    const k = pool[Math.floor(Math.random() * pool.length)];
+    const idx = e.bag.splice(k, 1)[0];
+    e.atkRun = moveDamage(moves[idx]) ? (e.atkRun || 0) + 1 : 0;
+    return idx;
+  }
+
+  // What's left in the boss's bag: [{ move, left, total }] in move order.
+  bagLeft() {
+    if (this.def.ai !== 'bag') return null;
+    const bag = this.enemy.bag || [];
+    return this.def.moves.map((m, i) => ({ move: m, left: bag.filter((x) => x === i).length, total: m.w || 1 }));
   }
 
   intentDamage() {
