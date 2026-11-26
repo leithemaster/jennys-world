@@ -890,7 +890,7 @@ function battleWon(kind, enemyId) {
         ${charm ? `<li>${charmIcon(charm)} ${esc(CHARMS[charm].name)} <small>${esc(CHARMS[charm].desc)}</small></li>` : ''}
         ${snackState === 'taken' ? `<li>${snackIcon(snack)} ${esc(SNACKS[snack].name)} <small>${esc(SNACKS[snack].desc)} Added to your snack bar.</small></li>` : ''}
       </ul>
-      ${snackState === 'full' ? `<div class="snack-offer">${snackIcon(snack)}<p><b>${esc(SNACKS[snack].name)}</b> ${esc(SNACKS[snack].desc)}<br><small>Your snack bar is full.</small></p><button class="btn" data-swap>Swap one out</button><button class="btn ghost" data-leave-snack>Leave it</button></div>` : ''}
+      ${snackState === 'full' ? `<div class="snack-offer">${snackIcon(snack)}<p><b>${esc(SNACKS[snack].name)}</b> ${esc(SNACKS[snack].desc)}<br><small>${snackRoom(run) ? 'You have room for it now.' : 'Your snack bar is full.'}</small></p><button class="btn${snackRoom(run) ? ' yellow' : ''}" data-swap>${snackRoom(run) ? 'Take it' : 'Swap one out'}</button><button class="btn ghost" data-leave-snack>Leave it</button></div>` : ''}
       ${bossCharms.length && !pickedBoss ? `<h2>Choose a boss charm</h2><div class="charm-choices">${bossCharms.map((k) => `<button class="charm-card" data-boss="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></button>`).join('')}</div>` : ''}
       ${!pickedCard ? `<h2>Add a card to your deck</h2><div class="choices">${choices.map((c, i) => `<button class="card-btn" data-pick="${i}" aria-label="${esc(cardName(c))}: ${esc(cardText(c))}">${cardHTML(c)}</button>`).join('')}</div>
       <button class="btn ghost" data-skip>Skip card</button>` : ''}
@@ -900,11 +900,17 @@ function battleWon(kind, enemyId) {
     app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { takeCard({ ...choices[Number(b.dataset.pick)] }); pickedCard = true; render(); }));
     app.querySelector('[data-skip]')?.addEventListener('click', () => { pickedCard = true; render(); });
     app.querySelectorAll('[data-boss]').forEach((b) => b.addEventListener('click', () => { takeCharm(b.dataset.boss); pickedBoss = true; render(); }));
-    app.querySelector('[data-swap]')?.addEventListener('click', async () => { const i = await pickSnackSlot('Toss which snack?'); if (i === null) return; removeSnack(run, i); takeSnack(snack); snackState = 'taken'; render(); });
+    app.querySelector('[data-swap]')?.addEventListener('click', async () => {
+      // a slot may have opened up (eaten or tossed from the bar): then just take it
+      if (!snackRoom(run)) { const i = await pickSnackSlot('Toss which snack?'); if (i === null) return; removeSnack(run, i); }
+      if (takeSnack(snack)) snackState = 'taken';
+      render();
+    });
     app.querySelector('[data-leave-snack]')?.addEventListener('click', () => { snackState = null; render(); });
-    app.querySelector('[data-go]')?.addEventListener('click', () => (kind === 'boss' ? actCleared() : completeRoom()));
+    app.querySelector('[data-go]')?.addEventListener('click', () => { barChanged = null; kind === 'boss' ? actCleared() : completeRoom(); });
     app.querySelector('main button')?.focus();
   };
+  barChanged = render; // eating or tossing from the bar updates the snack offer
   render();
 }
 
