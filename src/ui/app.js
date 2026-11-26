@@ -891,6 +891,9 @@ function battleWon(kind, enemyId) {
   battle = null;
   run.kills += 1;
   noteEnemyDefeated(enemyId);
+  // The final boss gives no rewards for now (nothing to spend them on yet):
+  // straight to the win screen. Bring this back with the hidden level.
+  if (kind === 'boss' && run.act >= ACTS.length - 1) { actCleared(); return; }
   const healed = afterFightHealing(run);
   const coins = gainCoins(run, kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9));
   const choices = cardChoices(run, kind);
