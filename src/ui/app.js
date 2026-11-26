@@ -260,13 +260,17 @@ function hasUpgradeView(c) {
 }
 
 // While choosing a card to upgrade, resting on a card (or focusing it) shows the upgraded version.
+// Both versions are drawn once and only toggled: swapping the card's HTML while
+// it's being pressed made the browser drop the click, so you had to wait for
+// the preview before you could pick a card.
 function upgradePreview(btn, c) {
   let t;
-  const show = () => { btn.innerHTML = cardHTML({ ...c, up: true }, 'alt-view'); };
-  const hide = () => { clearTimeout(t); btn.innerHTML = cardHTML(c); };
+  btn.innerHTML = `<span class="pv-base">${cardHTML(c)}</span><span class="pv-up">${cardHTML({ ...c, up: true }, 'alt-view')}</span>`;
+  const show = () => btn.classList.add('show-up');
+  const hide = () => { clearTimeout(t); btn.classList.remove('show-up'); };
   btn.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { clearTimeout(t); t = setTimeout(show, 450); } });
   btn.addEventListener('pointerleave', hide);
-  btn.addEventListener('focus', show);
+  btn.addEventListener('focus', () => { if (btn.matches(':focus-visible')) show(); }); // keyboard only; a click picks right away
   btn.addEventListener('blur', hide);
 }
 

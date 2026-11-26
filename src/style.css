@@ -790,3 +790,8 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
   .pick-hint .keys { display: none; }
   .map-pick { min-height: 40px; font-size: 13px; }
 }
+
+/* Upgrade picker: both versions are in the button; .show-up flips to the upgraded one */
+.pv-base, .pv-up { display: contents; }
+.card-btn .pv-up, .card-btn.show-up .pv-base { display: none; }
+.card-btn.show-up .pv-up { display: contents; }
