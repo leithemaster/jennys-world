@@ -289,7 +289,7 @@ export function loadRun() {
 export function clearRun() { removeDoc(RUN_DOC); try { localStorage.removeItem(LEGACY_RUN_KEY); } catch { /* ignore */ } }
 
 // What the progress save keeps about a finished run.
-export function runSummary(run, won) {
+export function runSummary(run, won, { killedBy, abandoned } = {}) {
   return {
     character: run.character || 'jenny',
     won: !!won,
@@ -300,6 +300,11 @@ export function runSummary(run, won) {
     deck: run.deck.map((c) => (c.up ? `${c.id}+` : c.id)),
     charms: [...run.charms],
     snacks: run.snacks.filter(Boolean),
+    // for the Run history page (runs saved before these were added don't have them)
+    guardians: [0, 1, 2].map((f) => run.guardianOf?.[f]).filter(Boolean),
+    bosses: [0, 1, 2].map((f) => run.bossOf?.[f]).filter(Boolean),
+    ...(killedBy ? { killed_by: killedBy } : {}),
+    ...(abandoned ? { abandoned: true } : {}),
   };
 }
 

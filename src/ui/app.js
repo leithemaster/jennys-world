@@ -327,6 +327,54 @@ function help() {
 }
 
 // ---------- title ----------
+// ---------- run history ----------
+// The progress save keeps the last runs (newest first). Older entries may be
+// missing the guardians / bosses / knocked-out-by fields.
+function historyScreen(filter = 'all') {
+  battle = null;
+  const p = getProgress();
+  const all = p.history || [];
+  const keep = { all: () => true, won: (h) => h.won, ...Object.fromEntries(Object.keys(CHARACTERS).map((c) => [c, (h) => h.character === c])) };
+  const list = all.filter(keep[filter] || keep.all);
+  const deckOf = (h) => (h.deck || []).map((s) => ({ id: s.replace(/\+$/, ''), ...(s.endsWith('+') ? { up: true } : {}) })).filter((c) => CARDS[c.id]);
+  const when = (t) => { const d = new Date(t * 1000); return `${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}, ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`; };
+  const floorName = (h) => esc(ACTS[h.act]?.name || `Floor ${(h.act || 0) + 1}`);
+  const result = (h) => h.won ? `<b>Cleared the tower!</b>${h.bosses?.[2] ? `<small>Beat ${esc(ENEMIES[h.bosses[2]]?.name || 'the final boss')}</small>` : ''}`
+    : h.abandoned ? `<b>Gave up</b><small>on ${floorName(h)}</small>`
+    : `<b>${h.killed_by && ENEMIES[h.killed_by] ? `Knocked out by ${esc(ENEMIES[h.killed_by].name)}` : 'Knocked out'}</b><small>on ${floorName(h)}</small>`;
+  const chars = Object.keys(CHARACTERS).filter((c) => heroOpen(c));
+  const tabs = [['all', 'All'], ['won', 'Wins'], ...chars.map((c) => [c, CHARACTERS[c].name])];
+  app.innerHTML = `<main class="room history">
+    <h1>Run history</h1>
+    <p class="room-text">Your last ${all.length === 1 ? 'run' : `${all.length} runs`}, newest first. The game keeps up to 30.</p>
+    <div class="hist-summary">${chars.map((c) => { const s = p.characters[c] || {}; return `<div class="hist-hero"><span class="hero-art">${heroSVG(c, { crop: true })}</span><p><b>${esc(CHARACTERS[c].name)}</b><small>${s.runs || 0} runs · ${s.wins || 0} wins · best ${s.best_floor || 0}/${TOTAL_FLOORS} rooms${climbUnlocked(c) ? ` · climb ${climbUnlocked(c)} unlocked` : ''}</small></p></div>`; }).join('')}</div>
+    <div class="hist-tabs" role="tablist">${tabs.map(([k, n]) => `<button class="btn small${k === filter ? ' yellow' : ' ghost'}" role="tab" aria-selected="${k === filter}" data-hfilter="${k}">${esc(n)}</button>`).join('')}</div>
+    <div class="hist-list">${list.map((h) => {
+      const i = all.indexOf(h);
+      const deck = deckOf(h);
+      const met = (h.guardians || []).map((g) => GUARDIANS[g]?.name).filter(Boolean);
+      return `<article class="run-row ${h.won ? 'won' : 'lost'}">
+        <span class="hero-art">${heroSVG(CHARACTERS[h.character] ? h.character : 'jenny', { crop: true })}</span>
+        <div class="run-main">
+          <p class="run-result">${result(h)}</p>
+          <p class="run-meta"><span>${esc(when(h.ended_at))}</span><span>${esc(CHARACTERS[h.character]?.name || 'Jenny')}</span>${h.climb ? `<span class="pill climb" data-tip="${esc(climbTip(h.climb))}">${uiIcon('flag')}<b>${h.climb}</b></span>` : ''}<span>${h.floors || 0} rooms</span><span>${h.defeated || 0} defeated</span></p>
+          ${met.length ? `<p class="run-meta"><span>Guardians: ${esc(met.join(', '))}</span></p>` : ''}
+          <div class="run-charms">${(h.charms || []).filter((k) => CHARMS[k]).map((k) => charmBadge(k)).join('') || '<small>No charms</small>'}</div>
+        </div>
+        <button class="btn small" data-hdeck="${i}" ${deck.length ? '' : 'disabled'}>Deck <b>${deck.length}</b></button>
+      </article>`;
+    }).join('') || `<p class="room-text">${all.length ? 'No runs match.' : 'No runs yet. Finish a run and it shows up here.'}</p>`}</div>
+    <button class="btn big ghost" data-back>Back</button>
+  </main>`;
+  app.querySelectorAll('[data-hfilter]').forEach((b) => b.addEventListener('click', () => historyScreen(b.dataset.hfilter)));
+  app.querySelectorAll('[data-hdeck]').forEach((b) => b.addEventListener('click', () => {
+    const h = all[Number(b.dataset.hdeck)];
+    showDeck(deckOf(h), `${CHARACTERS[h.character]?.name || 'Jenny'}'s deck`, esc(when(h.ended_at)));
+  }));
+  app.querySelector('[data-back]').addEventListener('click', title);
+  app.querySelector(`[data-hfilter="${filter}"]`)?.focus();
+}
+
 export function title() {
   battle = null;
   document.title = `${GAME.name} · Jenny's World`;
@@ -348,6 +396,7 @@ export function title() {
       <button class="btn big ghost" data-help>How to play</button>
       <button class="btn big ghost" data-outfits>Outfits</button>
       <button class="btn big ghost" data-catalog>Kioku Catalog</button>
+      <button class="btn big ghost" data-history>Run history</button>
       <button class="btn big ghost" data-sound>Settings</button>
     </div>
     <div class="home-stats"><dl class="stats">
@@ -360,6 +409,7 @@ export function title() {
   </main>`;
   app.querySelector('[data-catalog]').addEventListener('click', () => catalogScreen(app, { onBack: title }));
   app.querySelector('[data-help]').addEventListener('click', help);
+  app.querySelector('[data-history]').addEventListener('click', () => historyScreen());
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
   app.querySelector('[data-outfits]').addEventListener('click', outfitScreen);
   app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) guardianGift(); else mapScreen(); });
@@ -808,7 +858,7 @@ function battleScreen(enemyId, kind) {
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
     scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
     turn: () => { if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
-    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false)), 900 * PACE.scale); },
+    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false, false, enemyId)), 900 * PACE.scale); },
   });
   $('[data-end]').addEventListener('click', () => battle.endTurn());
   app.querySelectorAll('[data-pile]').forEach((p) => p.addEventListener('click', () => {
@@ -967,10 +1017,10 @@ function actCleared() {
   app.querySelector('[data-go]').addEventListener('click', () => (run.giftPending ? guardianGift() : mapScreen()));
 }
 
-function gameOver(won, abandoned) {
+function gameOver(won, abandoned, killedBy) {
   battle = null;
   clearRun();
-  const summary = runSummary(run, won);
+  const summary = runSummary(run, won, { killedBy, abandoned });
   const stats = recordRunEnd(summary).totals;
   const newOutfits = outfitsForRunEnd();
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">

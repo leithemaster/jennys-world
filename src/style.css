@@ -824,3 +824,27 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .pill.climb { background: #efe6ff; cursor: help; }
 .climb-note .ui-i { width: 44px; height: 44px; flex: none; }
 .end .unlock-note p, .end .unlock-note small { color: var(--ink); }
+
+/* run history */
+.history { max-width: 900px; margin: 0 auto; gap: var(--s3); }
+.hist-summary { display: flex; flex-wrap: wrap; width: 100%; gap: var(--s3); justify-content: center; }
+.hist-hero { flex: 0 1 390px; display: flex; align-items: center; gap: var(--s2); background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 6px 14px 6px 8px; }
+.hist-hero .hero-art { width: 52px; height: 52px; }
+.hist-hero p { margin: 0; display: grid; text-align: left; }
+.hist-hero small { font-size: 12px; opacity: .8; }
+.hist-tabs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.hist-list { display: grid; gap: var(--s2); width: 100%; }
+.run-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: var(--s3); background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-left-width: 10px; border-radius: 16px; padding: 8px 14px; text-align: left; }
+.run-row.won { border-left-color: #f6b74a; }
+.run-row.lost { border-left-color: #a98bf0; }
+.run-row .hero-art { width: 56px; height: 56px; }
+.run-main { display: grid; gap: 4px; min-width: 0; }
+.run-main p { margin: 0; }
+.run-result b { font-size: 17px; }
+.run-result small { margin-left: 8px; font-weight: 700; opacity: .75; }
+.run-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; font-weight: 700; opacity: .85; }
+.run-meta .pill { padding: 1px 8px; }
+.run-charms { display: flex; flex-wrap: wrap; gap: 4px; }
+.run-charms .charm { width: 30px; height: 30px; }
+.run-charms small { opacity: .6; }
+@media (max-width: 640px) { .run-row { grid-template-columns: 44px 1fr; } .run-row > .btn { grid-column: 2; justify-self: start; } .run-row .hero-art { width: 44px; height: 44px; } }
