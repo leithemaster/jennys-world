@@ -9,7 +9,7 @@ import {
 import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
 import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop, bossFor } from '../game/loot.js';
 import { ALL_EVENTS } from '../game/events.js';
-import { sfx, settings, saveSettings, music, FLIPS } from '../audio.js';
+import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
@@ -179,8 +179,6 @@ function soundSettings() {
       <button class="btn ghost" data-mute-music>${settings.musicOn ? 'Mute music' : 'Unmute music'}</button>
       <button class="btn ghost" data-mute-sfx>${settings.sfxOn ? 'Mute effects' : 'Unmute effects'}</button>
     </div>
-    <div class="flip-pick"><span>Card flip sound <small>Click one to hear it and use it.</small></span>
-      <div class="flip-opts">${Object.entries(FLIPS).map(([k, f]) => `<button class="btn small${settings.flip === k ? ' yellow' : ''}" data-flip="${k}" aria-pressed="${settings.flip === k}" data-tip="${esc(f.desc)}">${esc(f.name)}</button>`).join('')}</div></div>
     <label class="toggle"><input type="checkbox" data-fast ${settings.fast ? 'checked' : ''}><span><b>Fast mode</b><small>Quicker card flips, enemy turns and animations.</small></span></label>
     <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
     <button class="btn" data-close>Done</button>`);
@@ -189,10 +187,6 @@ function soundSettings() {
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
-  el.querySelectorAll('[data-flip]').forEach((b) => b.addEventListener('click', () => {
-    settings.flip = b.dataset.flip; saveSettings(); sfx('flip');
-    el.querySelectorAll('[data-flip]').forEach((x) => { const on = x === b; x.classList.toggle('yellow', on); x.setAttribute('aria-pressed', on); });
-  }));
   el.querySelector('[data-fast]').addEventListener('change', (e) => { settings.fast = e.target.checked; saveSettings(); applyPace(); });
   el.querySelector('[data-mute-music]').addEventListener('click', (e) => { settings.musicOn = !settings.musicOn; e.target.textContent = settings.musicOn ? 'Mute music' : 'Unmute music'; saveSettings(); });
   el.querySelector('[data-mute-sfx]').addEventListener('click', (e) => { settings.sfxOn = !settings.sfxOn; e.target.textContent = settings.sfxOn ? 'Mute effects' : 'Unmute effects'; saveSettings(); sfx('click'); });
@@ -202,7 +196,7 @@ function soundSettings() {
 document.addEventListener('click', (e) => {
   const t = e.target.closest?.('button, .node.avail');
   if (!t || t.disabled) return;
-  if (t.matches('.slot, [data-sound], [data-mute-sfx], [data-flip]')) return;
+  if (t.matches('.slot, [data-sound], [data-mute-sfx]')) return;
   if (t.matches('.card-btn, .charm-card, [data-pick], [data-boss]')) sfx('pick');
   else if (t.matches('.node')) sfx('enter');
   else sfx('click');
