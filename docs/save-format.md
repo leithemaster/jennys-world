@@ -43,11 +43,16 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
       "ended_at": 1764000000,
       "character": "jenny",
       "won": false,
+      "climb": 3,
       "floors": 14,
       "act": 1,
       "defeated": 11,
       "deck": ["strike", "strike+", "guard"],
-      "charms": ["kimbap", "purse"]
+      "charms": ["kimbap", "purse"],
+      "snacks": ["bananaMilk"],
+      "guardians": ["haru", "issei"],
+      "bosses": ["ramenThief", "hydra"],
+      "killed_by": "hydra"
     }
   ]
 }
@@ -64,7 +69,7 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
 | `collection.cards` / `charms` | `seen`: times offered (reward, shop, gift). `taken`: times added to a run. Taking also counts as seeing. |
 | `collection.enemies` | `met`: fights started. `defeated`: fights won. |
 | `collection.events` / `guardians` | `met`: times visited. |
-| `history` | The last 30 finished runs, newest first. A `+` after a card id means upgraded. |
+| `history` | The last 30 finished runs, newest first (shown on the Run history page). A `+` after a card id means upgraded. `climb`: climb level played. `guardians` / `bosses`: met per floor. `killed_by`: the enemy that knocked you out; `abandoned: true` for a run you gave up. Runs saved before these fields existed don't have them. |
 
 An entry that is missing from a `collection` page means the player has never found that thing, so the book shows its silhouette.
 
