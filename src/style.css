@@ -896,3 +896,37 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 /* an event hosted by a guardian */
 .room-icon.guardian-host { width: 120px; height: 120px; }
 .room-icon.guardian-host > svg { width: 100%; height: 100%; }
+
+/* Mina, the shopkeeper */
+.shopkeep { display: flex; align-items: center; gap: var(--s2); max-width: 520px; margin: 0 auto; }
+.shopkeep-art { width: 96px; height: 96px; flex: none; display: block; }
+.shopkeep-art > svg { width: 100%; height: 100%; animation: bob 3s ease-in-out infinite; }
+.shopkeep p { margin: 0; position: relative; display: grid; gap: 2px; text-align: left; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 6px 14px; font-weight: 700; }
+.shopkeep p::before { content: ''; position: absolute; left: -11px; top: 50%; width: 14px; height: 14px; background: var(--paper); border-left: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: translateY(-50%) rotate(45deg); }
+.shopkeep b { font-family: var(--font-display); font-size: 14px; color: #3fa47a; }
+.shop-h { display: flex; align-items: center; justify-content: center; gap: var(--s3); }
+.shop-h h2 { margin: 0; }
+.shop-h .btn small { display: inline-flex; align-items: center; gap: 2px; }
+.shop-h .ui-i { width: 16px; height: 16px; }
+
+/* toast: a short message that fades away */
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 10px; max-width: min(520px, 92vw); background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 6px 16px 6px 8px; box-shadow: var(--shadow); font-weight: 700; animation: pop .25s ease-out; transition: opacity .4s; }
+.toast > svg, .toast .snack-ic { width: 44px; height: 44px; flex: none; }
+.toast.out { opacity: 0; }
+
+/* timed events (flash sale) */
+.event-card { display: flex; justify-content: center; }
+.event-card .card { animation: pop .3s ease-out; }
+.countdown { width: min(320px, 80%); height: 12px; margin: 0 auto; border: 3px solid var(--ink); border-radius: 999px; background: var(--paper); overflow: hidden; }
+.countdown i { display: block; height: 100%; background: linear-gradient(90deg, #ff5d6e, #ffc53d); transform-origin: left; animation: countdown var(--secs) linear forwards; }
+.countdown.stopped i { animation-play-state: paused; }
+@keyframes countdown { to { transform: scaleX(0); } }
+
+/* tip jar on the run-end screen */
+.tip-jar { display: flex; align-items: center; gap: var(--s3); max-width: 520px; background: #e9fbf1; color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; padding: 8px 16px 8px 8px; text-align: left; }
+.tip-jar > svg { width: 64px; height: 64px; flex: none; }
+.end .tip-jar p { margin: 0; display: grid; gap: 4px; color: var(--ink); font-weight: 700; }
+.jar-bar { position: relative; display: block; height: 16px; border: 2.5px solid var(--ink); border-radius: 999px; background: #fff; overflow: hidden; }
+.jar-bar i { position: absolute; inset: 0 auto 0 0; width: var(--fill); background: #ffc53d; }
+.jar-bar small { position: relative; display: block; text-align: center; font-size: 10px; font-weight: 800; line-height: 11px; }
+@media (prefers-reduced-motion: reduce) { .shopkeep-art > svg { animation: none; } }

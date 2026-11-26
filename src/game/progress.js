@@ -38,6 +38,7 @@ export function blankProgress() {
       guardians: {}, // id -> { met }
     },
     history: [],     // newest first, at most HISTORY_MAX entries
+    tip_jar: 0,      // leftover coins from finished runs (see addTips)
   };
 }
 
@@ -145,6 +146,17 @@ export function isFound(page, id) {
 // ---------- unlocks ----------
 export const climbUnlocked = (character) => getProgress().characters[character]?.climb || 0;
 export function setClimb(character, n) { const p = getProgress(); (p.characters[character] ||= blankCharacter()).climb = n; save(); }
+// Tip jar: coins left at the end of a run go in the jar. Every TIP_STEP coins,
+// reveal() uncovers one thing you haven't found yet in the Kioku Catalog.
+export const TIP_STEP = 150;
+export function addTips(coins, reveal) {
+  const p = getProgress();
+  p.tip_jar = (p.tip_jar || 0) + Math.max(0, coins | 0);
+  const found = [];
+  while (p.tip_jar >= TIP_STEP) { const r = reveal(); if (!r) break; p.tip_jar -= TIP_STEP; found.push(r); }
+  save();
+  return { found, jar: p.tip_jar };
+}
 export const isUnlocked = (kind, id) => getProgress().unlocks[kind]?.includes(id) ?? false;
 export function unlock(kind, id) {
   const u = getProgress().unlocks;

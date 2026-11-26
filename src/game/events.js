@@ -3,6 +3,10 @@
 //        pickRemove(), pickUpgrade(), pickCopy(), addSnack(id?, paid?), pickSnack(title) -> name or null }
 //   addSnack is async: with a full bar it offers a swap, and leaving the snack refunds `paid`.
 //
+// setup(run, api) -> { text?, card?, timer?, options }: builds the event fresh each time
+//   (card: a card id shown above the options; timer: seconds before the option with
+//   `timeout: true` is picked for you).
+// art: a character drawn in place of the "?" icon (guardian art key, or 'manager').
 // requires(run): the event stays in the deck but is skipped until true; needs: the same rule in plain words.
 // gives: { cards, charms, snacks } – the event-only cards/charms/snacks it can hand out (the catalog lists where they come from).
 //
@@ -26,6 +30,7 @@ const upgradeText = (n, what) => (n ? `${n} ${what} card${n > 1 ? 's' : ''} upgr
 
 const rareSnack = () => { const r = Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === 'rare'); return r[Math.floor(Math.random() * r.length)]; };
 const queenIsGuardian = (r) => r.guardianOf?.[2] === 'sushiQueen';
+export const FLASH_SALE = { off: 75, seconds: 8, rareChance: 0.5 };
 
 export const EVENTS = [
   {
@@ -258,6 +263,26 @@ export const EVENTS = [
       { label: 'Bow to the Queen', note: `Only if she was your guardian: heal 15 and a free rare snack.`, can: queenIsGuardian, go: async (r, api) => { r.hp = Math.min(r.maxHp, r.hp + 15); return `"For my favorite climber." +15 ${T.hp} and ${await api.addSnack(rareSnack())}, on the house.`; } },
       { label: 'Just looking', go: () => '"Hmph. Come back when you are hungry."' },
     ],
+  },
+  {
+    // Mina's flash sale: one card at 75% off, but only for a few seconds.
+    id: 'flashSale', art: 'manager',
+    title: 'Flash Sale!',
+    text: 'Mina bursts out of the stock room with one card held high. "FLASH SALE! 75% off! Going, going..."',
+    options: [{ label: 'Pass', go: () => '"Your loss!"' }], // the real options come from setup()
+    setup: (r, api) => {
+      const rarity = Math.random() < FLASH_SALE.rareChance ? 'rare' : 'uncommon';
+      const id = api.randomCard(rarity);
+      const full = { rare: 145, uncommon: 75 }[CARDS[id].rarity] || 75;
+      const price = Math.round(full * (1 - FLASH_SALE.off / 100));
+      return {
+        card: id, timer: FLASH_SALE.seconds,
+        options: [
+          { label: `Buy ${CARDS[id].name} (${price} ${T.coins})`, note: `${FLASH_SALE.off}% off (was ${full}). Decide fast!`, can: (rr) => rr.coins >= price, go: (rr, a) => { rr.coins -= price; return `"Sold!" ${a.addCard(id)} is yours.`; } },
+          { label: 'Pass', timeout: true, go: () => '"Sale over! Too slow, too slow."' },
+        ],
+      };
+    },
   },
 ];
 

@@ -4,7 +4,7 @@ import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES, STICKERS } from '../game/battle.js';
 import {
   newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
-  afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor,
+  afterFightHealing, shopStock, shopCards, restockCost, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor,
 } from '../game/run.js';
 import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
 import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop, bossFor } from '../game/loot.js';
@@ -13,14 +13,14 @@ import { sfx, settings, saveSettings, music } from '../audio.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
-import { blobBackdrop, guardianChibi } from './chibi.js';
+import { blobBackdrop, guardianChibi, managerChibi } from './chibi.js';
 import { GUARDIANS, guardianFor, guardiansOn, lastGuardian } from '../game/guardians.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
   getProgress, recordRunEnd, isUnlocked, isFound, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
-  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet, noteSnackSeen, noteSnackTaken, climbUnlocked, setClimb,
+  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet, noteSnackSeen, noteSnackTaken, climbUnlocked, setClimb, addTips, TIP_STEP,
 } from '../game/progress.js';
 import { CLIMB, CLIMB_MAX, CLIMB_RULES, climbOn } from '../game/climb.js';
 
@@ -1079,6 +1079,8 @@ function gameOver(won, abandoned, killedBy) {
   clearRun();
   const summary = runSummary(run, won, { killedBy, abandoned });
   const cameo = lastGuardian(run); // the last guardian you met cheers or comforts you
+  const tipped = run.coins;
+  const tips = addTips(tipped, revealSomething);
   const stats = recordRunEnd(summary).totals;
   const newOutfits = outfitsForRunEnd();
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
@@ -1093,6 +1095,7 @@ function gameOver(won, abandoned, killedBy) {
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
+    ${tipped > 0 ? `<div class="tip-jar">${managerChibi()}<p><b>Tip jar +${tipped} ${T.coins}</b><span>${tips.found.length ? `Mina found ${tips.found.map((f) => `<b>${esc(f)}</b>`).join(', ')} for your Kioku Catalog!` : `Every ${TIP_STEP} ${T.coins} in the jar uncovers something new in your Kioku Catalog.`}</span><span class="jar-bar" style="--fill: ${Math.min(100, (tips.jar / TIP_STEP) * 100)}%"><i></i><small>${tips.jar}/${TIP_STEP}</small></span></p></div>` : ''}
     ${cameo ? `<div class="cameo"><span class="cameo-art pettable" role="button" tabindex="0" aria-label="Pet ${esc(GUARDIANS[cameo].name)}" data-pet>${guardianChibi(GUARDIANS[cameo].art)}</span><p><b>${esc(GUARDIANS[cameo].name)}</b>${esc(won ? GUARDIANS[cameo].cheer : GUARDIANS[cameo].comfort)}</p></div>` : ''}
     ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Climb level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
     ${newOutfits.map(outfitNote).join('')}
@@ -1103,10 +1106,25 @@ function gameOver(won, abandoned, killedBy) {
   app.querySelector('[data-title]').addEventListener('click', title);
 }
 
+// Tip jar: uncover one random thing you haven't found yet (card, charm or snack).
+function revealSomething() {
+  const pool = [
+    ...Object.keys(CARDS).filter((id) => !['status', 'curse'].includes(CARDS[id].rarity) && !isFound('cards', id)).map((id) => ['cards', id]),
+    ...Object.keys(CHARMS).filter((id) => !isFound('charms', id)).map((id) => ['charms', id]),
+    ...Object.keys(SNACKS).filter((id) => !isFound('snacks', id)).map((id) => ['snacks', id]),
+  ];
+  if (!pool.length) return null;
+  const [page, id] = pool[Math.floor(Math.random() * pool.length)];
+  if (page === 'cards') { noteCardSeen(id); return CARDS[id].name; }
+  if (page === 'charms') { noteCharmSeen(id); return CHARMS[id].name; }
+  noteSnackSeen(id); return SNACKS[id].name;
+}
+
 // ---------- rooms ----------
 function eventScreen() {
-  const ev = drawEvent(run);
-  noteEventMet(ev.id);
+  const base = drawEvent(run);
+  noteEventMet(base.id);
+  let ev = base;
   const api = {
     addCard: (id) => { takeCard({ id }); return CARDS[id].name; },
     randomCard: (rar) => drawCard(run, rar || 'common'),
@@ -1120,10 +1138,14 @@ function eventScreen() {
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
+  if (base.setup) ev = { ...base, ...base.setup(run, api) };
+  if (ev.card) noteCardSeen(ev.card);
   app.innerHTML = `${header()}<main class="room event${ev.special ? ' special' : ''}">
     <div class="room-icon${ev.art ? ' guardian-host' : ''}">${ev.art ? guardianChibi(ev.art) : ev.special && ev.boon ? charmIcon(ev.boon) : roomIcon('event')}</div>
     ${ev.special ? `<span class="special-tag">Special event${ev.style ? ` · ${esc(ARCHES[ev.style].name)}` : ''}</span>` : ''}
     <h1>${esc(ev.title)}</h1><p class="room-text">${esc(ev.text)}</p>
+    ${ev.card ? `<div class="event-card">${cardHTML({ id: ev.card })}</div>` : ''}
+    ${ev.timer ? `<div class="countdown" style="--secs: ${ev.timer}s" aria-hidden="true"><i></i></div>` : ''}
     <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
   </main>`;
   bindHeader(app);
@@ -1153,8 +1175,16 @@ function eventScreen() {
     if (offerRedraw) offerRedraw();
     else if (!chosen) app.querySelectorAll('[data-opt]').forEach((x) => { const o = ev.options[Number(x.dataset.opt)]; x.disabled = !!(o.can && !o.can(run)); });
   };
+  // A timed event picks its `timeout` option when time runs out.
+  if (ev.timer) {
+    const left = ev.options.findIndex((o) => o.timeout);
+    setTimeout(() => { if (!chosen && app.contains(b0)) app.querySelector(`[data-opt="${left}"]`)?.click(); }, ev.timer * 1000);
+  }
+  const b0 = app.querySelector('[data-opt]');
   app.querySelectorAll('[data-opt]').forEach((b) => b.addEventListener('click', async () => {
+    if (chosen) return;
     chosen = true;
+    app.querySelector('.countdown')?.classList.add('stopped');
     app.querySelectorAll('[data-opt]').forEach((x) => (x.disabled = true));
     const result = await ev.options[Number(b.dataset.opt)].go(run, api);
     app.querySelector('.stack').outerHTML = `<p class="result">${esc(result)}</p><button class="btn big yellow" data-go>Continue</button>`;
@@ -1165,20 +1195,49 @@ function eventScreen() {
   }));
 }
 
+// Doodle (Jenny's rest choice): any card with a style.
+const doodleable = (c) => !!CARDS[c.id].arch && !['status', 'curse', 'gift', 'event'].includes(CARDS[c.id].rarity);
+
 function restScreen() {
   const heal = run.charms.includes('footRub') ? run.maxHp : Math.round(run.maxHp * ((climbOn(run, 2) ? CLIMB_RULES.napHeal : 0.3) + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
+  const sleepHeal = run.charms.includes('footRub') ? run.maxHp : heal + Math.round(run.maxHp * 0.2); // Toni sleeps in: +20% of max HP over a nap
   app.innerHTML = `${header()}<main class="room rest">
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
     <div class="stack narrow">
       <button class="btn option" data-heal>Nap <small>Heal ${heal} ${T.hp}${run.charms.includes('doggyBed') ? ' and upgrade a random card' : ''}</small></button>
       <button class="btn option" data-up ${run.deck.some(canUpgrade) ? '' : 'disabled'}>Practice <small>Upgrade a card</small></button>
+      <button class="btn option" data-snackrun ${snackRoom(run) ? '' : 'disabled'}>Snack run <small>${snackRoom(run) ? 'Fill one empty snack slot' : 'Your snack bar is full'}</small></button>
+      ${run.character === 'jenny' ? `<button class="btn option" data-doodle ${run.deck.some(doodleable) ? '' : 'disabled'}>Doodle <small>Redraw a card as a different card of the same style</small></button>` : ''}
+      ${run.character === 'toni' ? `<button class="btn option" data-sleepin>Sleep in <small>Heal ${sleepHeal} ${T.hp}, but your next fight's first board has no free reveals</small></button>` : ''}
     </div></main>`;
   bindHeader(app);
   app.querySelector('[data-heal]').addEventListener('click', () => {
     if (run.charms.includes('pillowPet')) { run.maxHp += 2; run.hp += 2; }
     run.hp = Math.min(run.maxHp, run.hp + heal);
     if (run.charms.includes('doggyBed')) { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
+    completeRoom();
+  });
+  app.querySelector('[data-snackrun]').addEventListener('click', () => {
+    const k = drawSnack(run); noteSnackSeen(k);
+    if (k && takeSnack(k)) toast(`${snackIcon(k)}<span>Snack run: <b>${esc(SNACKS[k].name)}</b></span>`);
+    completeRoom();
+  });
+  app.querySelector('[data-doodle]')?.addEventListener('click', async () => {
+    const i = await pickFromDeck('Doodle a card', doodleable);
+    if (i === null) return;
+    const c = run.deck[i], d = CARDS[c.id];
+    const rar = ['common', 'uncommon', 'rare'].includes(d.rarity) ? d.rarity : 'common';
+    const id = drawStyleCard(run, d.arch, rar, [c.id]) || drawStyleCard(run, d.arch, 'common', [c.id]);
+    if (!id) return;
+    const before = cardName(c);
+    run.deck[i] = { id, ...(c.up ? { up: true } : {}) }; noteCardTaken(id);
+    toast(`<span>Doodle: <b>${esc(before)}</b> became <b>${esc(cardName(run.deck[i]))}</b></span>`);
+    completeRoom();
+  });
+  app.querySelector('[data-sleepin]')?.addEventListener('click', () => {
+    run.hp = Math.min(run.maxHp, run.hp + sleepHeal);
+    run.nextFight = { ...(run.nextFight || {}), noReveal: true };
     completeRoom();
   });
   app.querySelector('[data-up]').addEventListener('click', async () => {
@@ -1201,16 +1260,48 @@ function treasureScreen() {
   app.querySelector('[data-go]').addEventListener('click', completeRoom);
 }
 
+// Mina, the night manager, runs the shop. What she says (one picked at random).
+const MINA = {
+  hello: ['Welcome to the Konbini Corner! No running in the café.', 'Fresh stock, just unboxed.', 'Coins first, browsing second. Hehe, kidding. Mostly.', 'Oh, you again! Good. I like you.', 'Everything here is legally obtained. Probably.'],
+  sale: ['Card sale today! Don\'t tell the owner.', 'I marked some cards down. My accounting is a mystery.'],
+  poor: ['Window shopping? That\'s free, at least.', 'Short on coins? Go beat something up and come back.'],
+  card: ['Good pick!', 'Ooh, that one\'s a classic.', 'Great choice. I almost kept that one.'],
+  charm: ['Shiny! It suits you.', 'Careful, that one\'s lucky.'],
+  snack: ['Don\'t eat it in the PC booths.', 'Best before... soon. Enjoy!'],
+  restock: ['Fine, fine, I\'ll check the back.', 'Let me dig through the boxes...', 'Okay, last box! ...Maybe.'],
+  remove: ['I\'ll... recycle that for you.', 'Bye bye, card. You will not be missed.'],
+  bye: ['Thanks for shopping! Come again!', 'Pleasure doing business!'],
+  tease: ['Leaving empty-handed? I\'ll remember this.', 'Not even a snack? Rude.', 'Fine! More for the regulars.'],
+};
+const pickLine = (k) => MINA[k][Math.floor(Math.random() * MINA[k].length)];
+
+// A short message at the bottom of the screen that fades away.
+function toast(html, ms = 3200) {
+  document.querySelector('.toast')?.remove();
+  const t = document.createElement('div');
+  t.className = 'toast'; t.setAttribute('role', 'status'); t.innerHTML = html;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('out'), ms - 400);
+  setTimeout(() => t.remove(), ms);
+}
+
 function shopScreen() {
   const stock = shopStock(run);
+  stock.rerolls = 0;
+  let bought = false;
+  const cheapest = () => Math.min(...[...stock.cards, ...stock.charms, ...stock.snacks].filter((c) => !c.sold).map((c) => c.price), Infinity);
+  let mina = stock.cards.some((c) => c.sale) ? pickLine('sale') : run.coins < cheapest() ? pickLine('poor') : pickLine('hello');
+  const say = (k) => { mina = pickLine(k); };
   stock.cards.forEach((c) => noteCardSeen(c.id));
   stock.charms.forEach((c) => noteCharmSeen(c.id));
   stock.snacks.forEach((c) => noteSnackSeen(c.id));
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
-      <h1>${GAME.shop}</h1><p class="room-text">Snacks, cards and shiny charms.${stock.cards.some((c) => c.sale) ? ' <b class="sale-note">Card sale today!</b>' : ''}${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
-      <h2>Cards</h2>
+      <h1>${GAME.shop}</h1>
+      <div class="shopkeep"><span class="shopkeep-art">${managerChibi()}</span><p><b>Mina</b><span data-mina>${esc(mina)}</span></p></div>
+      <p class="room-text">Snacks, cards and shiny charms.${stock.cards.some((c) => c.sale && !c.sold) ? ' <b class="sale-note">Card sale today!</b>' : ''}${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
+      <div class="shop-h"><h2>Cards</h2><button class="btn small" data-restock ${run.coins < restockCost(stock.rerolls) ? 'disabled' : ''} data-tip="Swap the cards on the shelf for a new set. Costs more each time.">Restock <small>${uiIcon('coin')} ${restockCost(stock.rerolls)}</small></button></div>
       <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}${c.sale ? ` on-sale sale-${c.sale}` : ''}">${c.sale && !c.sold ? `<em class="sale-tag">${c.sale}% off</em>` : ''}<button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${priceOf(c)}${c.sale ? `, ${c.sale}% off` : ''}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${c.sale ? `<s>${priceOf({ price: c.was })}</s>` : ''}${priceOf(c)}</span></div>`).join('')}</div>
       <h2>Charms</h2>
       <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${charmIcon(c.id)}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
@@ -1224,24 +1315,35 @@ function shopScreen() {
     bindHeader(app);
     app.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.cards[Number(b.dataset.card)];
-      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCard({ id: c.id }); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCard({ id: c.id }); sfx('coin'); bought = true; say('card'); render();
     }));
     app.querySelectorAll('[data-charm]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.charms[Number(b.dataset.charm)];
-      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCharm(c.id); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCharm(c.id); sfx('coin'); bought = true; say('charm'); render();
     }));
     app.querySelectorAll('[data-snackbuy]').forEach((b) => b.addEventListener('click', () => {
       const c = stock.snacks[Number(b.dataset.snackbuy)];
       if (!snackRoom(run)) return;
-      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeSnack(c.id); sfx('coin'); render();
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeSnack(c.id); sfx('coin'); bought = true; say('snack'); render();
     }));
     app.querySelector('[data-remove]').addEventListener('click', async () => {
       const i = await pickFromDeck('Remove a card');
       if (i === null) return;
       const cost = removeCost(run);
-      run.deck.splice(i, 1); run.coins -= cost; if (!run.charms.includes('stampCard')) run.removeCost += 25; stock.removed = true; sfx('coin'); render();
+      run.deck.splice(i, 1); run.coins -= cost; if (!run.charms.includes('stampCard')) run.removeCost += 25; stock.removed = true; sfx('coin'); bought = true; say('remove'); render();
     });
-    app.querySelector('[data-go]').addEventListener('click', completeRoom);
+    app.querySelector('[data-restock]').addEventListener('click', () => {
+      const cost = restockCost(stock.rerolls);
+      if (run.coins < cost) return;
+      run.coins -= cost; stock.rerolls += 1;
+      stock.cards = shopCards(run);
+      stock.cards.forEach((c) => noteCardSeen(c.id));
+      sfx('scramble'); say(stock.cards.some((c) => c.sale) ? 'sale' : 'restock'); render();
+    });
+    app.querySelector('[data-go]').addEventListener('click', () => {
+      completeRoom();
+      toast(`${managerChibi()}<span><b>Mina:</b> ${esc(pickLine(bought ? 'bye' : 'tease'))}</span>`);
+    });
   };
   barChanged = render;
   render();

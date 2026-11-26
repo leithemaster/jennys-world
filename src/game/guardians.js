@@ -76,8 +76,11 @@ export const GUARDIANS = {
 };
 
 // only: the guardian shows up only when you play as that character.
+// Guardians you have actually met this run, by floor. (guardianOf can also hold the
+// one waiting upstairs, picked early so the map can show them.)
+export const guardiansMet = (run) => [0, 1, 2].filter((f) => f < run.act || (f === run.act && !run.giftPending)).map((f) => run.guardianOf?.[f]).filter((g) => GUARDIANS[g]);
 // The last guardian you met this run (for the run-end cameo).
-export const lastGuardian = (run) => [2, 1, 0].map((f) => run.guardianOf?.[f]).find((g) => GUARDIANS[g]) || null;
+export const lastGuardian = (run) => guardiansMet(run).pop() || null;
 
 export const guardiansOn = (floor, character) => Object.keys(GUARDIANS).filter((id) => GUARDIANS[id].floor === floor && (!character || !GUARDIANS[id].only || GUARDIANS[id].only === character));
 

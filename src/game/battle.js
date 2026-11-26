@@ -91,7 +91,7 @@ export class Battle {
     // one-fight buffs from events (e.g. the spicy ramen)
     if (climbOn(this.run, 10) && (this.def.elite || this.def.boss)) this.enemy.strength += CR.bigSpirit;
     const nf = this.run.nextFight;
-    if (nf) { if (nf.strength) this.player.strength += nf.strength; this.run.nextFight = null; }
+    if (nf) { if (nf.strength) this.player.strength += nf.strength; if (nf.noReveal) this.flags.noFreeReveal = true; this.run.nextFight = null; }
     this.chooseIntent();
     this.dealBoard();
     this.startTurn();
@@ -121,7 +121,8 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0);
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + (this.flags.noFreeReveal ? 0 : perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0));
+    this.flags.noFreeReveal = false; // Sleep in: only the first board
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);

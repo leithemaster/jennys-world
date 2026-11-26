@@ -5,6 +5,7 @@ import { CHARACTERS } from './characters.js';
 import { CHARMS } from './charms.js';
 import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard, drawSnack } from './loot.js';
 import { climbOn, CLIMB_RULES as CR, CLIMB_MAX } from './climb.js';
+import { guardiansMet } from './guardians.js';
 import { SNACKS, SNACK_SLOTS, SNACK_PRICE, addSnackSlots, addSnack, snackRoom } from './snacks.js';
 
 import { readDoc, writeDoc, removeDoc, readLegacy } from '../platform/storage.js';
@@ -244,9 +245,15 @@ function rollSale() {
   return r < CARD_SALE[50] ? 50 : r < CARD_SALE[50] + CARD_SALE[25] ? 25 : 0;
 }
 
-export function shopStock(run) {
-  const off = (run.charms.includes('memberCard') ? 0.8 : 1) * (run.charms.includes('chewToy') ? 0.9 : 1) * (climbOn(run, 4) ? CR.shopPrice : 1);
-  const price = (n) => Math.round(n * off);
+const shopOff = (run) => (run.charms.includes('memberCard') ? 0.8 : 1) * (run.charms.includes('chewToy') ? 0.9 : 1) * (climbOn(run, 4) ? CR.shopPrice : 1);
+
+// Restocking the card shelf: 25 coins, then 15 more each time in the same shop.
+export const RESTOCK = { base: 25, step: 15 };
+export const restockCost = (n) => RESTOCK.base + RESTOCK.step * n;
+
+// The 5 cards on the shelf (2 lean into your deck's style once you have one).
+export function shopCards(run) {
+  const price = (n) => Math.round(n * shopOff(run));
   const cards = [];
   const style = deckStyle(run);
   for (const [i, rar] of ['common', 'common', 'uncommon', 'uncommon', 'rare'].entries()) {
@@ -257,6 +264,12 @@ export function shopStock(run) {
     const sale = rollSale();
     cards.push(sale ? { id, price: Math.round(full * (1 - sale / 100)), was: full, sale } : { id, price: full });
   }
+  return cards;
+}
+
+export function shopStock(run) {
+  const price = (n) => Math.round(n * shopOff(run));
+  const cards = shopCards(run);
   const charms = [];
   for (const pool of ['shop', 'shop', 'drop']) {
     const id = drawCharm(run, pool, charms.map((c) => c.id));
@@ -301,7 +314,7 @@ export function runSummary(run, won, { killedBy, abandoned } = {}) {
     charms: [...run.charms],
     snacks: run.snacks.filter(Boolean),
     // for the Run history page (runs saved before these were added don't have them)
-    guardians: [0, 1, 2].map((f) => run.guardianOf?.[f]).filter(Boolean),
+    guardians: guardiansMet(run),
     bosses: [0, 1, 2].map((f) => run.bossOf?.[f]).filter(Boolean),
     ...(killedBy ? { killed_by: killedBy } : {}),
     ...(abandoned ? { abandoned: true } : {}),

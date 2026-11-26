@@ -609,6 +609,26 @@ function sushiQueen() {
 // Colors follow the real dogs: Haru is a black-and-tan shiba, Issei a red
 // shiba; Hana a long-haired red wiener dog, Kaiba a long-haired blue merle.
 
+// Mina, the net café's night manager. Runs the Konbini Corner and the flash sales.
+function manager() {
+  const skin = '#fde6da', hair = '#5a3a2e', shirt = '#fff8ee', apron = '#3fa47a', cap = '#3fa47a';
+  return `${shadow(60, 113, 34)}
+    <path d="M32 112 C32 88 42 78 60 78 C78 78 88 88 88 112 Z" ${o(shirt)}/>
+    <path d="M44 86 H76 L80 112 H40 Z" ${o(apron)}/>
+    <rect x="52" y="94" width="16" height="10" rx="3" ${o('#fff', 2.5)}/>
+    <path d="M28 52 C24 72 30 86 40 84 L80 84 C90 86 96 72 92 52 Z" ${o(hair)}/>
+    <ellipse cx="60" cy="54" rx="27" ry="25" ${o(skin)}/>
+    <path d="M33 50 C34 32 50 26 60 26 C72 26 86 32 87 50 C78 42 70 40 62 44 C54 40 42 42 33 50 Z" ${o(hair)}/>
+    <path d="M30 36 C36 18 84 18 90 36 Z" ${o(cap)}/>
+    <path d="M78 34 C90 34 98 36 100 40 C92 42 84 40 76 38 Z" ${o(cap)}/>
+    <path d="M34 52 C26 52 26 66 34 66" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M34 62 C40 70 46 72 52 70" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="53" cy="70" r="2.6" fill="${INK}"/>
+    ${eyes2(60, 56, 10, 4)}${blushes(60, 66, 18)}
+    <path d="M55 67 Q60 71 65 67" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    ${shine(72, 28, 5, 3)}`;
+}
+
 function nyx() {
   const hood = '#2a2233', pink = '#ff8fb8', skin = '#fff1f4';
   return `${shadow(60, 113, 34)}
@@ -630,6 +650,7 @@ function nyx() {
 }
 
 const GUARDIAN_ART = {
+  manager, // not a guardian: Mina hosts the shop and flash sales
   haru: () => shiba({ fur: '#2b2329', cream: '#f3ead8', points: '#c98a4a',
     // Haru's white chest fur is shaped like a T
     chest: `<path d="M42 89 C50 86 70 86 78 89 C77 94 71 96 65.5 96 C64.5 101 65.5 105 63.5 109 L56.5 109 C54.5 105 55.5 101 54.5 96 C49 96 43 94 42 89 Z" fill="#f3ead8"/>`,
@@ -643,6 +664,8 @@ const GUARDIAN_ART = {
   sushiQueen,
   nyx,
 };
+
+export const managerChibi = () => `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${manager()}</svg>`;
 
 export function guardianChibi(art) {
   // the partner guardian is the other playable character, in their date outfit
