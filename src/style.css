@@ -449,7 +449,7 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
 .loot small { color: var(--muted); }
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 150px)); gap: var(--s4); justify-content: center; width: 100%; }
 .charm-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 196px)); gap: var(--s3); justify-content: center; width: 100%; }
-.charm-card { display: grid; justify-items: center; gap: 4px; background: var(--paper); color: var(--ink); border: var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: var(--s3) var(--s3) var(--s4); transition: transform 180ms var(--ease-pop); }
+.charm-card { display: grid; justify-items: center; align-content: start; gap: 4px; background: var(--paper); color: var(--ink); border: var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: var(--s3) var(--s3) var(--s4); transition: transform 180ms var(--ease-pop); }
 .charm-card b { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
 .charm-card small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
 .charm-card.solo { width: min(260px, 100%); }
