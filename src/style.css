@@ -810,5 +810,10 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .cat .tag.ct-gift, .cat .tag.ct-guardian { background: #f6b74a; }
 .guardian-row .art { width: 120px; height: 120px; flex: none; }
 .cat .guardian-row .guardian-charms { grid-column: 1 / -1; }
+.cat .guardian-charms summary { cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; padding: 4px 12px 4px 8px; margin-bottom: 8px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); list-style: none; user-select: none; }
+.cat .guardian-charms summary::-webkit-details-marker { display: none; }
+.cat .guardian-charms summary::before { content: '▾'; transition: transform .15s; }
+.cat .guardian-charms:not([open]) summary::before { transform: rotate(-90deg); }
+.cat .guardian-charms:not([open]) summary { margin-bottom: 0; }
 .cat .guardian-row .guardian-charms .art { width: 40px; height: 40px; }
 .cat .guardian-row .guardian-charms td:nth-child(4) { min-width: 220px; }

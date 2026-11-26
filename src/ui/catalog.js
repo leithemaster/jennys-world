@@ -57,7 +57,7 @@ export function catalogScreen(app, { onBack }) {
   app.innerHTML = '<div class="cat-root"></div>';
   const root = app.firstElementChild;
   const D = withFound(buildCatalog());
-  const state = { tab: 'characters', q: '', filter: 'all', sort: null };
+  const state = { tab: 'characters', q: '', filter: 'all', sort: null, closed: new Set() }; // closed: collapsed guardian tables
 
   function table(rows, cols, filters, filterKey, note) {
     const q = state.q.toLowerCase();
@@ -148,9 +148,9 @@ export function catalogScreen(app, { onBack }) {
       ${D.guardians.map((g) => (g.found ? `<div class="tile boss-row guardian-row"><div class="art">${g.art}</div>
         <div class="boss-info"><h3>${esc(g.name)}</h3><p><span class="tag ct-guardian">${esc(g.kind)}</span> ${esc(g.floor)}${g.floorNo ? ' · one of the floor guardians' : ' · every run'}</p><p>${esc(g.blurb)}</p>
         </div>
-        <div class="scroll guardian-charms"><table class="slim"><thead><tr><th>Art</th><th>Charm</th><th>Style</th><th>Effect</th><th>Comes with</th></tr></thead><tbody>${g.charms.map((k) => { const c = charm[k]; return c.found
+        <details class="guardian-charms" data-guardian="${g.id}"${state.closed.has(g.id) ? '' : ' open'}><summary>Charms <span class="small">(${g.charms.filter((k) => charm[k].found).length} of ${g.charms.length} found)</span></summary><div class="scroll"><table class="slim"><thead><tr><th>Art</th><th>Charm</th><th>Style</th><th>Effect</th><th>Comes with</th></tr></thead><tbody>${g.charms.map((k) => { const c = charm[k]; return c.found
           ? `<tr><td>${artBox('charm', c, c.art)}</td><td><span class="name">${esc(c.name)}</span></td><td>${c.style ? `<span class="style">${esc(c.style)}</span>` : '<span class="small">Any</span>'}</td><td>${esc(c.desc)}</td><td>${c.gives ? `<span class="small">${esc(c.gives)}</span>` : '<span class="small">—</span>'}</td></tr>`
-          : `<tr class="locked"><td>${artBox('charm', c, c.art)}</td><td><span class="name muted">${HIDDEN}</span></td><td colspan="3"><span class="small">Not offered yet</span></td></tr>`; }).join('')}</tbody></table></div></div>`
+          : `<tr class="locked"><td>${artBox('charm', c, c.art)}</td><td><span class="name muted">${HIDDEN}</span></td><td colspan="3"><span class="small">Not offered yet</span></td></tr>`; }).join('')}</tbody></table></div></details></div>`
         : `<div class="tile boss-row guardian-row locked"><div class="art unseen">${g.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-guardian">Guardian</span> ${esc(g.floor)}</p><p class="small">Reach ${esc(g.floor)} to meet them.</p></div></div>`)).join('')}</section>`;
     },
 
@@ -201,6 +201,8 @@ export function catalogScreen(app, { onBack }) {
     if (focused) { const s = root.querySelector('[data-search]'); s?.focus(); s?.setSelectionRange(pos, pos); }
   }
 
+  // remember which guardian charm tables are collapsed (toggle doesn't bubble, so listen while capturing)
+  root.addEventListener('toggle', (e) => { const g = e.target.dataset?.guardian; if (g) state.closed[e.target.open ? 'delete' : 'add'](g); }, true);
   root.addEventListener('input', (e) => { if (e.target.matches('[data-search]')) { state.q = e.target.value; render(); } });
   root.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-tab]');
