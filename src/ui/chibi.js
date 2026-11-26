@@ -548,11 +548,11 @@ export function enemyChibi(art, color) {
 const eyes2 = (cx, cy, gap, r = 4.6) => [cx - gap, cx + gap].map((x) => `<ellipse cx="${x}" cy="${cy}" rx="${r}" ry="${r * 1.25}" fill="${INK}"/><circle cx="${x - 1.5}" cy="${cy - 2.2}" r="${r * 0.38}" fill="#fff"/>`).join('');
 const blushes = (cx, cy, gap) => [cx - gap, cx + gap].map((x) => `<ellipse cx="${x}" cy="${cy}" rx="5" ry="3" fill="#f59ab0" opacity=".75"/>`).join('');
 
-function shiba({ fur = '#e39a4c', cream = CREAM, points = '', scale = 1, extra = '' } = {}) {
+function shiba({ fur = '#e39a4c', cream = CREAM, points = '', chest = '', scale = 1, extra = '' } = {}) {
   return `<g transform="translate(60 60) scale(${scale}) translate(-60 -60)">${shadow(60, 112, 34)}
     <path d="M86 84 C102 78 104 60 92 58 C84 57 84 68 90 70" ${o(fur)}/>
     <path d="M38 80 C36 100 42 110 60 110 C78 110 84 100 82 80 Z" ${o(fur)}/>
-    <path d="M50 92 C50 104 70 104 70 92 C66 84 54 84 50 92 Z" fill="${cream}"/>
+    ${chest || `<path d="M50 92 C50 104 70 104 70 92 C66 84 54 84 50 92 Z" fill="${cream}"/>`}
     <path d="M44 108 v-8 M76 108 v-8" stroke="${INK}" stroke-width="${SW}" stroke-linecap="round"/>
     <path d="M30 40 L28 12 L52 28 Z" ${o(fur)}/><path d="M34 34 L33 20 L45 29 Z" fill="${cream}"/>
     <path d="M90 40 L92 12 L68 28 Z" ${o(fur)}/><path d="M86 34 L87 20 L75 29 Z" fill="${cream}"/>
@@ -609,7 +609,10 @@ function sushiQueen() {
 // Colors follow the real dogs: Haru is a black-and-tan shiba, Issei a red
 // shiba; Hana a long-haired red wiener dog, Kaiba a long-haired blue merle.
 const GUARDIAN_ART = {
-  haru: () => shiba({ fur: '#2b2329', cream: '#f3ead8', points: '#c98a4a', extra: `<path d="M40 82 Q60 92 80 82" fill="none" stroke="#c8323c" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="88" r="4" fill="#ffd34d" stroke="${INK}" stroke-width="2"/>` }),
+  haru: () => shiba({ fur: '#2b2329', cream: '#f3ead8', points: '#c98a4a',
+    // Haru's white chest fur is shaped like a T
+    chest: `<path d="M42 89 C50 86 70 86 78 89 C77 94 71 96 65.5 96 C64.5 101 65.5 105 63.5 109 L56.5 109 C54.5 105 55.5 101 54.5 96 C49 96 43 94 42 89 Z" fill="#f3ead8"/>`,
+    extra: `<path d="M40 81 Q60 89 80 81" fill="none" stroke="#c8323c" stroke-width="4.5" stroke-linecap="round"/>` }),
   issei: () => shiba({ fur: '#c9672c', cream: '#f8ecd8', scale: 0.86, extra: `<path d="M38 80 L82 80 L60 96 Z" fill="#5fa8e8" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><circle cx="54" cy="85" r="2" fill="#fff"/><circle cx="66" cy="85" r="2" fill="#fff"/>` }),
   hana: () => wiener({ fur: '#b8622a', dark: '#9c4f20', ear: '#8e451b', belly: '#d58a4c', extra: `<path d="M50 62 C52 72 46 78 40 78" fill="none" stroke="#ff8fb0" stroke-width="5" stroke-linecap="round"/><circle cx="44" cy="80" r="3.2" fill="#ff5d8f" stroke="${INK}" stroke-width="2"/>` }),
   kaiba: () => wiener({ fur: '#e9e7ec', dark: '#e9e7ec', ear: '#4a4552', belly: '#ffffff',
