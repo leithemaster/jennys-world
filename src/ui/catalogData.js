@@ -64,7 +64,8 @@ export function buildCatalog() {
   }));
 
   const charms = Object.entries(CHARMS).map(([id, c]) => ({
-    id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc, requires: c.needs || fromText('charms', id), art: charmIcon(id),
+    id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc,
+    gives: c.gives ? Object.entries(c.gives.reduce((m, k) => ((m[k] = (m[k] || 0) + 1), m), {})).map(([k, n]) => `${n} × ${CARDS[k].name}`).join(', ') : '', requires: c.needs || fromText('charms', id), art: charmIcon(id),
   }));
 
   const FLOOR_NAMES = ACTS.map((a) => a.name);

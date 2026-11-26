@@ -116,7 +116,7 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>') },
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Only shows up if', cell: (r) => (!r.found ? '' : r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>') },
-    ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
+    ], [['all', 'All'], ['haru', "Haru's Gift"], ['guardian', 'Guardian gift'], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
     'Every charm you have been offered or picked up. Charms are passive and last the whole run.'),
 
     snacks: () => table(D.snacks.map((r) => hide(r, ['rarity', 'art'])), [
@@ -147,7 +147,10 @@ export function catalogScreen(app, { onBack }) {
       return `<section class="sheet"><p class="note">Family who look out for you on the climb. Haru always meets you at the start of a run. On Floors 2 and 3, one of that floor's guardians is waiting when you arrive. Each has their own set of charms and offers 3 to pick 1. Floor 3 gifts are the strongest, made to help a build snowball. Some charms come with special cards that only that guardian gives. <b>Found ${D.guardians.filter((g) => g.found).length} of ${D.guardians.length}</b></p>
       ${D.guardians.map((g) => (g.found ? `<div class="tile boss-row guardian-row"><div class="art">${g.art}</div>
         <div class="boss-info"><h3>${esc(g.name)}</h3><p><span class="tag ct-guardian">${esc(g.kind)}</span> ${esc(g.floor)}${g.floorNo ? ' · one of the floor guardians' : ' · every run'}</p><p>${esc(g.blurb)}</p>
-        <ul class="charm-list">${g.charms.map((k) => { const c = charm[k]; return c.found ? `<li>${c.art}<span><b>${esc(c.name)}</b>${c.style ? ` <span class="small">(${esc(c.style)})</span>` : ''}<br><span class="small">${esc(c.desc)}</span></span></li>` : `<li class="muted">${c.art}<span><b>${HIDDEN}</b><br><span class="small">Not offered yet</span></span></li>`; }).join('')}</ul></div></div>`
+        </div>
+        <div class="scroll guardian-charms"><table class="slim"><thead><tr><th>Art</th><th>Charm</th><th>Style</th><th>Effect</th><th>Comes with</th></tr></thead><tbody>${g.charms.map((k) => { const c = charm[k]; return c.found
+          ? `<tr><td>${artBox('charm', c, c.art)}</td><td><span class="name">${esc(c.name)}</span></td><td>${c.style ? `<span class="style">${esc(c.style)}</span>` : '<span class="small">Any</span>'}</td><td>${esc(c.desc)}</td><td>${c.gives ? `<span class="small">${esc(c.gives)}</span>` : '<span class="small">—</span>'}</td></tr>`
+          : `<tr class="locked"><td>${artBox('charm', c, c.art)}</td><td><span class="name muted">${HIDDEN}</span></td><td colspan="3"><span class="small">Not offered yet</span></td></tr>`; }).join('')}</tbody></table></div></div>`
         : `<div class="tile boss-row guardian-row locked"><div class="art unseen">${g.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-guardian">Guardian</span> ${esc(g.floor)}</p><p class="small">Reach ${esc(g.floor)} to meet them.</p></div></div>`)).join('')}</section>`;
     },
 
