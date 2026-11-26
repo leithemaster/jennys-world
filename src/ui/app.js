@@ -986,7 +986,8 @@ function eventScreen() {
     styleCard: (arch, rar) => drawStyleCard(run, arch, rar || 'uncommon') || drawCard(run, rar || 'uncommon'),
     upgradeAll: (pred) => { const ups = run.deck.filter((c) => canUpgrade(c) && pred(CARDS[c.id])); ups.forEach((c) => (c.up = true)); return ups.length; },
     pickCopy: async () => { const i = await pickFromDeck('Copy a card', (c) => CARDS[c.id].rarity !== 'curse' && CARDS[c.id].rarity !== 'status'); if (i === null) return 'No card copied.'; const c = run.deck[i]; takeCard({ id: c.id, ...(c.up ? { up: true } : {}) }); return `${cardName(c)} copied!`; },
-    addSnack: (id) => { const k = id || drawSnack(run); noteSnackSeen(k); return takeSnack(k) ? SNACKS[k].name : `${SNACKS[k].name} (no room, so you eat it)`; },
+    // No room: offer Take / Swap one out / Leave it (paid snacks refund when left).
+    addSnack: async (id, paid = 0) => { const k = id || drawSnack(run); noteSnackSeen(k); return takeSnack(k) ? SNACKS[k].name : offerSnack(k, paid); },
     pickSnack: async (t) => { const i = await pickSnackSlot(t); if (i === null) return null; return SNACKS[removeSnack(run, i)].name; },
     addCharm: (id) => { if (id) { takeCharm(id); return CHARMS[id].name; } const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } takeCharm(k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
@@ -999,7 +1000,34 @@ function eventScreen() {
     <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
   </main>`;
   bindHeader(app);
+  // The snack offer shown when a snack has no room. Eating or tossing from the bar redraws it.
+  let chosen = false, offerRedraw = null;
+  const offerSnack = (k, paid) => new Promise((resolve) => {
+    const stack = app.querySelector('.stack');
+    const done = (text) => { offerRedraw = null; resolve(text); };
+    offerRedraw = () => {
+      const room = snackRoom(run);
+      stack.innerHTML = `<div class="snack-offer">${snackIcon(k)}<p><b>${esc(SNACKS[k].name)}</b> ${esc(SNACKS[k].desc)}<br><small>${room ? 'You have room for it now.' : 'Your snack bar is full.'}</small></p><button class="btn${room ? ' yellow' : ''}" data-swap>${room ? 'Take it' : 'Swap one out'}</button><button class="btn ghost" data-leave-snack>${paid ? `Leave it (get ${paid} ${T.coins} back)` : 'Leave it'}</button></div>`;
+      stack.querySelector('[data-swap]').addEventListener('click', async () => {
+        if (!snackRoom(run)) { const i = await pickSnackSlot('Toss which snack?'); if (i === null) return; removeSnack(run, i); }
+        if (takeSnack(k)) done(SNACKS[k].name); else offerRedraw();
+      });
+      stack.querySelector('[data-leave-snack]').addEventListener('click', () => {
+        if (paid) run.coins += paid;
+        done(`${SNACKS[k].name} (you leave it${paid ? ` and get your ${paid} ${T.coins} back` : ''})`);
+      });
+      stack.querySelector('[data-swap]').focus();
+    };
+    offerRedraw();
+  });
+  barChanged = () => {
+    const bar = app.querySelector('.bar');
+    if (bar) { bar.outerHTML = header(); bindHeader(app); }
+    if (offerRedraw) offerRedraw();
+    else if (!chosen) app.querySelectorAll('[data-opt]').forEach((x) => { const o = ev.options[Number(x.dataset.opt)]; x.disabled = !!(o.can && !o.can(run)); });
+  };
   app.querySelectorAll('[data-opt]').forEach((b) => b.addEventListener('click', async () => {
+    chosen = true;
     app.querySelectorAll('[data-opt]').forEach((x) => (x.disabled = true));
     const result = await ev.options[Number(b.dataset.opt)].go(run, api);
     app.querySelector('.stack').outerHTML = `<p class="result">${esc(result)}</p><button class="btn big yellow" data-go>Continue</button>`;

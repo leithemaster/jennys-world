@@ -1,6 +1,7 @@
 // "?" rooms. Each option: label, (optional) note, can(run) -> bool, go(run, api) -> result text.
 // api: { addCard(id), randomCard(rarity?), styleCard(arch, rarity?), addCharm(id?), upgradeAll(pred),
-//        pickRemove(), pickUpgrade(), pickCopy(), addSnack(id?), pickSnack(title) -> name or null }
+//        pickRemove(), pickUpgrade(), pickCopy(), addSnack(id?, paid?), pickSnack(title) -> name or null }
+//   addSnack is async: with a full bar it offers a swap, and leaving the snack refunds `paid`.
 //
 // requires(run): the event stays in the deck but is skipped until true; needs: the same rule in plain words.
 // gives: { cards, charms, snacks } – the event-only cards/charms/snacks it can hand out (the catalog lists where they come from).
@@ -51,7 +52,7 @@ export const EVENTS = [
     title: 'Vending Machine',
     text: 'A vending machine hums in the corner. The coin slot is taped over, but the snacks look great.',
     options: [
-      { label: `Buy a snack (20 ${T.coins})`, note: 'Gain a random snack. Needs an empty snack slot.', can: (r) => r.coins >= 20 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 20; return `Clunk! Out drops ${api.addSnack()}.`; } },
+      { label: `Buy a snack (20 ${T.coins})`, note: 'Gain a random snack.', can: (r) => r.coins >= 20, go: async (r, api) => { r.coins -= 20; return `Clunk! Out drops ${await api.addSnack(null, 20)}.`; } },
       { label: 'Give it a kick', note: `Take 5 damage. Maybe ${T.coins} fall out.`, go: (r) => {
         r.hp = Math.max(1, r.hp - 5);
         if (Math.random() < 0.6) { r.coins += 35; return `Ouch! …but 35 ${T.coins} rattle out.`; }
@@ -174,7 +175,7 @@ export const EVENTS = [
     title: 'Free Samples',
     text: 'A worker with a tray of tiny cups calls out: "Free samples! Try one, try two, nobody is counting!"',
     options: [
-      { label: 'Take a sample', note: 'Gain a random snack.', can: (r) => snackRoom(r) > 0, go: (r, api) => `Tasty. You keep ${api.addSnack()} for later.` },
+      { label: 'Take a sample', note: 'Gain a random snack.', go: async (r, api) => `Tasty. You keep ${await api.addSnack()} for later.` },
       { label: 'Stuff your cheeks', note: `Lose 5 ${T.hp}. Gain Hamster Cheeks (event charm): +1 snack slot.`, go: (r, api) => { r.hp = Math.max(1, r.hp - 5); return `Brain freeze! But you got ${api.addCharm('hamsterCheeks')}.`; } },
       { label: 'Eat them all right here', note: 'Heal 12.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 12); return `The worker looks impressed. +12 ${T.hp}.`; } },
     ],
@@ -201,7 +202,7 @@ export const EVENTS = [
     title: 'Midnight Konbini Run',
     text: 'The konbini downstairs is open all night. The fridges hum, and the onigiri are half price.',
     options: [
-      { label: `Stock up (35 ${T.coins})`, note: 'Fill all your empty snack slots.', can: (r) => r.coins >= 35 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 35; const got = []; while (snackRoom(r)) got.push(api.addSnack()); return `Your bag is full: ${got.join(', ')}.`; } },
+      { label: `Stock up (35 ${T.coins})`, note: 'Fill all your empty snack slots.', can: (r) => r.coins >= 35 && snackRoom(r) > 0, go: async (r, api) => { r.coins -= 35; const got = []; while (snackRoom(r)) got.push(await api.addSnack()); return `Your bag is full: ${got.join(', ')}.`; } },
       { label: `Buy a pocket fridge (60 ${T.coins})`, note: 'Gain Pocket Fridge (event charm): fill empty snack slots on each new floor.', can: (r) => r.coins >= 60, go: (r, api) => { r.coins -= 60; return `It even has a tiny light inside. You got ${api.addCharm('pocketFridge')}.`; } },
       { label: 'Go back to bed', note: 'Heal 8.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 8); return `Sleep is free. +8 ${T.hp}.`; } },
     ],
@@ -211,8 +212,8 @@ export const EVENTS = [
     title: 'The Cotton Candy Lady',
     text: 'A lady with a squeaky cart spins sugar into fluffy clouds. "Pink or rainbow, sweetie?"',
     options: [
-      { label: `Pink cotton candy (15 ${T.coins})`, note: 'Gain Cotton Candy (event snack).', can: (r) => r.coins >= 15 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 15; return `So fluffy. You got ${api.addSnack('cottonCandy')}.`; } },
-      { label: `Rainbow cotton candy (30 ${T.coins})`, note: 'Gain Rainbow Cotton Candy (event snack).', can: (r) => r.coins >= 30 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 30; return `It's bigger than your head. You got ${api.addSnack('rainbowCotton')}.`; } },
+      { label: `Pink cotton candy (15 ${T.coins})`, note: 'Gain Cotton Candy (event snack).', can: (r) => r.coins >= 15, go: async (r, api) => { r.coins -= 15; return `So fluffy. You got ${await api.addSnack('cottonCandy', 15)}.`; } },
+      { label: `Rainbow cotton candy (30 ${T.coins})`, note: 'Gain Rainbow Cotton Candy (event snack).', can: (r) => r.coins >= 30, go: async (r, api) => { r.coins -= 30; return `It's bigger than your head. You got ${await api.addSnack('rainbowCotton', 30)}.`; } },
       { label: 'Help her spin', note: 'Upgrade a card.', go: async (r, api) => `"You're a natural!" ${await api.pickUpgrade()}` },
     ],
   },
@@ -221,7 +222,7 @@ export const EVENTS = [
     title: 'Sweet Potato Cart',
     text: 'A grandpa roasts sweet potatoes in an old drum by the door. The whole floor smells amazing.',
     options: [
-      { label: `Buy one for later (10 ${T.coins})`, note: 'Gain Roasted Sweet Potato (event snack).', can: (r) => r.coins >= 10 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 10; return `Wrapped in newspaper, still warm. You got ${api.addSnack('sweetPotato')}.`; } },
+      { label: `Buy one for later (10 ${T.coins})`, note: 'Gain Roasted Sweet Potato (event snack).', can: (r) => r.coins >= 10, go: async (r, api) => { r.coins -= 10; return `Wrapped in newspaper, still warm. You got ${await api.addSnack('sweetPotato', 10)}.`; } },
       { label: 'Share one with him', note: 'Heal 8.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 8); return `He tells you about the café in the old days. +8 ${T.hp}.`; } },
     ],
   },
@@ -230,12 +231,12 @@ export const EVENTS = [
     title: 'Dalgona Challenge',
     text: 'A booth with a sign: "Carve out the shape without breaking it and win a prize!" A needle and a honeycomb candy wait on the table.',
     options: [
-      { label: 'Try the star (easy)', note: `70%: gain Dalgona Candy (event snack). Fail: lose 3 ${T.hp}.`, can: (r) => snackRoom(r) > 0, go: (r, api) => {
-        if (Math.random() < 0.7) return `Perfect star! You got ${api.addSnack('dalgona')}.`;
+      { label: 'Try the star (easy)', note: `70%: gain Dalgona Candy (event snack). Fail: lose 3 ${T.hp}.`, go: async (r, api) => {
+        if (Math.random() < 0.7) return `Perfect star! You got ${await api.addSnack('dalgona')}.`;
         r.hp = Math.max(1, r.hp - 3); return `Crack. You poke your finger trying to fix it. -3 ${T.hp}.`;
       } },
-      { label: 'Try the heart (hard)', note: `35%: gain Dalgona Candy and 60 ${T.coins}. Fail: lose 6 ${T.hp}.`, can: (r) => snackRoom(r) > 0, go: (r, api) => {
-        if (Math.random() < 0.35) { r.coins += 60; return `Flawless heart! The booth pays 60 ${T.coins} and you keep ${api.addSnack('dalgona')}.`; }
+      { label: 'Try the heart (hard)', note: `35%: gain Dalgona Candy and 60 ${T.coins}. Fail: lose 6 ${T.hp}.`, go: async (r, api) => {
+        if (Math.random() < 0.35) { r.coins += 60; return `Flawless heart! The booth pays 60 ${T.coins} and you keep ${await api.addSnack('dalgona')}.`; }
         r.hp = Math.max(1, r.hp - 6); return `It snaps right through the middle. -6 ${T.hp}.`;
       } },
       { label: 'Walk away', go: () => 'Not today, sugar.' },
