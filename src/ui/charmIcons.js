@@ -23,6 +23,12 @@ const I = {
   hotWaterBottle: `<path d="M9 10 H23 C26 10 27 13 27 16 V24 C27 27 25 28 22 28 H10 C7 28 5 27 5 24 V16 C5 13 6 10 9 10 Z" ${s('#ff8f6b')}/><rect x="13" y="5" width="6" height="5" rx="1" ${s('#fff4e6', 1.6)}/>${line('M10 17 q2 -2 4 0 t4 0 t4 0 M10 22 q2 -2 4 0 t4 0 t4 0', 1.4)}`,
   gossipPhone: `<rect x="9" y="3" width="14" height="26" rx="3" ${s('#ff5d8f')}/><rect x="11.5" y="6.5" width="9" height="15" rx="1" fill="#fff4e6"/>${line('M13 11 h6 M13 14 h4', 1.4)}<circle cx="16" cy="25" r="1.4" fill="${K}"/>`,
 
+  // event only
+  kittenBell: `<path d="M16 5 C10 5 8 10 8 16 L6 22 H26 L24 16 C24 10 22 5 16 5 Z" ${s('#ffc53d')}/><circle cx="16" cy="25" r="2.6" ${s('#ff5d8f', 1.4)}/>${line('M9 18 H23', 1.4)}${shine(12, 10)}`,
+  goldenMic: `<circle cx="20" cy="11" r="7" ${s('#ffc53d')}/>${line('M15 9 l9 6 M17 6 l7 5', 1.3)}<path d="M15 15 L5 27 L8 29 L18 18" ${s('#3c3758')}/>${shine(22, 8)}`,
+  luckyChopsticks: `<path d="M9 4 L13 28" stroke="${K}" stroke-width="4.4" stroke-linecap="round"/><path d="M9 4 L13 28" stroke="#d6ab7b" stroke-width="2.2" stroke-linecap="round"/><path d="M22 4 L17 28" stroke="${K}" stroke-width="4.4" stroke-linecap="round"/><path d="M22 4 L17 28" stroke="#d6ab7b" stroke-width="2.2" stroke-linecap="round"/><path d="M9 6 l1.5 -2 M22 6 l-1.5 -2" stroke="#ff5d6e" stroke-width="2.4" stroke-linecap="round"/>`,
+  vpnDongle: `<rect x="6" y="11" width="16" height="10" rx="2" ${s('#6ec3ff')}/><rect x="22" y="13" width="6" height="6" ${s('#e8e2f2', 1.4)}/>${line('M10 16 l2 2 4 -4', 1.6)}`,
+
   // special event boons
   lucidDream: `<path d="M7 20 C3 20 3 14 7 14 C7 9 14 8 16 12 C18 8 26 9 25 15 C29 15 29 21 25 21 Z" ${s('#a98bf0')}/><path d="M22 3 l1.2 2.6 2.8 .4 -2 2 .5 2.8 -2.5 -1.3 -2.5 1.3 .5 -2.8 -2 -2 2.8 -.4z" ${s('#ffc53d', 1.2)}/>${line('M10 26 q3 2 6 0 M17 28 q3 2 6 0', 1.4)}`,
   grandmaSoup: `<path d="M4 15 H28 C28 22 23 27 16 27 C9 27 4 22 4 15 Z" ${s('#ff8f6b')}/><ellipse cx="16" cy="15" rx="12" ry="3" fill="#ffe3a8" stroke="${K}" stroke-width="1.6"/>${line('M11 11 q-2 -3 0 -6 M16 11 q-2 -3 0 -6 M21 11 q-2 -3 0 -6', 1.5)}`,

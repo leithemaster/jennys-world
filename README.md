@@ -52,6 +52,7 @@ Rewards don't come from pure dice rolls. Each source draws from its own shuffled
 - **Charms** – three separate decks: *drops* (treasure, elites, events), *shop only* (Member Card, Stamp Card, Shiba Plush, …) and *boss only*.
 - **Conditional items** stay hidden until your deck can use them. Catalyst only shows up once you own Stinger, Glitch Vial needs a Glitch card, Fuzzy Socks needs 3+ Guard/Hoodie Up, and so on.
 - **Events** – every "?" event shows up once before any repeats.
+- **Event-only cards and charms** – 9 cards (rarity `event`) and 4 charms (pool `event`) that never show up in rewards or shops. Events hand them out; each event lists them in `gives`, and the catalog shows which event they come from.
 - **Special events** – 8 conditional "?" events, one per card style plus a Crossover one for hybrid decks. From Floor 2 on, once your deck has 3+ cards of a style (or 2+ hybrid cards), the next "?" room is that special event, at most one per floor. Each offers a boon (a run-long charm that powers up that style), an upgrade for all your cards of that style, or a smaller reward.
 - **Enemies** – you won't meet the same enemy twice until you've seen the rest of that floor's lineup.
 

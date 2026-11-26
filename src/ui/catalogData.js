@@ -16,6 +16,13 @@ import { charmIcon } from './charmIcons.js';
 import { jennyChibi, toniChibi } from './chibi.js';
 
 export function buildCatalog() {
+  // Which events hand out each event-only card / charm (and each boon).
+  const fromEvents = { cards: {}, charms: {} };
+  for (const e of ALL_EVENTS) {
+    for (const k of ['cards', 'charms']) for (const id of e.gives?.[k] || []) (fromEvents[k][id] ||= []).push(e.title);
+    if (e.boon) (fromEvents.charms[e.boon] ||= []).push(e.title);
+  }
+  const fromText = (k, id) => (fromEvents[k][id] ? `Only from: ${fromEvents[k][id].join(', ')}` : '');
 
   const styleName = (d) => [d.arch, d.arch2].filter(Boolean).map((a) => ARCHES[a].name).join(' / ');
   const starterOf = (id) => Object.values(CHARACTERS).map((ch) => [ch.name, ch.deck.filter((c) => c === id).length]).filter(([, n]) => n).map(([n, k]) => `${n} ×${k}`).join(', ');
@@ -23,11 +30,11 @@ export function buildCatalog() {
   const cards = Object.entries(CARDS).map(([id, d]) => ({
     id, name: d.name, type: d.type === 'status' && d.rarity === 'curse' ? 'status' : d.type, rarity: d.rarity,
     style: styleName(d), text: d.text(false), up: d.text(true), exhaust: !!d.exhaust,
-    starter: starterOf(id), requires: d.needs || '', art: icon(d.icon),
+    starter: starterOf(id), requires: d.needs || '', from: fromText('cards', id), art: icon(d.icon),
   }));
 
   const charms = Object.entries(CHARMS).map(([id, c]) => ({
-    id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc, requires: c.needs || '', art: charmIcon(id),
+    id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc, requires: c.needs || fromText('charms', id), art: charmIcon(id),
   }));
 
   const moveText = (m) => {
@@ -57,6 +64,7 @@ export function buildCatalog() {
   const events = ALL_EVENTS.map((e) => ({
     id: e.id, title: e.title, text: e.text, requires: e.needs || '',
     special: !!e.special, style: e.style ? ARCHES[e.style].name : '', boon: e.boon ? CHARMS[e.boon].name : '',
+    gives: [...(e.gives?.cards || []).map((k) => CARDS[k].name), ...(e.gives?.charms || []).map((k) => CHARMS[k].name)],
     options: e.options.map((o) => ({ label: o.label, note: o.note || '', cond: o.can && coinCost(o.label) ? `${coinCost(o.label)}+ ${T.coins}` : '' })),
   }));
 
@@ -65,7 +73,7 @@ export function buildCatalog() {
 
   const styles = Object.entries(ARCHES).map(([id, a]) => ({
     id, name: a.name, color: a.color, desc: a.desc,
-    cards: Object.values(CARDS).filter((c) => c.arch === id || c.arch2 === id).map((c) => c.name + (c.arch2 ? ' (hybrid)' : '')),
+    cards: Object.values(CARDS).filter((c) => c.arch === id || c.arch2 === id).map((c) => c.name + (c.arch2 ? ' (hybrid)' : '') + (c.rarity === 'event' ? ' (event)' : '')),
     charms: Object.values(CHARMS).filter((c) => c.style === id).map((c) => c.name),
   }));
 

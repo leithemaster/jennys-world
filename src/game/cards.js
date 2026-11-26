@@ -6,7 +6,8 @@
 // Wording rule: this game has no "draw a card". Anything that would draw
 // a card reveals cards instead.
 // type: attack | skill | power | status
-// rarity: starter | common | uncommon | rare | status
+// rarity: starter | common | uncommon | rare | event | status
+//   event: only given by events (see `gives` in events.js), never in rewards or shops
 // fx(b, up) runs the effect inside a Battle (b); `up` is true when upgraded.
 // requires(run, h): card stays out of rewards until true; needs: the same rule in plain words (catalog).
 
@@ -378,6 +379,53 @@ export const CARDS = {
     arch: 'exposed', arch2: 'glitch', name: 'Data Leak', type: 'skill', rarity: 'uncommon', icon: 'upload',
     text: (u) => `Apply ${u ? 3 : 2} ${T.exposed} and ${u ? 4 : 3} ${T.glitch}. ${T.block} ${u ? 6 : 4}.`,
     fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); b.gainBlock(u ? 6 : 4); },
+  },
+
+  // ---------- event only: never in card rewards or shops ----------
+  sheepStampede: {
+    arch: 'dreamy', name: 'Sheep Stampede', type: 'attack', rarity: 'event', icon: 'sheep',
+    text: (u) => `Deal ${u ? 6 : 4} twice. Apply 2 ${T.sleepy}.`,
+    fx: (b, u) => { b.attack(u ? 6 : 4); b.attack(u ? 6 : 4); b.applyEnemy('weak', 2); },
+  },
+  dumplings: {
+    arch: 'cozy', name: "Grandma's Dumplings", type: 'skill', rarity: 'event', icon: 'bowl', exhaust: true,
+    text: (u) => `Heal ${u ? 12 : 8}. ${T.cozy}. ${T.exhaust}.`,
+    fx: (b, u) => b.heal(u ? 12 : 8, { cozy: true }),
+  },
+  zeroDay: {
+    arch: 'glitch', name: 'Zero Day', type: 'attack', rarity: 'event', icon: 'chip',
+    text: (u) => `Deal 5. Apply ${u ? 6 : 4} ${T.glitch}.`,
+    fx: (b, u) => { b.attack(5); b.applyEnemy('poison', u ? 6 : 4); },
+  },
+  velvetRope: {
+    arch: 'guard', name: 'Velvet Rope', type: 'skill', rarity: 'event', icon: 'fort',
+    text: (u) => `${T.block} ${u ? 12 : 9}. Gain 2 ${T.spikes}.`,
+    fx: (b, u) => { b.gainBlock(u ? 12 : 9); b.applyPlayer('thorns', 2); },
+  },
+  dejaVu: {
+    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'event', icon: 'eye',
+    text: (u) => `Reveal ${u ? 6 : 4} hidden cards. +1 ${T.energy}.`,
+    fx: (b, u) => { b.reveal(u ? 6 : 4); b.gainEnergy(1); },
+  },
+  perfectChain: {
+    arch: 'combo', name: 'Perfect Chain', type: 'attack', rarity: 'event', icon: 'loop',
+    text: (u) => `Deal ${u ? 8 : 5}. +2 ${T.combo}.`,
+    fx: (b, u) => { b.attack(u ? 8 : 5); b.combo += 2; },
+  },
+  ratiod: {
+    arch: 'exposed', name: "Ratio'd", type: 'attack', rarity: 'event', icon: 'crit',
+    text: (u) => `Apply 2 ${T.exposed}, then deal ${u ? 10 : 7}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', 2); b.attack(u ? 10 : 7); },
+  },
+  teamUp: {
+    arch: 'combo', arch2: 'guard', name: 'Team-Up', type: 'attack', rarity: 'event', icon: 'twin',
+    text: (u) => `Deal ${u ? 8 : 6}. ${T.block} ${u ? 8 : 6}.`,
+    fx: (b, u) => { b.attack(u ? 8 : 6); b.gainBlock(u ? 8 : 6); },
+  },
+  powerBallad: {
+    name: 'Power Ballad', type: 'attack', rarity: 'event', icon: 'mic', exhaust: true,
+    text: (u) => `Deal ${u ? 20 : 14}. ${T.exhaust}.`,
+    fx: (b, u) => b.attack(u ? 20 : 14),
   },
 
   // ---------- status (added by enemies, gone after the fight) ----------

@@ -3,6 +3,7 @@
 //        pickRemove(), pickUpgrade(), pickCopy() }
 //
 // requires(run): the event stays in the deck but is skipped until true; needs: the same rule in plain words.
+// gives: { cards, charms } – the event-only cards/charms it can hand out (the catalog lists where they come from).
 //
 // SPECIAL_EVENTS are conditional: each one waits for a deck that leans into
 // its style. From Floor 2 on, the first "?" room after you qualify is a
@@ -115,11 +116,12 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'karaoke',
+    id: 'karaoke', gives: { cards: ['powerBallad'], charms: ['goldenMic'] },
     title: 'Karaoke Room',
     text: 'Room 4 has a free mic and a song list as thick as a phone book. Someone left the volume on max.',
     options: [
-      { label: 'Belt out a ballad', note: `Lose 8 ${T.hp}. Gain a random rare card.`, go: (r, api) => { r.hp = Math.max(1, r.hp - 8); return `Your voice cracks, but the crowd loves it. You got ${api.addCard(api.randomCard('rare'))}.`; } },
+      { label: 'Belt out a ballad', note: `Lose 6 ${T.hp}. Gain Power Ballad (event card).`, go: (r, api) => { r.hp = Math.max(1, r.hp - 6); return `Your voice cracks, but the crowd loves it. You learned ${api.addCard('powerBallad')}.`; } },
+      { label: 'Pocket the golden mic', note: 'Gain Golden Mic (event charm). Add a Static curse.', go: (r, api) => { api.addCard('static'); return `Nobody saw that. You got ${api.addCharm('goldenMic')}, and your deck feels a little fuzzy.`; } },
       { label: 'Sing a duet', note: 'Heal 10.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 10); return `A stranger joins in. You feel great. +10 ${T.hp}.`; } },
       { label: 'Close the door', go: () => 'Peace and quiet.' },
     ],
@@ -136,30 +138,33 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'ramen',
+    id: 'ramen', gives: { charms: ['luckyChopsticks'] },
     title: 'Cup Ramen Station',
     text: 'A hot water tap and a shelf of cup ramen. One says "EXTREME FIRE NOODLE" in big red letters.',
     options: [
       { label: `Regular cup (10 ${T.coins})`, note: 'Heal 15.', can: (r) => r.coins >= 10, go: (r) => { r.coins -= 10; r.hp = Math.min(r.maxHp, r.hp + 15); return `Slurp. +15 ${T.hp}.`; } },
       { label: 'Extreme Fire Noodle', note: `Lose 5 ${T.hp}. +2 ${T.spirit} in your next fight.`, go: (r) => { r.hp = Math.max(1, r.hp - 5); r.nextFight = { strength: 2 }; return 'SO SPICY. You are fired up for the next fight.'; } },
+      { label: `Lucky chopsticks (25 ${T.coins})`, note: 'Gain Lucky Chopsticks (event charm).', can: (r) => r.coins >= 25, go: (r, api) => { r.coins -= 25; return `They say these never drop a noodle. You got ${api.addCharm('luckyChopsticks')}.`; } },
       { label: 'Not hungry', go: () => 'You move on.' },
     ],
   },
   {
-    id: 'kitten',
+    id: 'kitten', gives: { charms: ['kittenBell'] },
     title: 'Lost Kitten',
     text: 'A tiny kitten is hiding under a desk, meowing at everyone who walks by.',
     options: [
       { label: 'Walk it home', note: 'Remove a card.', go: async (r, api) => `The owner hugs you. ${await api.pickRemove()}` },
+      { label: 'Follow it', note: `Lose 4 ${T.hp}. Gain Kitten Bell (event charm).`, go: (r, api) => { r.hp = Math.max(1, r.hp - 4); return `It leads you through a nest of cables, then drops its bell at your feet. You got ${api.addCharm('kittenBell')}.`; } },
       { label: 'Give it pets', note: `Heal 6. +3 max ${T.hp}.`, go: (r) => { r.maxHp += 3; r.hp = Math.min(r.maxHp, r.hp + 9); return `Purrrr. +3 max ${T.hp} and +6 ${T.hp}.`; } },
     ],
   },
   {
-    id: 'wifi',
+    id: 'wifi', gives: { charms: ['vpnDongle'] },
     title: 'Free Wi-Fi?',
     text: 'A network called "FREE_WIFI_NOT_A_SCAM" pops up. The signal is very strong.',
     options: [
       { label: 'Connect', note: `Gain 45 ${T.coins}. Add a Spam card to your deck.`, go: (r, api) => { r.coins += 45; api.addCard('spam'); return `A pop-up hands you 45 ${T.coins}… and something else.`; } },
+      { label: `Buy a VPN (30 ${T.coins})`, note: 'Gain VPN Dongle (event charm).', can: (r) => r.coins >= 30, go: (r, api) => { r.coins -= 30; return `Safe and sound. You got ${api.addCharm('vpnDongle')}.`; } },
       { label: 'Stay offline', go: () => 'Smart choice.' },
     ],
   },
@@ -179,77 +184,77 @@ const upgradeStyle = (arch, label) => ({
 
 export const SPECIAL_EVENTS = [
   special('dreamy', {
-    id: 'dreamworld', boon: 'lucidDream',
+    id: 'dreamworld', boon: 'lucidDream', gives: { cards: ['sheepStampede'] },
     title: 'Dreamworld',
     text: 'You nod off at a PC and wake up somewhere soft and purple. Sheep float past. A sign says "Stay as long as you like."',
     options: [
       { label: 'Drift deeper', note: `Gain Lucid Dream: the first Dreamy card you match each turn applies 1 more ${T.sleepy}.`, go: (r, api) => `You learn to steer your dreams. ${api.addCharm('lucidDream')}!` },
       upgradeStyle('dreamy', 'Count the stars'),
-      { label: 'Wake up', note: 'Heal 12.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 12); return `Best nap ever. +12 ${T.hp}.`; } },
+      { label: 'Chase the sheep', note: 'Gain Sheep Stampede (event card).', go: (r, api) => `The sheep follow you home. You got ${api.addCard('sheepStampede')}.` },
     ],
   }),
   special('cozy', {
-    id: 'grandma', boon: 'grandmaSoup',
+    id: 'grandma', boon: 'grandmaSoup', gives: { cards: ['dumplings'] },
     title: "Grandma's Kitchen",
     text: 'Behind a noren curtain there is a tiny kitchen. A grandma waves you in: "You look hungry. Sit, sit!"',
     options: [
       { label: 'Eat the soup', note: `Gain Grandma's Soup: all your healing is ${T.cozy}.`, go: (r, api) => `Warm all the way down. ${api.addCharm('grandmaSoup')}!` },
       upgradeStyle('cozy', 'Help with the dishes'),
-      { label: 'Take leftovers', note: `+6 max ${T.hp}. Heal 6.`, go: (r) => { r.maxHp += 6; r.hp = Math.min(r.maxHp, r.hp + 12); return `"Eat well!" +6 max ${T.hp}.`; } },
+      { label: 'Take leftovers', note: "Gain Grandma's Dumplings (event card).", go: (r, api) => `"Eat well!" You got ${api.addCard('dumplings')}.` },
     ],
   }),
   special('glitch', {
-    id: 'backroom', boon: 'rootAccess',
+    id: 'backroom', boon: 'rootAccess', gives: { cards: ['zeroDay'] },
     title: 'The Back Room',
     text: 'A locked server closet, but the admin password is on a sticky note on the door. The screen inside glows green.',
     options: [
       { label: 'Log in as admin', note: `Gain Root Access: your Glitch cards apply 2 more ${T.glitch}.`, go: (r, api) => `Access granted. ${api.addCharm('rootAccess')}!` },
       upgradeStyle('glitch', 'Install updates'),
-      { label: 'Sell the password', note: `Gain 60 ${T.coins}.`, go: (r) => { r.coins += 60; return `Someone pays 60 ${T.coins} for a sticky note.`; } },
+      { label: 'Copy the exploit', note: 'Gain Zero Day (event card).', go: (r, api) => `You save it to a USB stick. You got ${api.addCard('zeroDay')}.` },
     ],
   }),
   special('guard', {
-    id: 'bouncerclass', boon: 'bouncerStance',
+    id: 'bouncerclass', boon: 'bouncerStance', gives: { cards: ['velvetRope'] },
     title: 'Bouncer Lessons',
     text: 'The café bouncer is on break. "You block like a pro. Want to learn the real stance?"',
     options: [
       { label: 'Learn the stance', note: `Gain Bouncer's Stance: your Guard cards give 2 more ${T.block}.`, go: (r, api) => `"Feet wide. Chin down." ${api.addCharm('bouncerStance')}!` },
       upgradeStyle('guard', 'Run drills'),
-      { label: 'Just chat', note: `+5 max ${T.hp}.`, go: (r) => { r.maxHp += 5; r.hp += 5; return `Good talk. +5 max ${T.hp}.`; } },
+      { label: 'Borrow the rope', note: 'Gain Velvet Rope (event card).', go: (r, api) => `"Bring it back." You got ${api.addCard('velvetRope')}.` },
     ],
   }),
   special('memory', {
-    id: 'palace', boon: 'palaceKey',
+    id: 'palace', boon: 'palaceKey', gives: { cards: ['dejaVu'] },
     title: 'Memory Palace',
     text: 'A door you have never noticed opens into a hall of photos: every card you have ever matched, hung in neat rows.',
     options: [
       { label: 'Take the key', note: 'Gain Palace Key: the first Memory card you match each turn reveals 1 more card.', go: (r, api) => `You will never forget a face. ${api.addCharm('palaceKey')}!` },
       upgradeStyle('memory', 'Study the photos'),
-      { label: 'Take a photo', note: 'Gain a random Memory card.', go: (r, api) => `You got ${api.addCard(api.styleCard('memory', 'uncommon'))}.` },
+      { label: 'Take a photo', note: 'Gain Déjà Vu (event card).', go: (r, api) => `Wait, haven't you been here before? You got ${api.addCard('dejaVu')}.` },
     ],
   }),
   special('combo', {
-    id: 'rhythm', boon: 'encore',
+    id: 'rhythm', boon: 'encore', gives: { cards: ['perfectChain'] },
     title: 'Rhythm Tournament',
     text: 'The rhythm game corner is hosting a tournament, and your combos have the crowd chanting your name.',
     options: [
       { label: 'Play the final', note: `Gain Encore: the first Combo card you match each turn adds 1 more ${T.combo}.`, go: (r, api) => `Full combo! The crowd wants more. ${api.addCharm('encore')}!` },
       upgradeStyle('combo', 'Practice the hard chart'),
-      { label: 'Take the prize money', note: `Gain 60 ${T.coins}.`, go: (r) => { r.coins += 60; return `Second place, 60 ${T.coins}. Not bad.`; } },
+      { label: 'Take the trophy', note: 'Gain Perfect Chain (event card).', go: (r, api) => `Engraved and everything. You got ${api.addCard('perfectChain')}.` },
     ],
   }),
   special('exposed', {
-    id: 'viral', boon: 'trending',
+    id: 'viral', boon: 'trending', gives: { cards: ['ratiod'] },
     title: 'Viral Thread',
     text: 'Your call-outs went viral. Everyone in the café is reading the thread, and they all want the next post.',
     options: [
       { label: 'Post the sequel', note: `Gain Trending: ${T.exposed} enemies take 75% more damage instead of 50%.`, go: (r, api) => `#1 trending. ${api.addCharm('trending')}!` },
       upgradeStyle('exposed', 'Edit for clarity'),
-      { label: 'Log off', note: 'Heal 12.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 12); return `Touch grass. +12 ${T.hp}.`; } },
+      { label: 'Quote-tweet a hater', note: "Gain Ratio'd (event card).", go: (r, api) => `Brutal. You got ${api.addCard('ratiod')}.` },
     ],
   }),
   {
-    id: 'crossover', boon: 'crossover', special: true, style: null,
+    id: 'crossover', boon: 'crossover', gives: { cards: ['teamUp'] }, special: true, style: null,
     requires: (r) => hybridCount(r) >= 2,
     needs: '2+ hybrid cards',
     title: 'Crossover Episode',
@@ -257,10 +262,7 @@ export const SPECIAL_EVENTS = [
     options: [
       { label: 'Watch the whole thing', note: `Gain Crossover: the first hybrid card you match in each fight gives +2 ${T.energy}.`, go: (r, api) => `Best episode ever. ${api.addCharm('crossover')}!` },
       { label: 'Read the fan wiki', note: 'Upgrade all your hybrid cards.', go: (r, api) => upgradeText(api.upgradeAll((d) => !!d.arch2), 'hybrid') },
-      { label: 'Buy the merch', note: 'Gain a random hybrid card.', go: (r, api) => {
-        const ids = Object.keys(CARDS).filter((id) => CARDS[id].arch2 && CARDS[id].rarity !== 'starter');
-        return `You got ${api.addCard(ids[Math.floor(Math.random() * ids.length)])}.`;
-      } },
+      { label: 'Buy the merch', note: 'Gain Team-Up (event card).', go: (r, api) => `Limited edition. You got ${api.addCard('teamUp')}.` },
     ],
   },
 ];

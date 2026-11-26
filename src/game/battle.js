@@ -158,6 +158,7 @@ export class Battle {
   miss() {
     this.emit('sfx', 'miss');
     if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
+    else if (this.has('kittenBell') && !this.bellUsed) { this.bellUsed = true; this.log(`Miss! Kitten Bell keeps your ${T.combo}.`); }
     else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log(`Miss! Groove keeps half your ${T.combo}.`); }
     else { this.combo = 0; this.log('No match…'); }
     if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
@@ -177,6 +178,7 @@ export class Battle {
     if (def.exhaust || def.type === 'power') { card._exhaust = true; if (b.card !== a.card) b.card._exhaust = true; }
     this.emit('play', card);
     if (def.type === 'power' && this.has('powerBank')) this.gainEnergy(1);
+    if (def.rarity === 'status' && this.has('vpnDongle')) this.gainBlock(4);
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
     if (this.has('encore') && (def.arch === 'combo' || def.arch2 === 'combo') && !this.flags.encore) { this.flags.encore = true; this.combo += 1; }
     if (this.has('crossover') && def.arch2 && !this.crossoverUsed) { this.crossoverUsed = true; this.gainEnergy(2); this.log(`Crossover! +2 ${T.energy}.`); }
@@ -201,6 +203,7 @@ export class Battle {
       if (this.has('strap')) this.gainBlock(6);
       if (this.has('lipTint')) this.heal(3);
       if (this.has('snackBag')) this.heal(2);
+      if (this.has('goldenMic')) this.attack(5, { raw: true });
       this.log(`Board cleared! +1 ${T.energy}.`);
       this.emit('sfx', 'clear');
       this.emit('cleared');
@@ -324,7 +327,7 @@ export class Battle {
   startTurn() {
     this.turn += 1;
     if (!this.powers.fortress) this.player.block = this.turn === 1 ? this.player.block : 0;
-    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
+    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
     this.combo = this.has('stickers') ? 1 : 0;
     this.matchesThisTurn = 0;
     this.flags = {};

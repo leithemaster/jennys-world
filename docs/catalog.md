@@ -46,7 +46,7 @@ Each set has a matching look for Jenny and Toni, and both unlock together. Open 
 
 ## Cards by style
 
-### Glitch (7)
+### Glitch (8)
 
 Stack Glitch and let it tick the enemy down.
 
@@ -59,8 +59,9 @@ Stack Glitch and let it tick the enemy down.
 | Corrupt | Glitch | attack | uncommon | Deal damage equal to the enemy's Glitch. | Deal damage equal to the enemy's Glitch +6. | yes |
 | Data Leak | Exposed / Glitch | skill | uncommon | Apply 2 Exposed and 3 Glitch. Block 4. | Apply 3 Exposed and 4 Glitch. Block 6. |  |
 | Malware | Glitch | power | rare | Power: apply 3 Glitch at the start of each turn. | Power: apply 4 Glitch at the start of each turn. |  |
+| Zero Day | Glitch | attack | event | Deal 5. Apply 4 Glitch. | Deal 5. Apply 6 Glitch. |  |
 
-### Guard (8)
+### Guard (10)
 
 Pile up Block and hit back with it.
 
@@ -74,8 +75,10 @@ Pile up Block and hit back with it.
 | Shield Bash | Guard | attack | uncommon | Deal damage equal to your Block. | Deal damage equal to your Block +5. | yes |
 | Blanket Fort | Guard | power | rare | Power: Block no longer resets. | Power: Block no longer resets. Block 10. | yes |
 | Iron Hoodie | Guard | power | rare | Power: gain 3 Block at the start of each turn. | Power: gain 5 Block at the start of each turn. |  |
+| Team-Up | Combo / Guard | attack | event | Deal 6. Block 6. | Deal 8. Block 8. |  |
+| Velvet Rope | Guard | skill | event | Block 9. Gain 2 Spikes. | Block 12. Gain 2 Spikes. |  |
 
-### Combo (8)
+### Combo (10)
 
 Chain matches for big combo damage.
 
@@ -89,6 +92,8 @@ Chain matches for big combo damage.
 | Ricochet | Combo | attack | uncommon | Deal 3 for each match this turn. | Deal 5 for each match this turn. |  |
 | Button Mash | Combo | attack | rare | Deal 2, 7 times. | Deal 2, 10 times. |  |
 | Groove | Combo | power | rare | Power: a miss only halves your combo. | Power: a miss only halves your combo. +1 energy. |  |
+| Perfect Chain | Combo | attack | event | Deal 5. +2 combo. | Deal 8. +2 combo. |  |
+| Team-Up | Combo / Guard | attack | event | Deal 6. Block 6. | Deal 8. Block 8. |  |
 
 ### Memory (8)
 
@@ -102,10 +107,10 @@ Reveal cards and never miss.
 | Memory Lane | Memory | skill | uncommon | Show every card for a moment. Block 4. | Show every card for a moment. Block 8. |  |
 | Snitch | Exposed / Memory | skill | uncommon | Apply 1 Exposed. Reveal 2 hidden cards. Block 4. | Apply 2 Exposed. Reveal 3 hidden cards. Block 6. |  |
 | Spotlight | Memory | power | uncommon | Power: matching a revealed card deals 4. | Power: matching a revealed card deals 6. |  |
-| Déjà Vu | Memory | skill | rare | Reveal all cards, or the next board if none are left. Exhaust. | Reveal all cards, or the next board if none are left. +1 energy. Exhaust. |  |
 | Photo Memory | Memory | power | rare | Power: your first miss each turn is free. | Power: your first miss each turn is free. Reveal 2. |  |
+| Déjà Vu | Memory | skill | event | Reveal 4 hidden cards. +1 energy. | Reveal 6 hidden cards. +1 energy. |  |
 
-### Dreamy (9)
+### Dreamy (10)
 
 Build Sleepy until the enemy falls Asleep.
 
@@ -120,8 +125,9 @@ Build Sleepy until the enemy falls Asleep.
 | Nap Time | Dreamy / Cozy | skill | uncommon | Heal 3, or 7 if the enemy is Asleep. Cozy. | Heal 4, or 9 if the enemy is Asleep. Cozy. |  |
 | Pillow Fight | Dreamy | attack | uncommon | Deal 7. Double damage if the enemy is Asleep. | Deal 10. Double damage if the enemy is Asleep. | yes |
 | Deep Sleep | Dreamy | power | rare | Power: enemies stay Asleep 1 turn longer. | Power: enemies stay Asleep 1 turn longer. Apply 2 Sleepy. | yes |
+| Sheep Stampede | Dreamy | attack | event | Deal 4 twice. Apply 2 Sleepy. | Deal 6 twice. Apply 2 Sleepy. |  |
 
-### Cozy (8)
+### Cozy (9)
 
 Heal up, and turn extra healing into damage.
 
@@ -135,8 +141,9 @@ Heal up, and turn extra healing into damage.
 | Nap Time | Dreamy / Cozy | skill | uncommon | Heal 3, or 7 if the enemy is Asleep. Cozy. | Heal 4, or 9 if the enemy is Asleep. Cozy. |  |
 | Second Helping | Cozy | attack | uncommon | Deal damage equal to the HP you have healed this fight (max 30). | Deal damage equal to the HP you have healed this fight (max 30) +6. | yes |
 | Sweet Dreams | Cozy | power | rare | Power: whenever you heal, deal that much damage. | Power: whenever you heal, deal that much damage. Heal 4. | yes |
+| Grandma's Dumplings | Cozy | skill | event | Heal 8. Cozy. Exhaust. | Heal 12. Cozy. Exhaust. |  |
 
-### Exposed (7)
+### Exposed (8)
 
 Stack Exposed and hit where it hurts.
 
@@ -149,8 +156,9 @@ Stack Exposed and hit where it hurts.
 | Roast | Exposed | attack | uncommon | Deal 5, +3 for each Exposed on the enemy. | Deal 7, +4 for each Exposed on the enemy. | yes |
 | Snitch | Exposed / Memory | skill | uncommon | Apply 1 Exposed. Reveal 2 hidden cards. Block 4. | Apply 2 Exposed. Reveal 3 hidden cards. Block 6. |  |
 | Roast Battle | Exposed | power | rare | Power: Exposed on enemies no longer wears off. | Power: Exposed on enemies no longer wears off. Apply 2 Exposed. | yes |
+| Ratio'd | Exposed | attack | event | Apply 2 Exposed, then deal 7. | Apply 2 Exposed, then deal 10. |  |
 
-### No style (11)
+### No style (12)
 
 | Card | Style | Type | Rarity | Effect | Upgraded | Conditional |
 |---|---|---|---|---|---|---|
@@ -165,8 +173,9 @@ Stack Exposed and hit where it hurts.
 | Spiky Jacket | — | power | uncommon | Power: when hit, deal 3 back. | Power: when hit, deal 5 back. |  |
 | Critical Hit | — | attack | rare | Deal 30. Exhaust. | Deal 40. Exhaust. |  |
 | Overclock | — | skill | rare | +3 energy. Take 3 damage. | +4 energy. Take 3 damage. |  |
+| Power Ballad | — | attack | event | Deal 14. Exhaust. | Deal 20. Exhaust. |  |
 
-### Hybrids (7)
+### Hybrids (8)
 
 - **Trip**: Guard / Dreamy
 - **Group Hug**: Cozy / Guard
@@ -175,6 +184,7 @@ Stack Exposed and hit where it hurts.
 - **Dream Journal**: Dreamy / Memory
 - **Heckle**: Exposed / Combo
 - **Data Leak**: Exposed / Glitch
+- **Team-Up**: Combo / Guard
 
 ## Charms
 
@@ -238,6 +248,15 @@ Stack Exposed and hit where it hurts.
 | Clicky Keyboard |  | Each match adds 2 combo instead of 1. |  |
 | Big Headphones |  | At the start of each turn, reveal 1 card. |  |
 | Giant Plushie |  | Heal 12 after each fight. +8 max HP. |  |
+
+### Event only (4)
+
+| Charm | Style | Effect | Conditional |
+|---|---|---|---|
+| Kitten Bell |  | Your first miss in each fight doesn't reset your combo. |  |
+| Golden Mic |  | Clearing a board deals 5 damage. |  |
+| Lucky Chopsticks |  | +1 energy on your first turn against elites and bosses. |  |
+| VPN Dongle |  | Matching a Spam, Lag or Bug card gives 4 Block. |  |
 
 ### Special event boons (8)
 

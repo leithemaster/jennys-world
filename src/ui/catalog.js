@@ -11,8 +11,8 @@ import { outfitOpen } from '../game/outfits.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
-const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', special: 'Special event' };
-const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, status: 4, curse: 5 };
+const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', event: 'Event only', special: 'Special event' };
+const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, event: 4, status: 5, curse: 6 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 const HIDDEN = '???';
 
@@ -102,7 +102,7 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>') },
       { label: 'Effect', cell: (r) => (r.found ? esc(r.text) : '') },
       { label: 'Upgraded (+)', cell: (r) => (!r.found ? '' : r.rarity === 'status' || r.rarity === 'curse' ? '<span class="small">Can’t upgrade</span>' : r.up === r.text ? '<span class="small">Same</span>' : `<span class="up">${esc(r.up)}</span>`) },
-      { label: 'Shows up when', cell: (r) => (!r.found ? '' : r.starter ? `<span class="small">Starter deck: ${esc(r.starter)}</span>` : r.requires ? `<span class="small">Needs ${esc(r.requires)}</span>` : r.rarity === 'status' ? '<span class="small">Added by enemies</span>' : r.rarity === 'curse' ? '<span class="small">From events</span>' : '<span class="small">Always</span>') },
+      { label: 'Shows up when', cell: (r) => (!r.found ? '' : r.starter ? `<span class="small">Starter deck: ${esc(r.starter)}</span>` : r.from ? `<span class="small">${esc(r.from)}</span>` : r.requires ? `<span class="small">Needs ${esc(r.requires)}</span>` : r.rarity === 'status' ? '<span class="small">Added by enemies</span>' : r.rarity === 'curse' ? '<span class="small">From events</span>' : '<span class="small">Always</span>') },
     ], [['all', 'All'], ['attack', 'Attack'], ['skill', 'Skill'], ['power', 'Power'], ['status', 'Status']], 'type',
     'Every card you have been offered or picked up. Each card in your deck is a pair on the board; match the pair to play it. Hybrid cards count toward two styles.'),
 
@@ -113,7 +113,7 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>') },
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Only shows up if', cell: (r) => (!r.found ? '' : r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>') },
-    ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['special', 'Special event']], 'pool',
+    ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
     'Every charm you have been offered or picked up. Charms are passive and last the whole run.'),
 
     enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss').map((r) => hide(r, ['kind', 'floor', 'art'])), [
@@ -141,7 +141,7 @@ export function catalogScreen(app, { onBack }) {
 
     styles: () => {
       const cardFound = Object.fromEntries(D.cards.map((c) => [c.name, c.found]));
-      const nm = (n) => (cardFound[n.replace(' (hybrid)', '')] === false ? HIDDEN : n);
+      const nm = (n) => (cardFound[n.replace(' (hybrid)', '').replace(' (event)', '')] === false ? HIDDEN : n);
       return `<section class="sheet"><p class="note">Every style is open to every character. Once your deck leans into a style, card rewards and shops offer more of it (starter cards don't count). Hybrid cards count toward two styles.</p>
       <ul class="opts"><li><b>Sleepy → Asleep:</b> an enemy that reaches ${D.rules.sleepAt} Sleepy skips its next ${D.rules.sleepTurns} turns (bosses ${D.rules.bossSleepTurns}). It can't get more Sleepy while asleep, and each time it wakes up it takes ${D.rules.sleepGrow} more to fall asleep again.</li><li><b>Cozy:</b> on a Cozy card, healing past your max HP hits the enemy.</li></ul>
       <div class="grid">${D.styles.map((s) => `<article class="tile" style="border-top:10px solid ${s.color}"><h3>${esc(s.name)}</h3><p>${esc(s.desc)}</p>

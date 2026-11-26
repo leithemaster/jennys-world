@@ -72,7 +72,7 @@ ul.moves li { margin: 1px 0; }
 .tag.attack { background: var(--coral); } .tag.skill { background: var(--sky); } .tag.power { background: var(--lilac); } .tag.status, .tag.curse { background: var(--grey); }
 .tag.starter { background: #fff; } .tag.common { background: #eee6df; } .tag.uncommon { background: var(--mint); } .tag.rare { background: var(--sun); }
 .tag.haru { background: var(--ring); } .tag.drop { background: #eee6df; } .tag.shop { background: var(--sun); } .tag.boss, .tag.Boss { background: var(--pink); color: #fff; }
-.tag.special { background: #5b6fc9; color: #fff; } .tile.special { border-color: #5b6fc9; box-shadow: 4px 4px 0 #5b6fc9; }
+.tag.event { background: #a98bf0; color: #fff; } .tag.special { background: #5b6fc9; color: #fff; } .tile.special { border-color: #5b6fc9; box-shadow: 4px 4px 0 #5b6fc9; }
 .tag.Elite { background: var(--lilac); } .tag.Normal { background: #eee6df; }
 .style { font-weight: 800; }
 
@@ -110,8 +110,8 @@ ul.moves li { margin: 1px 0; }
 <script>
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => s ? s[0].toUpperCase() + s.slice(1) : '';
-const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', special: 'Special event' };
-const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, status: 4, curse: 5 };
+const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', event: 'Event only', special: 'Special event' };
+const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, event: 4, status: 5, curse: 6 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 let D;
 
@@ -159,7 +159,7 @@ const VIEWS = {
     { label: 'Style', key: 'style', cell: (r) => r.style ? `<span class="style">${esc(r.style)}</span>${r.style.includes('/') ? '<span class="id">hybrid</span>' : ''}` : '<span class="small">—</span>' },
     { label: 'Effect', cell: (r) => esc(r.text) },
     { label: 'Upgraded (+)', cell: (r) => r.rarity === 'status' || r.rarity === 'curse' ? '<span class="small">Can’t upgrade</span>' : r.up === r.text ? '<span class="small">Same</span>' : `<span class="up">${esc(r.up)}</span>` },
-    { label: 'Shows up when', cell: (r) => r.starter ? `<span class="small">Starter deck: ${esc(r.starter)}</span>` : r.requires ? `<span class="small">${esc(r.requires)}</span>` : r.rarity === 'status' ? '<span class="small">Added by enemies</span>' : r.rarity === 'curse' ? '<span class="small">From events</span>' : '<span class="small">Always</span>' },
+    { label: 'Shows up when', cell: (r) => r.starter ? `<span class="small">Starter deck: ${esc(r.starter)}</span>` : r.from ? `<span class="small">${esc(r.from)}</span>` : r.requires ? `<span class="small">${esc(r.requires)}</span>` : r.rarity === 'status' ? '<span class="small">Added by enemies</span>' : r.rarity === 'curse' ? '<span class="small">From events</span>' : '<span class="small">Always</span>' },
   ], [['all', 'All'], ['attack', 'Attack'], ['skill', 'Skill'], ['power', 'Power'], ['status', 'Status']], 'type',
   'Each card in your deck is a pair on the board. Match the pair to play it; each flip costs energy. Upgrades come from Practice at rest booths and some events. There is no “draw a card”: anything that would draw reveals cards instead. Hybrid cards count toward two styles.'),
 
@@ -170,7 +170,7 @@ const VIEWS = {
     { label: 'Style', key: 'style', cell: (r) => r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">—</span>' },
     { label: 'Effect', cell: (r) => esc(r.desc) },
     { label: 'Only shows up if', cell: (r) => r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>' },
-  ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['special', 'Special event']], 'pool',
+  ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
   `Charms are passive and last the whole run. Haru's Gift offers 3 of the ${D.charms.filter((c) => c.pool === 'haru').length} starters at the start. Shop-only charms never drop anywhere else.`),
 
   enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss'), [

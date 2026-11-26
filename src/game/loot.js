@@ -98,7 +98,7 @@ export function deckStyle(run) {
 
 export function drawStyleCard(run, arch, rarity, exclude = []) {
   const ok = (id) => !exclude.includes(id) && cardAllowed(run, id);
-  const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && (!r || CARDS[id].rarity === r));
+  const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && CARDS[id].rarity !== 'event' && (!r || CARDS[id].rarity === r));
   return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || drawFrom(run, `card:${arch}:any`, () => ids(), ok);
 }
 

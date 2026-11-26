@@ -5,6 +5,7 @@
 //   boss – only offered after beating a boss
 //   haru – Haru's Gift, pick 1 of 3 at the start of a run
 //   special – boons from special events only (see events.js); they power up one style
+//   event – only given by regular "?" events
 // requires(run, h): optional; the charm stays hidden until this is true.
 
 import { T } from './terms.js';
@@ -60,6 +61,12 @@ export const CHARMS = {
   keyboard: { name: 'Clicky Keyboard', icon: '⌨️', pool: 'boss', desc: `Each match adds 2 ${T.combo} instead of 1.` },
   headset: { name: 'Big Headphones', icon: '🎧', pool: 'boss', desc: 'At the start of each turn, reveal 1 card.' },
   plush: { name: 'Giant Plushie', icon: '🧸', pool: 'boss', desc: `Heal 12 after each fight. +8 max ${T.hp}.` },
+
+  // ----- event only (regular "?" events) -----
+  kittenBell: { name: 'Kitten Bell', icon: '🔔', pool: 'event', desc: `Your first miss in each fight doesn't reset your ${T.combo}.` },
+  goldenMic: { name: 'Golden Mic', icon: '🎙️', pool: 'event', desc: 'Clearing a board deals 5 damage.' },
+  luckyChopsticks: { name: 'Lucky Chopsticks', icon: '🥢', pool: 'event', desc: `+1 ${T.energy} on your first turn against elites and bosses.` },
+  vpnDongle: { name: 'VPN Dongle', icon: '🔌', pool: 'event', desc: `Matching a Spam, Lag or Bug card gives 4 ${T.block}.` },
 
   // ----- special event boons (only from special events) -----
   lucidDream: { name: 'Lucid Dream', icon: '🌌', pool: 'special', style: 'dreamy', desc: `The first Dreamy card you match each turn applies 1 more ${T.sleepy}.` },
