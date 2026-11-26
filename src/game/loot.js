@@ -19,6 +19,7 @@ import { CHARMS } from './charms.js';
 import { EVENTS, SPECIAL_EVENTS } from './events.js';
 import { ACTS } from './enemies.js';
 import { SNACKS, SNACK_DROP } from './snacks.js';
+import { climbOn, CLIMB_RULES as CR } from './climb.js';
 
 const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -66,7 +67,8 @@ const cardIds = (rarity) => Object.keys(CARDS).filter((id) => CARDS[id].rarity =
 export function rollRarity(run, kind) {
   if (kind === 'boss') return 'rare';
   const loot = ensure(run);
-  const rare = (kind === 'elite' ? 10 : 3) + loot.rarePity;
+  // climb level 6: normal fights show about 10% fewer rares (0.78 on the roll, since pity makes up part of the gap)
+  const rare = ((kind === 'elite' ? 10 : 3) + loot.rarePity) * (kind !== 'elite' && climbOn(run, 6) ? CR.normalRare : 1);
   const uncommon = kind === 'elite' ? 40 : 37;
   const r = Math.random() * 100;
   if (r < rare) { loot.rarePity = -5; return 'rare'; }

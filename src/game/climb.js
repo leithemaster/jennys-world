@@ -10,7 +10,7 @@ export const CLIMB = [
   { name: 'Sharper hits', text: 'Enemies deal 10% more damage.' },
   { name: 'Price hike', text: 'Shop prices are 10% higher.' },
   { name: 'Big bosses', text: 'Bosses have 15% more HP.' },
-  { name: 'Slim pickings', text: 'Card rewards offer 2 cards instead of 3.' },
+  { name: 'Slim pickings', text: 'Rare cards show up 10% less often in rewards from normal fights.' },
   { name: 'Foggy boards', text: '1 fewer free reveal on every board.' },
   { name: 'Tired start', text: 'Start with 10% less max HP.' },
   { name: 'Leftovers', text: 'Start with a Leftovers curse in your deck. Matching it exhausts it for the fight, but it comes back next fight.' },
@@ -23,5 +23,5 @@ export const climbOn = (run, n) => (run?.climb || 0) >= n;
 // Numbers the game reads (kept here so tuning a level is one edit).
 export const CLIMB_RULES = {
   eliteHp: 1.15, bossHp: 1.15, enemyDamage: 1.1, shopPrice: 1.1,
-  napHeal: 0.2, rewardChoices: 2, revealLoss: 1, maxHp: 0.9, curse: 'leftovers', bigSpirit: 1,
+  napHeal: 0.2, normalRare: 0.78, revealLoss: 1, maxHp: 0.9, curse: 'leftovers', bigSpirit: 1,
 };
