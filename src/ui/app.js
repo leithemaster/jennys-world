@@ -45,7 +45,7 @@ function startNewRun() { pickCharacter(); }
 // from before unlocks existed: reaching past a floor's boss room counts.
 function syncUnlocks() {
   // Testing switch: open the game with ?unlockall to unlock every character
-  // and outfit and fill in the whole Memory Catalog.
+  // and outfit and fill in the whole Kioku Catalog.
   if (new URLSearchParams(location.search).has('unlockall')) {
     Object.keys(CHARACTERS).forEach((id) => unlock('characters', id));
     Object.keys(OUTFITS).forEach((id) => unlock('outfits', id));
@@ -339,7 +339,7 @@ export function title() {
       <button class="btn big ${saved ? '' : 'yellow'}" data-new>${saved ? 'New run' : 'Start a run'}</button>
       <button class="btn big ghost" data-help>How to play</button>
       <button class="btn big ghost" data-outfits>Outfits</button>
-      <button class="btn big ghost" data-catalog>Memory Catalog</button>
+      <button class="btn big ghost" data-catalog>Kioku Catalog</button>
       <button class="btn big ghost" data-sound>Settings</button>
     </div>
     <div class="home-stats"><dl class="stats">

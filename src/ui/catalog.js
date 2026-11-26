@@ -1,4 +1,4 @@
-// The Memory Catalog: every character, outfit, card, charm, enemy, boss and
+// The Kioku Catalog: every character, outfit, card, charm, enemy, boss and
 // event, with the in-game art. Built from buildCatalog() (catalogData.js), so
 // anything added to the game files shows up here on its own. Things the
 // player hasn't found or unlocked yet are greyed out and their names hidden,
@@ -185,7 +185,7 @@ export function catalogScreen(app, { onBack }) {
     const t = totalFound();
     root.innerHTML = `<main class="cat">
       <header class="cat-head">
-        <div><h1>Memory <span>Catalog</span></h1><p class="sub">Everything you've found in the ${esc('Net Café Tower')}. Greyed-out entries are still waiting for you.</p></div>
+        <div><h1>Kioku <span>Catalog</span></h1><p class="sub">Everything you've found in the ${esc('Net Café Tower')}. Greyed-out entries are still waiting for you.</p></div>
         <div class="cat-side"><span class="count"><b>${t.found}</b> of ${t.all} found</span><button class="btn yellow" data-back>Back</button></div>
       </header>
       <nav class="cat-tabs" aria-label="Sections">${TABS.map((x) => `<button data-tab="${x.id}" aria-current="${state.tab === x.id ? 'page' : 'false'}">${x.label}</button>`).join('')}</nav>

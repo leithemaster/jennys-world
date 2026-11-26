@@ -1,5 +1,5 @@
-// Everything the Memory Catalog shows, built from the game files and the
-// in-game art. Used by the in-game Memory Catalog (src/ui/catalog.js) and by
+// Everything the Kioku Catalog shows, built from the game files and the
+// in-game art. Used by the in-game Kioku Catalog (src/ui/catalog.js) and by
 // tools/catalog-page.mjs, which writes the same data for the published page.
 // Add a card, charm, enemy, event, character or outfit to the game files and
 // it shows up in both automatically.

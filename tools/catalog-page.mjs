@@ -1,6 +1,6 @@
 // Writes tools/catalog-page/data.json for the published catalog page
 // (tools/catalog-page/index.html). The data itself comes from
-// src/ui/catalogData.js, the same builder the in-game Memory Catalog uses.
+// src/ui/catalogData.js, the same builder the in-game Kioku Catalog uses.
 //   npm run catalog     then republish index.html + data.json
 import { writeFileSync } from 'node:fs';
 

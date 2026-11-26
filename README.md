@@ -17,7 +17,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 
 Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each ending in one of 3 bosses (picked per run and shown on the map). Some bosses steal coins (you get them back if you win), drain HP or ban a card for the fight. Bosses don't repeat a fixed pattern: each one draws its moves from a bag of 10 marbles (no repeats until the bag is empty, never its biggest hit first, never 3 attacks in a row while it has anything else, plus combos like "after a Spirit boost, usually an attack"). The marbles under the boss show what's left. On the map pick fights, elites, "?" events, shops, rest booths and treasure. Build your deck from 55+ cards, collect 40+ charms, and upgrade or remove cards along the way. Runs are saved in the browser so you can continue later, and a separate progress save remembers stats, unlocks and everything you've found (see `docs/save-format.md`).
 
-**Memory Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
+**Kioku Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
 
 The full list of characters, cards and charms is in **[docs/catalog.md](docs/catalog.md)**. There's also a visual catalog page with the in-game art (`tools/catalog-page/`, published as a private artifact). Both are generated from the game files: run `npm run catalog` after changing cards, charms, enemies, characters or outfits, then republish `tools/catalog-page/index.html` with its `data.json`.
 
@@ -30,7 +30,7 @@ Pick who climbs at the start of each run. Every card style is open to every char
 
 ## Couple outfits
 
-Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit and fill in the whole Memory Catalog, for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
+Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit and fill in the whole Kioku Catalog, for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
 
 ## Haru's Gift
 
