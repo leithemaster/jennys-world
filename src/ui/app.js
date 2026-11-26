@@ -103,7 +103,7 @@ function header() {
       <span class="pill hp" aria-label="Health">${uiIcon('heart')}<b>${run.hp}</b>/${run.maxHp}</span>
       <span class="pill coins" aria-label="Coins">${uiIcon('coin')}<b>${run.coins}</b></span>
       <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/10</small></span>
-      ${run.climb ? `<span class="pill climb" data-tip="${esc(climbTip(run.climb))}" aria-label="Climb level ${run.climb}">${uiIcon('flag')}<b>${run.climb}</b></span>` : ''}
+      ${run.climb ? `<span class="pill climb" data-tip="${esc(climbTip(run.climb))}" aria-label="Level ${run.climb}">${uiIcon('flag')}<b>${run.climb}</b></span>` : ''}
     </div>
     <div class="bar-snacks" aria-label="Snack bar">${snackBar(run).map((id, i) => (id ? `<button class="snack" data-snack="${i}" data-tip="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}" aria-label="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}">${snackIcon(id)}</button>` : '<span class="snack empty" title="Empty snack slot"></span>')).join('')}</div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
@@ -377,7 +377,7 @@ function historyScreen(filter = 'all') {
   app.innerHTML = `<main class="room history">
     <h1>Run history</h1>
     <p class="room-text">Your last ${all.length === 1 ? 'run' : `${all.length} runs`}, newest first. The game keeps up to 30.</p>
-    <div class="hist-summary">${chars.map((c) => { const s = p.characters[c] || {}; return `<div class="hist-hero"><span class="hero-art">${heroSVG(c, { crop: true })}</span><p><b>${esc(CHARACTERS[c].name)}</b><small>${s.runs || 0} runs · ${s.wins || 0} wins · best ${s.best_floor || 0}/${TOTAL_FLOORS} rooms${climbUnlocked(c) ? ` · climb ${climbUnlocked(c)} unlocked` : ''}</small></p></div>`; }).join('')}</div>
+    <div class="hist-summary">${chars.map((c) => { const s = p.characters[c] || {}; return `<div class="hist-hero"><span class="hero-art">${heroSVG(c, { crop: true })}</span><p><b>${esc(CHARACTERS[c].name)}</b><small>${s.runs || 0} runs · ${s.wins || 0} wins · best ${s.best_floor || 0}/${TOTAL_FLOORS} rooms${climbUnlocked(c) ? ` · level ${climbUnlocked(c)} unlocked` : ''}</small></p></div>`; }).join('')}</div>
     <div class="hist-tabs" role="tablist">${tabs.map(([k, n]) => `<button class="btn small${k === filter ? ' yellow' : ' ghost'}" role="tab" aria-selected="${k === filter}" data-hfilter="${k}">${esc(n)}</button>`).join('')}</div>
     <div class="hist-list">${list.map((h) => {
       const i = all.indexOf(h);
@@ -501,21 +501,22 @@ function outfitScreen() {
 // ---------- character pick ----------
 // ---------- climb levels ----------
 // Everything active at climb level n (each level keeps the ones below it).
-const climbTip = (n) => [`Climb level ${n}:`, ...CLIMB.slice(1, n + 1).map((c, i) => `${i + 1}. ${c.name}: ${c.text}`)].join('\n');
-const climbSel = {}; // level picked per character on the climber screen (defaults to the highest unlocked)
+const climbTip = (n) => [`Level ${n}:`, ...CLIMB.slice(1, n + 1).map((c, i) => `${i + 1}. ${c.name}: ${c.text}`)].join('\n');
+let climbSel = {}; // level picked per character on the climber screen (starts at the highest unlocked each time the screen opens)
 function climbPicker(id) {
   const max = heroOpen(id) ? climbUnlocked(id) : 0;
   if (!max) return '</div>';
   const n = climbSel[id] ?? (climbSel[id] = max);
   return `<div class="climb-pick"${n ? ` data-tip="${esc(climbTip(n))}"` : ''}>
-    <button class="btn small" data-climb="${id}" data-step="-1" ${n <= 0 ? 'disabled' : ''} aria-label="Lower climb level">−</button>
-    <span><b>${n ? `Climb level ${n}` : 'Normal climb'}</b><small>${n ? esc(CLIMB[n].name) : `Up to level ${max} unlocked`}</small></span>
-    <button class="btn small" data-climb="${id}" data-step="1" ${n >= max ? 'disabled' : ''} aria-label="Raise climb level">+</button>
+    <button class="btn small" data-climb="${id}" data-step="-1" ${n <= 0 ? 'disabled' : ''} aria-label="Lower level">−</button>
+    <span><b>Level ${n}</b><small>${n ? esc(CLIMB[n].name) : `Normal · up to level ${max} unlocked`}</small></span>
+    <button class="btn small" data-climb="${id}" data-step="1" ${n >= max ? 'disabled' : ''} aria-label="Raise level">+</button>
   </div></div>`;
 }
 
-function pickCharacter() {
+function pickCharacter(keepPick) {
   battle = null;
+  if (keepPick !== true) climbSel = {}; // a fresh visit starts every climber on their highest level
   app.innerHTML = `<main class="room pick-hero">
     <h1>Who's climbing?</h1>
     <p class="room-text">Every card style is open to everyone. Each climber starts a little differently.</p>
@@ -537,7 +538,7 @@ function pickCharacter() {
   app.querySelectorAll('[data-climb]').forEach((b) => b.addEventListener('click', () => {
     const id = b.dataset.climb, max = climbUnlocked(id);
     climbSel[id] = Math.max(0, Math.min(max, (climbSel[id] ?? max) + Number(b.dataset.step)));
-    pickCharacter();
+    pickCharacter(true);
     app.querySelector(`[data-climb="${id}"][data-step="${b.dataset.step}"]:not(:disabled)`)?.focus();
   }));
   app.querySelector('[data-back]').addEventListener('click', title);
@@ -1162,7 +1163,7 @@ function gameOver(won, abandoned, killedBy) {
     <p>${won ? `${esc(hero().name)} beat ${esc(ENEMIES[run.bossOf?.[run.act]]?.name || 'the final boss')}. Legendary.` : `Made it to ${esc(ACTS[run.act].name)}.`}</p>
     <dl class="stats">
       <div><dt>Rooms</dt><dd>${run.floorsCleared}</dd></div>
-      ${run.climb ? `<div><dt>Climb</dt><dd>${run.climb}</dd></div>` : ''}
+      ${run.climb ? `<div><dt>Level</dt><dd>${run.climb}</dd></div>` : ''}
       <div><dt>Defeated</dt><dd>${run.kills}</dd></div>
       <div><dt>Deck</dt><dd>${run.deck.length}</dd></div>
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
@@ -1171,7 +1172,7 @@ function gameOver(won, abandoned, killedBy) {
     ${runStory(won)}
     ${tipped > 0 ? `<div class="tip-jar">${managerChibi()}<p><b>Tip jar +${tipped} ${T.coins}</b><span>${tips.found.length ? `Mina found ${tips.found.map((f) => `<b>${esc(f)}</b>`).join(', ')} for your Kioku Catalog!` : `Every ${TIP_STEP} ${T.coins} in the jar uncovers something new in your Kioku Catalog.`}</span><span class="jar-bar" style="--fill: ${Math.min(100, (tips.jar / TIP_STEP) * 100)}%"><i></i><small>${tips.jar}/${TIP_STEP}</small></span></p></div>` : ''}
     ${cameo ? `<div class="cameo"><span class="cameo-art pettable" role="button" tabindex="0" aria-label="Pet ${esc(GUARDIANS[cameo].name)}" data-pet>${guardianChibi(GUARDIANS[cameo].art)}</span><p><b>${esc(GUARDIANS[cameo].name)}</b>${esc(won ? GUARDIANS[cameo].cheer : GUARDIANS[cameo].comfort)}</p></div>` : ''}
-    ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Climb level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
+    ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
     ${newOutfits.map(outfitNote).join('')}
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
