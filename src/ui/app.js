@@ -978,13 +978,15 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Wide PC layout: pick the column count that gives the biggest cards for the
-// space in the middle column, then size the board to match.
+// Wide PC layout: the cards are the same size on every floor. The card size is the one
+// that lets the biggest board (Floor 3) fit the space in the middle column, and each
+// board picks the column count that fits at that size and is closest in shape to it.
 const WIDE = matchMedia('(min-width: 1000px), (orientation: landscape) and (max-height: 520px)'); // PC, or a phone on its side
 const CARD_RATIO = 6.2 / 5; // slot height / width
 // Narrow (phone) columns that fill every spot without scrolling: 16 cards 4x4,
 // 18 cards 6x3, 20 cards 5x4. Wide screens pick their own in fitBoard().
 const gridCols = (n) => [4, 5, 6].find((c) => n % c === 0 && n / c <= c) || (n > 16 ? 5 : 4);
+const BOARD_SIZES = RULES.boardPairs.map((p) => p * 2); // cards on a full board, per floor
 function fitBoard() {
   const battleEl = app.querySelector('main.battle');
   const board = battleEl?.querySelector('[data-board]');
@@ -998,18 +1000,21 @@ function fitBoard() {
   const H = window.innerHeight - top - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - energy - controls - 2 * parseFloat(cs.rowGap);
   const pad = 2 * (parseFloat(bs.paddingLeft) + parseFloat(bs.borderLeftWidth));
   const gap = parseFloat(bs.columnGap);
+  const COLS = [3, 4, 5, 6, 7, 8];
+  const layouts = (n) => { const full = COLS.filter((c) => n % c === 0); return (full.length ? full : COLS).map((c) => ({ c, r: Math.ceil(n / c) })); };
+  const widthFor = ({ c, r }) => Math.min((W - pad - gap * (c - 1)) / c, (H - pad - gap * (r - 1)) / r / CARD_RATIO);
+  const bestFor = (n) => layouts(n).reduce((a, l) => (widthFor(l) > widthFor(a) ? l : a));
   const n = board.children.length;
-  let best = { c: 4, w: 0 };
-  const full = [3, 4, 5, 6, 7, 8].filter((c) => n % c === 0); // layouts with no empty spots
-  for (const c of full.length ? full : [3, 4, 5, 6, 7, 8]) {
-    const r = Math.ceil(n / c);
-    const w = Math.min((W - pad - gap * (c - 1)) / c, (H - pad - gap * (r - 1)) / r / CARD_RATIO);
-    if (w > best.w) best = { c, w };
-  }
-  const cw = Math.floor(best.w);
-  board.style.setProperty('--cols', best.c);
+  // the card size every floor shares: whatever the biggest board can fit
+  const ref = bestFor(Math.max(n, ...BOARD_SIZES));
+  const cw = Math.floor(widthFor(ref));
+  // this board: a layout that fits at that size, as close in shape to the biggest board as possible
+  const shape = ({ c, r }) => Math.log((c * cw) / (r * cw * CARD_RATIO));
+  const fits = layouts(n).filter((l) => widthFor(l) >= cw);
+  const pick = fits.length ? fits.reduce((a, l) => (Math.abs(shape(l) - shape(ref)) < Math.abs(shape(a) - shape(ref)) ? l : a)) : bestFor(n);
+  board.style.setProperty('--cols', pick.c);
   board.style.setProperty('--cw', cw);
-  board.style.width = `${best.c * cw + gap * (best.c - 1) + pad}px`;
+  board.style.width = `${pick.c * cw + gap * (pick.c - 1) + pad}px`;
 }
 window.addEventListener('resize', () => fitBoard());
 
