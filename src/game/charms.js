@@ -60,6 +60,30 @@ export const CHARMS = {
   conveyorBelt: { name: 'Conveyor Belt', icon: '🍣', pool: 'guardian', from: 'sushiQueen', style: 'memory', desc: 'At the start of each turn, reveal 2 cards.' },
   bambooMat: { name: 'Bamboo Mat', icon: '🎋', pool: 'guardian', from: 'sushiQueen', style: 'guard', desc: `Half your ${T.block} stays at the start of your turn instead of all of it going away.` },
 
+  // Nyx (cute-goth mischief imp)
+  prankBox: { name: 'Prank Box', icon: '🎁', pool: 'guardian', from: 'nyx', style: 'glitch', gives: ['prank', 'prank', 'prank'], desc: `Start with 3 Prank cards (apply 2 ${T.exposed} and 3 ${T.glitch}).` },
+  hexRibbon: { name: 'Hex Ribbon', icon: '🎀', pool: 'guardian', from: 'nyx', style: 'glitch', desc: `${T.glitch} on enemies never wears off.` },
+  nightOwl: { name: 'Night Owl', icon: '🦉', pool: 'guardian', from: 'nyx', style: 'dreamy', desc: `Enemies start each fight with 2 ${T.sleepy}.` },
+  batWings: { name: 'Pink Bat Wings', icon: '🦇', pool: 'guardian', from: 'nyx', desc: `+1 ${T.energy} on your first 2 turns of each fight.` },
+  spiteful: { name: 'Spiteful Pout', icon: '😈', pool: 'guardian', from: 'nyx', style: 'exposed', desc: `Whenever an enemy hits you, it gets 1 ${T.exposed}.` },
+  peekMirror: { name: 'Peeking Mirror', icon: '🪞', pool: 'guardian', from: 'nyx', style: 'memory', desc: 'Every new board is shown for a moment, and 2 more cards start revealed.' },
+
+  // Toni (meets you when you play as Jenny): thoughtful husband gifts
+  loveNotes: { name: 'Love Notes', icon: '💌', pool: 'guardian', from: 'toni', style: 'cozy', gives: ['loveNote', 'loveNote'], desc: `Start with 2 Love Note cards (heal 6, ${T.block} 6, +1 ${T.energy}).` },
+  hisHoodie: { name: 'His Hoodie', icon: '🧥', pool: 'guardian', from: 'toni', desc: `+15 max ${T.hp}. Start each fight with 5 ${T.block}.` },
+  packedLunch: { name: 'Packed Lunch', icon: '🍱', pool: 'guardian', from: 'toni', desc: '+1 snack slot. Fills your empty snack slots now and on each new floor.' },
+  footRub: { name: 'Foot Rub', icon: '🦶', pool: 'guardian', from: 'toni', desc: `Naps at ${T.rest}s heal you to full.` },
+  alwaysThere: { name: 'Always There', icon: '🤝', pool: 'guardian', from: 'toni', desc: `In each fight, the first time you would be knocked out, survive with 15 ${T.hp}.` },
+  remembers: { name: 'He Remembers', icon: '🗒️', pool: 'guardian', from: 'toni', style: 'memory', desc: `Reveal 1 card at the start of each turn. Your first miss each turn refunds its ${T.energy}.` },
+
+  // Jenny (meets you when you play as Toni): cute love gifts
+  heartStickers: { name: 'Heart Stickers', icon: '💖', pool: 'guardian', from: 'jenny', style: 'cozy', gives: ['heartSticker', 'heartSticker', 'heartSticker'], desc: 'Start with 3 Heart Sticker cards (deal 6, heal 3).' },
+  cuddlePlush: { name: 'Cuddle Plush', icon: '🧸', pool: 'guardian', from: 'jenny', desc: `+12 max ${T.hp}. Heal 10 after each fight.` },
+  doodleOfYou: { name: 'Doodle of You', icon: '🖍️', pool: 'guardian', from: 'jenny', desc: 'Upgrade 3 random cards in your deck.' },
+  matchingCharms: { name: 'Matching Phone Charms', icon: '📱', pool: 'guardian', from: 'jenny', style: 'combo', desc: `Every 4th match in a fight gives +1 ${T.energy} and heals 3.` },
+  goodLuckKiss: { name: 'Good Luck Kiss', icon: '💋', pool: 'guardian', from: 'jenny', desc: `Start each fight with 2 ${T.spirit}.` },
+  loveLetter: { name: 'Love Letter', icon: '💗', pool: 'guardian', from: 'jenny', style: 'dreamy', desc: `Enemies start each fight with 2 ${T.exposed} and 2 ${T.sleepy}.` },
+
   // ----- drops -----
   luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'Every new board is shown for a moment.' },
   americano: { name: 'Iced Americano', icon: '🧋', pool: 'drop', desc: `+1 ${T.energy} on your first turn.` },

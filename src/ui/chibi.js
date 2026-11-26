@@ -608,6 +608,27 @@ function sushiQueen() {
 
 // Colors follow the real dogs: Haru is a black-and-tan shiba, Issei a red
 // shiba; Hana a long-haired red wiener dog, Kaiba a long-haired blue merle.
+
+function nyx() {
+  const hood = '#2a2233', pink = '#ff8fb8', skin = '#fff1f4';
+  return `${shadow(60, 113, 34)}
+    <path d="M30 70 C14 60 10 44 18 38 C22 50 28 52 34 56 Z M90 70 C106 60 110 44 102 38 C98 50 92 52 86 56 Z" ${o(pink)}/>
+    <path d="M86 98 C100 100 104 90 98 84" fill="none" stroke="${INK}" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M86 98 C100 100 104 90 98 84" fill="none" stroke="${hood}" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M98 84 C94 78 102 74 104 80 C106 74 114 78 110 84 L104 90 Z" ${o(pink, 3)}/>
+    <path d="M40 110 C38 90 46 80 60 80 C74 80 82 90 80 110 Z" ${o(hood)}/>
+    <path d="M50 110 V100 M70 110 V100" stroke="${INK}" stroke-width="${SW}" stroke-linecap="round"/>
+    <path d="M26 56 C22 30 40 14 60 14 C80 14 98 30 94 56 C96 74 82 84 60 84 C38 84 24 74 26 56 Z" ${o(hood)}/>
+    <path d="M38 20 L32 4 L46 14 Z M82 20 L88 4 L74 14 Z" ${o(hood)}/>
+    <ellipse cx="60" cy="56" rx="24" ry="21" ${o(skin)}/>
+    <path d="M40 44 C46 36 54 40 60 44 C66 40 74 36 80 44" fill="none" stroke="${hood}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 26 C56 22 60 20 60 24 C60 20 64 22 64 26 L60 31 Z" fill="${pink}" stroke="${INK}" stroke-width="2"/>
+    ${eyes2(60, 56, 10, 4.2)}${blushes(60, 66, 17)}
+    <path d="M55 67 Q60 71 65 67" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M64 68 L66 72 L68 68" fill="#fff" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+    ${shine(76, 28, 6, 3.5)}`;
+}
+
 const GUARDIAN_ART = {
   haru: () => shiba({ fur: '#2b2329', cream: '#f3ead8', points: '#c98a4a',
     // Haru's white chest fur is shaped like a T
@@ -620,8 +641,12 @@ const GUARDIAN_ART = {
     face: `<path d="M22 34 C30 30 38 34 40 44 C34 42 26 44 22 40 Z" fill="#4a4552"/><ellipse cx="31" cy="55" rx="3.2" ry="2" fill="#c98a4a"/><path d="M8 64 C14 68 20 68 24 64" fill="none" stroke="#c98a4a" stroke-width="3"/>`,
     extra: `<path d="M50 62 C52 72 46 78 40 78" fill="none" stroke="#b9a27a" stroke-width="5" stroke-linecap="round"/><circle cx="44" cy="80" r="3.2" fill="#ffd34d" stroke="${INK}" stroke-width="2"/>` }),
   sushiQueen,
+  nyx,
 };
 
 export function guardianChibi(art) {
+  // the partner guardian is the other playable character, in their date outfit
+  if (art === 'jenny') return jennyChibi('date');
+  if (art === 'toni') return toniChibi('date');
   return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${(GUARDIAN_ART[art] || GUARDIAN_ART.haru)()}</svg>`;
 }

@@ -451,6 +451,22 @@ export const CARDS = {
     fx: (b, u) => { b.attack(u ? 10 : 7); b.gainEnergy(1); },
   },
 
+  prank: {
+    arch: 'exposed', arch2: 'glitch', name: 'Prank', type: 'skill', rarity: 'gift', icon: 'bounce',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.exposed} and ${u ? 4 : 3} ${T.glitch}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); },
+  },
+  loveNote: {
+    arch: 'cozy', arch2: 'guard', name: 'Love Note', type: 'skill', rarity: 'gift', icon: 'paper',
+    text: (u) => `Heal ${u ? 8 : 6}. ${T.block} ${u ? 8 : 6}. +1 ${T.energy}.`,
+    fx: (b, u) => { b.heal(u ? 8 : 6); b.gainBlock(u ? 8 : 6); b.gainEnergy(1); },
+  },
+  heartSticker: {
+    arch: 'cozy', name: 'Heart Sticker', type: 'attack', rarity: 'gift', icon: 'hug',
+    text: (u) => `Deal ${u ? 9 : 6}. Heal ${u ? 4 : 3}.`,
+    fx: (b, u) => { b.attack(u ? 9 : 6); b.heal(u ? 4 : 3); },
+  },
+
   // ---------- status (added by enemies, gone after the fight) ----------
   bug: {
     name: 'Bug', type: 'status', rarity: 'status', icon: 'bug', exhaust: true,

@@ -82,6 +82,10 @@ export class Battle {
     if (this.has('chewedCable')) this.enemy.poison += 3;
     if (this.has('sharpTeeth')) this.player.thorns += 2;
     if (this.has('toroCrown')) { this.enemy.vuln += 3; this.enemy.poison += 4; }
+    if (this.has('nightOwl')) this.enemy.weak += 2;
+    if (this.has('hisHoodie')) this.player.block += 5;
+    if (this.has('goodLuckKiss')) this.player.strength += 2;
+    if (this.has('loveLetter')) { this.enemy.vuln += 2; this.enemy.weak += 2; }
     // one-fight buffs from events (e.g. the spicy ramen)
     const nf = this.run.nextFight;
     if (nf) { if (nf.strength) this.player.strength += nf.strength; this.run.nextFight = null; }
@@ -114,12 +118,12 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + perFloor(RULES.freeReveal, this.run.act);
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act);
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);
     }
-    if (this.has('luckyCat')) this.flash(1400);
+    if (this.has('luckyCat') || this.has('peekMirror')) this.flash(1400);
   }
 
   // Is the card being played tagged with this style (either of its two)?
@@ -175,7 +179,7 @@ export class Battle {
     else if (this.has('tennisBall') && !this.flags.tennisBall) { this.flags.tennisBall = true; this.log(`Miss! Tennis Ball keeps your ${T.combo}.`); }
     else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log(`Miss! Groove keeps half your ${T.combo}.`); }
     else { this.combo = 0; this.log('No match…'); }
-    if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
+    if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint') || this.has('remembers'))) {
       this.flags.missRefunded = true;
       this.energy += 1;
       this.log(`Miss refunded (+1 ${T.energy}).`);
@@ -202,6 +206,7 @@ export class Battle {
     this.playing = null;
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.matchesThisFight += 1;
+    if (this.has('matchingCharms') && this.matchesThisFight % 4 === 0) { this.gainEnergy(1); this.heal(3); this.log(`Matching Phone Charms! +1 ${T.energy}.`); }
     const pas = this.character.passive;
     if (pas.id === 'stickerBook' && this.matchesThisFight % pas.n === 0) {
       const id = this.nextSticker();
@@ -360,13 +365,14 @@ export class Battle {
   startTurn() {
     this.turn += 1;
     if (!this.powers.fortress) this.player.block = this.turn === 1 ? this.player.block : this.has('bambooMat') ? Math.floor(this.player.block / 2) : 0;
-    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('bandana') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
+    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('bandana') ? 1 : 0) + (this.turn <= 2 && this.has('batWings') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
     this.combo = (this.has('stickers') ? 1 : 0) + (this.has('rainbowRoll') ? 2 : 0);
     this.matchesThisTurn = 0;
     this.flags = {};
     this.turnEnergy = this.energy;
     if (this.has('headset')) this.reveal(1, true);
     if (this.has('conveyorBelt')) this.reveal(2, true);
+    if (this.has('remembers')) this.reveal(1, true);
     if (this.has('hanaSigh')) this.heal(2);
     if (this.powers.armor) this.gainBlock(this.powers.armor);
     if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
@@ -394,7 +400,7 @@ export class Battle {
     if (e.poison > 0) {
       e.hp = Math.max(0, e.hp - e.poison);
       this.emit('hit', 'enemy', e.poison, 0, 'poison');
-      e.poison -= 1;
+      if (!this.has('hexRibbon')) e.poison -= 1;
       if (this.checkEnd()) { this.busy = false; return; }
     }
     if (e.asleep > 0) {
@@ -413,6 +419,7 @@ export class Battle {
       this.player.block -= absorbed;
       this.run.hp = Math.max(0, this.run.hp - (dmg - absorbed));
       this.emit('hit', 'player', dmg - absorbed, absorbed);
+      if (this.has('spiteful') && dmg - absorbed > 0) e.vuln += 1;
       if (this.player.thorns > 0) {
         e.hp = Math.max(0, e.hp - this.player.thorns);
         this.emit('hit', 'enemy', this.player.thorns, 0, 'thorns');
@@ -535,6 +542,13 @@ export class Battle {
       this.run.shibaUsed = true;
       this.run.hp = Math.max(1, Math.round(this.run.maxHp * 0.25));
       this.log(`Shiba Keychain! Back up with 25% ${T.hp}.`);
+      this.emit('float', 'player', 'Saved!', 'heal');
+      this.emit('update');
+    }
+    if (this.run.hp <= 0 && this.has('alwaysThere') && !this.savedByToni) {
+      this.savedByToni = true;
+      this.run.hp = Math.min(this.run.maxHp, 15);
+      this.log(`Toni is always there for you! (15 ${T.hp})`);
       this.emit('float', 'player', 'Saved!', 'heal');
       this.emit('update');
     }

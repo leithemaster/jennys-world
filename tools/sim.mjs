@@ -193,8 +193,9 @@ if (MODE === 'guardians') {
   console.table(out);
   const per = [];
   for (const gid of Object.keys(GUARDIANS).filter((g) => GUARDIANS[g].floor > 0)) {
-    const { stats, wins } = batch(SKILLS.sharp, { character: 'jenny', force: gid });
-    per.push(summarize(stats, wins, { guardian: GUARDIANS[gid].name }));
+    const character = GUARDIANS[gid].only || 'jenny'; // a partner guardian only meets the other character
+    const { stats, wins } = batch(SKILLS.sharp, { character: character === 'toni' ? 'toni' : 'jenny', force: gid });
+    per.push(summarize(stats, wins, { guardian: GUARDIANS[gid].name, as: character }));
   }
   console.table(per);
   process.exit(0);

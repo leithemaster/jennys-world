@@ -183,6 +183,13 @@ export function gainCharm(run, id) {
   if (id === 'scarf') { run.maxHp += 12; run.hp += 12; }
   if (id === 'luckyCoin') run.coins += 100;
   if (id === 'chewToy') run.coins += 75;
+  if (id === 'hisHoodie') { run.maxHp += 15; run.hp += 15; }
+  if (id === 'cuddlePlush') { run.maxHp += 12; run.hp += 12; }
+  if (id === 'packedLunch') { addSnackSlots(run, 1); while (snackRoom(run)) { const k = drawSnack(run); if (!k || !addSnack(run, k)) break; } }
+  if (id === 'doodleOfYou') {
+    const ups = run.deck.filter((c) => !c.up && !['status', 'curse'].includes(CARDS[c.id].rarity));
+    for (let i = 0; i < 3 && ups.length; i++) ups.splice(Math.floor(Math.random() * ups.length), 1)[0].up = true;
+  }
   if (id === 'greenTea') { run.maxHp += 10; run.hp += 10; }
   if (id === 'treatPouch') { addSnackSlots(run, 1); addSnack(run, drawSnack(run)); }
   for (const card of CHARMS[id]?.gives || []) run.deck.push({ id: card });
@@ -213,6 +220,7 @@ export function afterFightHealing(run) {
   if (run.charms.includes('thermos')) h += 7;
   if (run.charms.includes('hotWaterBottle')) h += 4;
   if (run.charms.includes('warmLap')) h += 6;
+  if (run.charms.includes('cuddlePlush')) h += 10;
   if (run.charms.includes('greenTea')) h += 15;
   const before = run.hp;
   run.hp = Math.min(run.maxHp, run.hp + h);
@@ -292,7 +300,7 @@ export function runSummary(run, won) {
 
 // Pocket Fridge: fill the empty snack slots when you reach a new floor.
 export function fillSnacksForFloor(run) {
-  if (!run.charms.includes('pocketFridge')) return [];
+  if (!run.charms.includes('pocketFridge') && !run.charms.includes('packedLunch')) return [];
   const got = [];
   while (snackRoom(run)) { const id = drawSnack(run); if (!id || !addSnack(run, id)) break; got.push(id); }
   return got;

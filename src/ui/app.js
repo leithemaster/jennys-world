@@ -940,7 +940,7 @@ function actCleared() {
   run.pos = null; run.path = [];
   const fridge = fillSnacksForFloor(run);
   fridge.forEach(noteSnackTaken);
-  run.giftPending = guardiansOn(run.act).length > 0;
+  run.giftPending = guardiansOn(run.act, run.character).length > 0;
   saveRun(run);
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
@@ -1011,7 +1011,7 @@ function eventScreen() {
 }
 
 function restScreen() {
-  const heal = Math.round(run.maxHp * (0.3 + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
+  const heal = run.charms.includes('footRub') ? run.maxHp : Math.round(run.maxHp * (0.3 + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));
   app.innerHTML = `${header()}<main class="room rest">
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>

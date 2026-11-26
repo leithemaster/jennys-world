@@ -40,9 +40,9 @@ Family who meet you on the climb and offer 3 of their charms to pick 1 (`src/gam
 
 - **Floor 1: Haru** (black-and-tan shiba, the big brother), every run. 15 charms; some push a play style, like Sleep Mask (Dreamy), Hot Water Bottle (Cozy) and Gossip Phone (Exposed).
 - **Floor 2:** one of **Issei** (red shiba, Haru's little brother: Combo, Glitch), **Hana** (long-haired red wiener dog: Dreamy, Cozy) or **Kaiba** (long-haired blue merle wiener dog: Guard, Exposed). 6 solid charms each.
-- **Floor 3: the Sushi Queen** of the Sushi Palace. 6 strong charms made to help a build snowball. Two more Floor 3 guardian slots are open.
+- **Floor 3:** one of **the Sushi Queen** of the Sushi Palace, **Nyx** (a cute-goth mischief imp: Glitch, Dreamy, Exposed, Memory) or your **partner**: play as Jenny and Toni meets you with thoughtful husband gifts; play as Toni and Jenny brings cute love gifts. 6 strong charms each, made to help a build snowball.
 
-Each guardian mixes style charms with all-round ones, and some charms come with gift cards only that guardian gives (Zoomie, Snuggle, Bark, Sushi Roll). The offer is saved, so reloading doesn't reroll it. `node tools/sim.mjs 300 guardians` compares runs with and without the Floor 2/3 gifts.
+Each guardian mixes style charms with all-round ones, and some charms come with gift cards only that guardian gives (Zoomie, Snuggle, Bark, Sushi Roll, Prank, Love Note, Heart Sticker). The offer is saved, so reloading doesn't reroll it. `node tools/sim.mjs 300 guardians` compares runs with and without the Floor 2/3 gifts.
 
 ## Play styles
 

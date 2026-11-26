@@ -70,7 +70,7 @@ export function buildCatalog() {
 
   const FLOOR_NAMES = ACTS.map((a) => a.name);
   const guardians = Object.entries(GUARDIANS).map(([id, g]) => ({
-    id, name: g.name, kind: g.kind, blurb: g.blurb, floor: FLOOR_NAMES[g.floor], floorNo: g.floor,
+    id, name: g.name, kind: g.kind, blurb: g.blurb, floor: FLOOR_NAMES[g.floor], floorNo: g.floor, only: g.only ? CHARACTERS[g.only].name : '',
     charms: Object.keys(CHARMS).filter((k) => (id === 'haru' ? CHARMS[k].pool === 'haru' : CHARMS[k].from === id)),
     art: guardianChibi(g.art),
   }));

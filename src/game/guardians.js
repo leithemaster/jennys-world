@@ -33,14 +33,31 @@ export const GUARDIANS = {
     blurb: 'She rules the Sushi Palace and only hands her sushi to climbers she believes in.',
     line: 'The Sushi Queen glides in on a conveyor belt. "Only the finest for the top floor." Pick one.',
   },
+  nyx: {
+    name: 'Nyx', floor: 2, kind: 'Mischief imp', art: 'nyx',
+    blurb: 'A cute little troublemaker in a black hood. Loves pranks, hexes and the color pink.',
+    line: 'Nyx drops from the ceiling, giggling. "You look like you need some mischief." Pick one.',
+  },
+  // The partner guardian: you meet whoever you're NOT playing as.
+  toni: {
+    name: 'Toni', floor: 2, kind: 'Husband', art: 'toni', only: 'jenny',
+    blurb: "Jenny's husband. Shows up at the top floor with everything she might need.",
+    line: 'Toni is waiting at the top of the stairs with a bag he packed just for you. Pick one.',
+  },
+  jenny: {
+    name: 'Jenny', floor: 2, kind: 'Wife', art: 'jenny', only: 'toni',
+    blurb: "Toni's wife. Brings cute little gifts she made for him.",
+    line: 'Jenny runs up and hands you a tiny decorated box. "I made these for you!" Pick one.',
+  },
 };
 
-export const guardiansOn = (floor) => Object.keys(GUARDIANS).filter((id) => GUARDIANS[id].floor === floor);
+// only: the guardian shows up only when you play as that character.
+export const guardiansOn = (floor, character) => Object.keys(GUARDIANS).filter((id) => GUARDIANS[id].floor === floor && (!character || !GUARDIANS[id].only || GUARDIANS[id].only === character));
 
 // The guardian waiting on a floor: picked once per run, then kept (like bosses).
 export function guardianFor(run, floor = run.act) {
   run.guardianOf ||= {};
-  const list = guardiansOn(floor);
+  const list = guardiansOn(floor, run.character);
   if (!list.length) return null;
   if (!list.includes(run.guardianOf[floor])) run.guardianOf[floor] = list[Math.floor(Math.random() * list.length)];
   return run.guardianOf[floor];
