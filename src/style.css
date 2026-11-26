@@ -824,3 +824,8 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .pill.climb { background: #efe6ff; cursor: help; }
 .climb-note .ui-i { width: 44px; height: 44px; flex: none; }
 .end .unlock-note p, .end .unlock-note small { color: var(--ink); }
+
+/* flip sound picker (Settings) */
+.flip-pick { display: grid; gap: var(--s2); font-weight: 800; }
+.flip-pick small { display: block; font-weight: 600; font-size: 12px; opacity: .75; }
+.flip-opts { display: flex; flex-wrap: wrap; gap: 6px; }

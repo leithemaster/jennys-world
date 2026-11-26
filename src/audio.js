@@ -3,7 +3,7 @@
 // Defaults: music 25%, effects 40%. Settings persist in localStorage.
 
 const KEY = 'sm.audio';
-const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false };
+const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false, flip: 'original' };
 export const settings = { ...DEFAULTS, ...safeLoad() };
 
 function safeLoad() {
@@ -83,7 +83,7 @@ function tone({ freq = 440, to, type = 'sine', dur = 0.12, vol = 0.5, delay = 0,
   o.start(t); o.stop(t + dur + 0.02);
 }
 
-function noise({ dur = 0.15, vol = 0.4, delay = 0, filter = 1200, q = 0.8, type = 'lowpass', sweepTo }) {
+function noise({ dur = 0.15, vol = 0.4, delay = 0, filter = 1200, q = 0.8, type = 'lowpass', sweepTo, attack = 0 }) {
   const a = ctx(); if (!a) return;
   const t = a.currentTime + delay;
   const len = Math.floor(a.sampleRate * dur);
@@ -97,15 +97,25 @@ function noise({ dur = 0.15, vol = 0.4, delay = 0, filter = 1200, q = 0.8, type 
   f.frequency.setValueAtTime(filter, t);
   if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
   const g = a.createGain();
-  g.gain.setValueAtTime(vol, t);
+  if (attack) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); } else g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(f); f.connect(g); g.connect(master);
   src.start(t);
 }
 
+// Card flip sounds to choose from in Settings (settings.flip).
+export const FLIPS = {
+  original: { name: 'Original', desc: 'Bright hiss with a little blip', play: () => { noise({ dur: 0.08, vol: 0.35, filter: 2600, type: 'bandpass', q: 1.2, sweepTo: 5000 }); tone({ freq: 900, to: 1300, type: 'sine', dur: 0.05, vol: 0.08 }); } },
+  paper: { name: 'Paper flick', desc: 'A soft, dry card turning over', play: () => { noise({ dur: 0.045, vol: 0.32, filter: 1800, type: 'bandpass', q: 0.7, sweepTo: 900 }); noise({ dur: 0.03, vol: 0.18, filter: 3200, type: 'highpass', delay: 0.035 }); } },
+  pop: { name: 'Bubble pop', desc: 'A round, cute little pop', play: () => { tone({ freq: 420, to: 880, type: 'sine', dur: 0.07, vol: 0.32, attack: 0.003 }); tone({ freq: 1760, type: 'sine', dur: 0.03, vol: 0.05, delay: 0.02 }); } },
+  tile: { name: 'Wooden tile', desc: 'A gentle tok, like a game piece on a table', play: () => { tone({ freq: 1150, to: 980, type: 'triangle', dur: 0.045, vol: 0.22, attack: 0.002 }); tone({ freq: 310, to: 240, type: 'sine', dur: 0.06, vol: 0.3, attack: 0.002 }); noise({ dur: 0.02, vol: 0.12, filter: 2500, type: 'bandpass', q: 3 }); } },
+  swish: { name: 'Soft swish', desc: 'A quiet whoosh as the card spins', play: () => { noise({ dur: 0.13, vol: 0.22, filter: 700, type: 'bandpass', q: 1.6, sweepTo: 2600, attack: 0.04 }); } },
+  twinkle: { name: 'Twinkle', desc: 'Two tiny bell notes, a bit magical', play: () => { tone({ freq: 1568, type: 'sine', dur: 0.09, vol: 0.12 }); tone({ freq: 2093, type: 'sine', dur: 0.14, vol: 0.1, delay: 0.045 }); } },
+};
+
 const SFX = {
   click: () => tone({ freq: 660, to: 520, type: 'triangle', dur: 0.06, vol: 0.25 }),
-  flip: () => { noise({ dur: 0.08, vol: 0.35, filter: 2600, type: 'bandpass', q: 1.2, sweepTo: 5000 }); tone({ freq: 900, to: 1300, type: 'sine', dur: 0.05, vol: 0.08 }); },
+  flip: (which) => (FLIPS[which || settings.flip] || FLIPS.original).play(),
   match: (combo = 1) => {
     const base = 523 * Math.pow(2, Math.min(combo - 1, 7) / 12 * 2);
     tone({ freq: base, type: 'triangle', dur: 0.12, vol: 0.32 });
