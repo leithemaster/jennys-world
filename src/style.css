@@ -880,3 +880,19 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .title-shiba.haru .pet-bubble.show { animation-name: petBubbleL; }
 @keyframes petBubbleL { 0% { opacity: 0; transform: translate(0, 6px) scale(.8); } 10%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
 .pet-hint { margin: -6px 0 0; font-size: 12px; font-weight: 800; color: var(--on-ground-muted); }
+
+/* run-end cameo: the last guardian you met */
+.cameo { display: flex; align-items: center; gap: var(--s3); max-width: 520px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; padding: 8px 16px 8px 8px; text-align: left; }
+.cameo-art { width: 84px; height: 84px; flex: none; display: block; }
+.cameo-art > svg { width: 100%; height: 100%; }
+.end .cameo p { margin: 0; display: grid; gap: 2px; color: var(--ink); font-weight: 700; }
+.cameo b { font-family: var(--font-display); font-size: 17px; }
+
+/* map: the guardian waiting at the top of the next floor */
+.map-guardian { display: inline-flex; align-items: center; gap: 6px; background: rgba(42, 22, 38, 0.35); border-radius: 999px; padding: 2px 12px 2px 4px; cursor: help; }
+.mini-guardian { width: 30px; height: 30px; display: block; }
+.mini-guardian > svg { width: 100%; height: 100%; }
+
+/* an event hosted by a guardian */
+.room-icon.guardian-host { width: 120px; height: 120px; }
+.room-icon.guardian-host > svg { width: 100%; height: 100%; }

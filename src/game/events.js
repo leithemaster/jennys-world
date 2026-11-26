@@ -13,7 +13,7 @@
 
 import { T } from './terms.js';
 import { CARDS, ARCHES } from './cards.js';
-import { snackRoom, snackCount } from './snacks.js';
+import { snackRoom, snackCount, SNACKS } from './snacks.js';
 
 // Non-starter cards in the deck tagged with this style (hybrids count for both).
 export function styleCount(run, arch) {
@@ -23,6 +23,9 @@ const hybridCount = (run) => run.deck.filter((c) => CARDS[c.id].arch2).length;
 export const SPECIAL_NEED = 3; // style cards needed to open a style's special event
 const ofStyle = (arch) => (d) => d.arch === arch || d.arch2 === arch;
 const upgradeText = (n, what) => (n ? `${n} ${what} card${n > 1 ? 's' : ''} upgraded!` : `No ${what} cards left to upgrade.`);
+
+const rareSnack = () => { const r = Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === 'rare'); return r[Math.floor(Math.random() * r.length)]; };
+const queenIsGuardian = (r) => r.guardianOf?.[2] === 'sushiQueen';
 
 export const EVENTS = [
   {
@@ -240,6 +243,20 @@ export const EVENTS = [
         r.hp = Math.max(1, r.hp - 6); return `It snaps right through the middle. -6 ${T.hp}.`;
       } },
       { label: 'Walk away', go: () => 'Not today, sugar.' },
+    ],
+  },
+  {
+    // The Sushi Queen's own restaurant. Floor 3 only. If she was your floor 3 guardian, she has a treat for you.
+    id: 'sushiPalace', art: 'sushiQueen', gives: { cards: ['sushiRoll'] },
+    requires: (r) => r.act === 2,
+    needs: 'Floor 3',
+    title: 'The Sushi Palace',
+    text: 'A paper lantern glows over a tiny counter that should not fit in a net café. The Sushi Queen looks up from her knife. "Ah. A customer."',
+    options: [
+      { label: `Chef's choice (50 ${T.coins})`, note: 'Gain a random rare snack.', can: (r) => r.coins >= 50, go: async (r, api) => { r.coins -= 50; return `She slides a lacquered box across the counter: ${await api.addSnack(rareSnack(), 50)}.`; } },
+      { label: `Sushi Roll platter (60 ${T.coins})`, note: `Add 2 Sushi Roll cards (deal 7, +1 ${T.energy}).`, can: (r) => r.coins >= 60, go: (r, api) => { r.coins -= 60; api.addCard('sushiRoll'); return `"Eat them hot." You got 2 × ${api.addCard('sushiRoll')}.`; } },
+      { label: 'Bow to the Queen', note: `Only if she was your guardian: heal 15 and a free rare snack.`, can: queenIsGuardian, go: async (r, api) => { r.hp = Math.min(r.maxHp, r.hp + 15); return `"For my favorite climber." +15 ${T.hp} and ${await api.addSnack(rareSnack())}, on the house.`; } },
+      { label: 'Just looking', go: () => '"Hmph. Come back when you are hungry."' },
     ],
   },
 ];

@@ -14,7 +14,7 @@ import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
 import { blobBackdrop, guardianChibi } from './chibi.js';
-import { GUARDIANS, guardianFor, guardiansOn } from '../game/guardians.js';
+import { GUARDIANS, guardianFor, guardiansOn, lastGuardian } from '../game/guardians.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
@@ -652,8 +652,9 @@ function mapScreen() {
     <circle r="30"/><g transform="translate(-18 -18) scale(1.125)">${roomIcon('boss').replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
 
   const boss = ENEMIES[bossFor(run)];
+  const upstairs = run.act < ACTS.length - 1 ? guardianFor(run, run.act + 1) : null; // picked once, like the boss
   app.innerHTML = `${header()}<main class="map-screen">
-    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p><p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
+    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p>${upstairs ? `<p class="map-guardian" data-tip="${esc(`${GUARDIANS[upstairs].name} is waiting at the top of ${ACTS[run.act + 1].name} with a gift.`)}"><span class="mini-guardian">${guardianChibi(GUARDIANS[upstairs].art)}</span>Waiting upstairs: <b>${esc(GUARDIANS[upstairs].name)}</b></p>` : ''}<p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
     <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
     <div class="map-pick" data-pick aria-live="polite"></div>
     <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${T.rooms[t][0]}</span></li>`).join('')}</ul>
@@ -1077,6 +1078,7 @@ function gameOver(won, abandoned, killedBy) {
   battle = null;
   clearRun();
   const summary = runSummary(run, won, { killedBy, abandoned });
+  const cameo = lastGuardian(run); // the last guardian you met cheers or comforts you
   const stats = recordRunEnd(summary).totals;
   const newOutfits = outfitsForRunEnd();
   app.innerHTML = `<main class="end ${won ? 'won' : 'lost'}">
@@ -1091,10 +1093,12 @@ function gameOver(won, abandoned, killedBy) {
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
+    ${cameo ? `<div class="cameo"><span class="cameo-art pettable" role="button" tabindex="0" aria-label="Pet ${esc(GUARDIANS[cameo].name)}" data-pet>${guardianChibi(GUARDIANS[cameo].art)}</span><p><b>${esc(GUARDIANS[cameo].name)}</b>${esc(won ? GUARDIANS[cameo].cheer : GUARDIANS[cameo].comfort)}</p></div>` : ''}
     ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Climb level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
     ${newOutfits.map(outfitNote).join('')}
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
+  if (cameo) bindPet(app.querySelector('[data-pet]'), GUARDIANS[cameo]);
   app.querySelector('[data-again]').addEventListener('click', startNewRun);
   app.querySelector('[data-title]').addEventListener('click', title);
 }
@@ -1117,7 +1121,7 @@ function eventScreen() {
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
   };
   app.innerHTML = `${header()}<main class="room event${ev.special ? ' special' : ''}">
-    <div class="room-icon">${ev.special && ev.boon ? charmIcon(ev.boon) : roomIcon('event')}</div>
+    <div class="room-icon${ev.art ? ' guardian-host' : ''}">${ev.art ? guardianChibi(ev.art) : ev.special && ev.boon ? charmIcon(ev.boon) : roomIcon('event')}</div>
     ${ev.special ? `<span class="special-tag">Special event${ev.style ? ` · ${esc(ARCHES[ev.style].name)}` : ''}</span>` : ''}
     <h1>${esc(ev.title)}</h1><p class="room-text">${esc(ev.text)}</p>
     <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
