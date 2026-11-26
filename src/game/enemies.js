@@ -7,14 +7,6 @@
 //   without putting them back, refilled when empty. combo: { after: next } means that after
 //   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
 //   ('attack' = any move that deals damage), if the bag still has one.
-// ai: 'bag' (bosses) draws from a marble bag: each move has w marbles (10 in all), drawn
-//   without putting them back, refilled when empty. combo: { after: next } means that after
-//   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
-//   ('attack' = any move that deals damage), if the bag still has one.
-// ai: 'bag' (bosses) draws from a marble bag: each move has w marbles (10 in all), drawn
-//   without putting them back, refilled when empty. combo: { after: next } means that after
-//   a move of type `after`, the next marble is usually (COMBO_CHANCE) one of type `next`
-//   ('attack' = any move that deals damage), if the bag still has one.
 
 export const ENEMIES = {
   // ----- Floor 1 -----

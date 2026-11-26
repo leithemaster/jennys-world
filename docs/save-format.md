@@ -52,6 +52,9 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
       "snacks": ["bananaMilk"],
       "guardians": ["haru", "issei"],
       "bosses": ["ramenThief", "hydra"],
+      "top_card": "slash",
+      "top_plays": 14,
+      "best_hit": 38,
       "killed_by": "hydra"
     }
   ]
@@ -69,7 +72,7 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
 | `collection.cards` / `charms` | `seen`: times offered (reward, shop, gift). `taken`: times added to a run. Taking also counts as seeing. |
 | `collection.enemies` | `met`: fights started. `defeated`: fights won. |
 | `collection.events` / `guardians` | `met`: times visited. |
-| `history` | The last 30 finished runs, newest first (shown on the Run history page). A `+` after a card id means upgraded. `climb`: climb level played. `guardians` / `bosses`: met per floor. `killed_by`: the enemy that knocked you out; `abandoned: true` for a run you gave up. Runs saved before these fields existed don't have them. |
+| `history` | The last 30 finished runs, newest first (shown on the Run history page). A `+` after a card id means upgraded. `climb`: climb level played. `guardians` / `bosses`: met per floor. `top_card` / `top_plays`: the card played most (statuses and curses don't count) and how often. `best_hit`: the biggest single hit on an enemy. `killed_by`: the enemy that knocked you out; `abandoned: true` for a run you gave up. Runs saved before these fields existed don't have them. |
 
 An entry that is missing from a `collection` page means the player has never found that thing, so the book shows its silhouette.
 
@@ -77,6 +80,6 @@ Version 1 is built from the old `sm.stats.v2` key the first time it loads, so ru
 
 ## `run` (version 1)
 
-This is the live run object from `newRun()` in [src/game/run.js](../src/game/run.js), saved whenever the player is on the map, plus `"version": 1`. Fields: `character`, `hp`, `maxHp`, `coins`, `deck` (`[{ "id": "...", "up": true }]`), `charms`, `snacks` (the snack bar: one snack id or `null` per slot), `giftPending`, `act`, `map`, `pos`, `path`, `pending`, `removeCost`, `floorsCleared`, `kills`, `loot`.
+This is the live run object from `newRun()` in [src/game/run.js](../src/game/run.js), saved whenever the player is on the map, plus `"version": 1`. Fields: `character`, `hp`, `maxHp`, `coins`, `deck` (`[{ "id": "...", "up": true }]`), `charms`, `snacks` (the snack bar: one snack id or `null` per slot), `giftPending`, `act`, `map`, `pos`, `path`, `pending`, `removeCost`, `floorsCleared`, `kills`, `plays` (card id → times played this run), `bestHit`, `loot`.
 
 If `kioku.run` is missing, the game falls back to the old `sm.run.v3` key once, so a run that was in progress during the update can still be continued.

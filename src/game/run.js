@@ -35,6 +35,8 @@ export function newRun(character = 'jenny', climb = 0) {
     removeCost: 75,
     floorsCleared: 0,
     kills: 0,
+    plays: {}, // card id -> times played this run (for the run-end story)
+    bestHit: 0, // biggest single hit on an enemy
     loot: { decks: {}, rarePity: -5 },
   };
   if (climbOn(run, 8)) run.hp = run.maxHp = Math.round(run.maxHp * CR.maxHp);
@@ -301,6 +303,17 @@ export function loadRun() {
 }
 export function clearRun() { removeDoc(RUN_DOC); try { localStorage.removeItem(LEGACY_RUN_KEY); } catch { /* ignore */ } }
 
+// The card played the most this run (statuses and curses don't count).
+export function topCard(run) {
+  let best = null;
+  for (const [id, n] of Object.entries(run.plays || {})) {
+    const def = CARDS[id];
+    if (!def || def.rarity === 'status' || def.rarity === 'curse' || def.type === 'status') continue;
+    if (!best || n > best.n) best = { id, n };
+  }
+  return best;
+}
+
 // What the progress save keeps about a finished run.
 export function runSummary(run, won, { killedBy, abandoned } = {}) {
   return {
@@ -316,6 +329,8 @@ export function runSummary(run, won, { killedBy, abandoned } = {}) {
     // for the Run history page (runs saved before these were added don't have them)
     guardians: guardiansMet(run),
     bosses: [0, 1, 2].map((f) => run.bossOf?.[f]).filter(Boolean),
+    ...(topCard(run) ? { top_card: topCard(run).id, top_plays: topCard(run).n } : {}),
+    ...(run.bestHit ? { best_hit: run.bestHit } : {}),
     ...(killedBy ? { killed_by: killedBy } : {}),
     ...(abandoned ? { abandoned: true } : {}),
   };

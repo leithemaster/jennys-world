@@ -4,12 +4,13 @@ import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES, STICKERS } from '../game/battle.js';
 import {
   newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
-  afterFightHealing, shopStock, shopCards, restockCost, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor,
+  afterFightHealing, shopStock, shopCards, restockCost, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor, topCard,
 } from '../game/run.js';
 import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
 import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop, bossFor } from '../game/loot.js';
 import { ALL_EVENTS } from '../game/events.js';
-import { sfx, settings, saveSettings, music } from '../audio.js';
+import { sfx, settings, saveSettings, music, musicSlowMo } from '../audio.js';
+import { BOSS_THEMES, bossStage } from './bossThemes.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
@@ -388,6 +389,7 @@ function historyScreen(filter = 'all') {
           <p class="run-result">${result(h)}</p>
           <p class="run-meta"><span>${esc(when(h.ended_at))}</span><span>${esc(CHARACTERS[h.character]?.name || 'Jenny')}</span>${h.climb ? `<span class="pill climb" data-tip="${esc(climbTip(h.climb))}">${uiIcon('flag')}<b>${h.climb}</b></span>` : ''}<span>${h.floors || 0} rooms</span><span>${h.defeated || 0} defeated</span></p>
           ${met.length ? `<p class="run-meta"><span>Guardians: ${esc(met.join(', '))}</span></p>` : ''}
+          ${h.top_card && CARDS[h.top_card] ? `<p class="run-meta"><span>Most played: ${esc(CARDS[h.top_card].name)} ×${h.top_plays || 0}</span>${h.best_hit ? `<span>Biggest hit: ${h.best_hit}</span>` : ''}</p>` : ''}
           <div class="run-charms">${(h.charms || []).filter((k) => CHARMS[k]).map((k) => charmBadge(k)).join('') || '<small>No charms</small>'}</div>
         </div>
         <button class="btn small" data-hdeck="${i}" ${deck.length ? '' : 'disabled'}>Deck <b>${deck.length}</b></button>
@@ -747,7 +749,10 @@ function battleScreen(enemyId, kind) {
   barChanged = null;
   const def = ENEMIES[enemyId];
   noteEnemyMet(enemyId);
-  app.innerHTML = `${header()}<main class="battle">
+  const theme = kind === 'boss' ? BOSS_THEMES[enemyId] : null;
+  run.plays ||= {}; // how many times each card was played this run (for the run-end story)
+  app.innerHTML = `${header()}<main class="battle${theme ? ` boss-fight bf-${enemyId}` : ''}">
+    ${theme ? `${bossStage(enemyId)}<div class="boss-intro" aria-hidden="true"><b>${esc(def.name)}</b><small>${esc(theme.tag)}</small></div>` : ''}
     <section class="arena">
       <div class="fighter you" data-who="player">
         <div class="portrait" data-hero-art="${run.character}" data-crop>${heroSVG(run.character, { crop: true })}</div>
@@ -909,14 +914,34 @@ function battleScreen(enemyId, kind) {
     },
     hit: (who, dmg, blocked, why) => {
       if (dmg > 0) sfx(who === 'enemy' ? 'hit' : 'hurt'); else if (blocked > 0) sfx('block');
+      if (who === 'enemy' && dmg > (run.bestHit || 0)) run.bestHit = dmg;
       if (dmg > 0) { float(who, `-${dmg}`, why || 'dmg'); shake(who); }
       if (blocked > 0) float(who, `${blocked} blocked`, 'block');
     },
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
     scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
     turn: () => { if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
-    end: (result) => { sfx(result === 'win' ? 'win' : 'lose'); setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false, false, enemyId)), 900 * PACE.scale); },
+    play: (card) => { run.plays[card.id] = (run.plays[card.id] || 0) + 1; },
+    enemyAct: () => { if (theme) sfx('motif', theme.voice, true); },
+    end: (result) => {
+      if (result === 'win' && kind === 'boss') { bossKO(); return; }
+      sfx(result === 'win' ? 'win' : 'lose');
+      setTimeout(() => (result === 'win' ? battleWon(kind, enemyId) : gameOver(false, false, enemyId)), 900 * PACE.scale);
+    },
   });
+  // The final blow on a boss: big K.O. pop, the fight slows down, then the win.
+  const bossKO = () => {
+    const main = app.querySelector('main.battle');
+    sfx('ko');
+    musicSlowMo(900);
+    // the final blow's number, big, outside the fading enemy picture
+    const last = [...app.querySelectorAll('[data-who="enemy"] .float:not(.k-block)')].pop();
+    if (last) { app.querySelector('[data-who="enemy"]').insertAdjacentHTML('beforeend', `<span class="ko-num">${esc(last.textContent)}</span>`); last.remove(); }
+    main.insertAdjacentHTML('beforeend', '<div class="ko-flash" aria-hidden="true"></div><div class="ko-stamp" role="status"><b>K.O.!</b></div>');
+    main.classList.add('ko');
+    setTimeout(() => sfx('win'), 1100 * PACE.scale);
+    setTimeout(() => battleWon(kind, enemyId), 2600 * PACE.scale);
+  };
   $('[data-end]').addEventListener('click', () => battle.endTurn());
   app.querySelectorAll('[data-pile]').forEach((p) => p.addEventListener('click', () => {
     const which = p.dataset.pile;
@@ -924,6 +949,7 @@ function battleScreen(enemyId, kind) {
   }));
   battle.start();
   update();
+  if (theme) setTimeout(() => sfx('motif', theme.sting), 200);
 }
 
 // ---------- keyboard ----------
@@ -1074,6 +1100,38 @@ function actCleared() {
   app.querySelector('[data-go]').addEventListener('click', () => (run.giftPending ? guardianGift() : mapScreen()));
 }
 
+// Run-end story: the card you leaned on most, your biggest hit, the bosses you beat,
+// and the whole deck at a glance.
+function runStory(won) {
+  const top = topCard(run);
+  const topC = top && { id: top.id, ...(run.deck.some((c) => c.id === top.id && c.up) ? { up: true } : {}) };
+  const pairs = Object.values(run.plays || {}).reduce((a, b) => a + b, 0);
+  const beaten = [0, 1, 2].filter((f) => f < run.act || (won && f === run.act)).map((f) => ENEMIES[run.bossOf?.[f]]?.name).filter(Boolean);
+  const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+  const lines = [
+    `${esc(hero().name)} climbed with <b>${run.deck.length} cards</b>${pairs ? ` and matched <b>${pairs} ${pairs === 1 ? 'pair' : 'pairs'}</b>` : ''}.`,
+    run.bestHit ? `Biggest hit: <b>${run.bestHit} damage</b>.` : '',
+    beaten.length ? `Beat ${list(beaten.map((n) => `<b>${esc(n)}</b>`))}.` : '',
+  ].filter(Boolean);
+  const groups = new Map();
+  [...run.deck].sort((a, b) => (CARDS[a.id].type + cardName(a)).localeCompare(CARDS[b.id].type + cardName(b))).forEach((c) => {
+    const k = c.id + (c.up ? '+' : '');
+    groups.set(k, { c, n: (groups.get(k)?.n || 0) + 1 });
+  });
+  const chips = [...groups.values()].map(({ c, n }) => `<span class="deck-chip t-${CARDS[c.id].type}${c.up ? ' up' : ''}" data-tip="${esc(`${cardName(c)}: ${cardText(c)}`)}">${icon(CARDS[c.id].icon)}<span>${esc(cardName(c))}</span>${n > 1 ? `<b>×${n}</b>` : ''}</span>`).join('');
+  return `<section class="run-story">
+    <h2>Your run</h2>
+    <div class="story-body">
+      ${topC ? `<figure class="story-top">${cardHTML(topC)}<figcaption>Most played <b>×${top.n}</b></figcaption></figure>` : ''}
+      <div class="story-text">
+        ${lines.map((l) => `<p>${l}</p>`).join('')}
+        <div class="deck-strip">${chips}</div>
+        <button class="btn small" data-story-deck>See full deck</button>
+      </div>
+    </div>
+  </section>`;
+}
+
 function gameOver(won, abandoned, killedBy) {
   battle = null;
   clearRun();
@@ -1095,6 +1153,7 @@ function gameOver(won, abandoned, killedBy) {
       <div><dt>Best ever</dt><dd>${stats.best_floor}/${TOTAL_FLOORS}</dd></div>
     </dl>
     <div class="end-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
+    ${runStory(won)}
     ${tipped > 0 ? `<div class="tip-jar">${managerChibi()}<p><b>Tip jar +${tipped} ${T.coins}</b><span>${tips.found.length ? `Mina found ${tips.found.map((f) => `<b>${esc(f)}</b>`).join(', ')} for your Kioku Catalog!` : `Every ${TIP_STEP} ${T.coins} in the jar uncovers something new in your Kioku Catalog.`}</span><span class="jar-bar" style="--fill: ${Math.min(100, (tips.jar / TIP_STEP) * 100)}%"><i></i><small>${tips.jar}/${TIP_STEP}</small></span></p></div>` : ''}
     ${cameo ? `<div class="cameo"><span class="cameo-art pettable" role="button" tabindex="0" aria-label="Pet ${esc(GUARDIANS[cameo].name)}" data-pet>${guardianChibi(GUARDIANS[cameo].art)}</span><p><b>${esc(GUARDIANS[cameo].name)}</b>${esc(won ? GUARDIANS[cameo].cheer : GUARDIANS[cameo].comfort)}</p></div>` : ''}
     ${summary.climbUnlocked ? `<div class="unlock-note climb-note">${uiIcon('flag')}<p><b>Climb level ${summary.climbUnlocked} unlocked for ${esc(hero().name)}!</b><br><small>${esc(CLIMB[summary.climbUnlocked].name)}: ${esc(CLIMB[summary.climbUnlocked].text)} Pick it on the climber screen.</small></p></div>` : ''}
@@ -1102,6 +1161,7 @@ function gameOver(won, abandoned, killedBy) {
     <div class="stack narrow"><button class="btn big yellow" data-again>Play again</button><button class="btn ghost" data-title>Title screen</button></div>
   </main>`;
   if (cameo) bindPet(app.querySelector('[data-pet]'), GUARDIANS[cameo]);
+  app.querySelector('[data-story-deck]').addEventListener('click', () => showDeck(run.deck, `${hero().name}'s deck`));
   app.querySelector('[data-again]').addEventListener('click', startNewRun);
   app.querySelector('[data-title]').addEventListener('click', title);
 }

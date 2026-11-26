@@ -134,6 +134,26 @@ const SFX = {
   turn: () => tone({ freq: 392, to: 494, type: 'triangle', dur: 0.12, vol: 0.18 }),
   win: () => { [523, 659, 784, 659, 784, 1046].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.2, vol: 0.25, delay: i * 0.1 })); },
   lose: () => { [392, 349, 311, 262].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.35, vol: 0.22, delay: i * 0.2 })); },
+  // boss fights: a tune from src/ui/bossThemes.js (notes in semitones from A4; an array is a chord)
+  motif: ({ notes, type = 'triangle', step = 0.12, noise: crackle } = {}, quiet = false) => {
+    const v = quiet ? 0.5 : 1;
+    const hz = (n) => 440 * Math.pow(2, n / 12);
+    notes.forEach((n, i) => {
+      if (n === null) return; // a rest
+      const last = i === notes.length - 1;
+      const chord = Array.isArray(n) ? n : [n];
+      const vol = (type === 'sine' || type === 'triangle' ? 0.24 : 0.09) * v / Math.sqrt(chord.length);
+      chord.forEach((m) => tone({ freq: hz(m), type, dur: last ? step * 3 : step * 0.9, vol, delay: i * step }));
+    });
+    if (crackle && !quiet) noise({ dur: 0.5, vol: 0.18, filter: 2400, type: 'bandpass', q: 0.7, sweepTo: 600 });
+  },
+  // the final blow on a boss: a deep boom, then a sparkle
+  ko: () => {
+    tone({ freq: 150, to: 38, type: 'sine', dur: 0.9, vol: 0.6 });
+    tone({ freq: 90, to: 30, type: 'triangle', dur: 0.8, vol: 0.3 });
+    noise({ dur: 0.6, vol: 0.5, filter: 2200, sweepTo: 120 });
+    [1046, 1318, 1568, 2093].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.3, vol: 0.12, delay: 0.55 + i * 0.07 }));
+  },
   enter: () => { tone({ freq: 330, type: 'triangle', dur: 0.1, vol: 0.2 }); tone({ freq: 494, type: 'triangle', dur: 0.16, vol: 0.2, delay: 0.08 }); },
 };
 
@@ -142,4 +162,21 @@ export function sfx(name, ...args) {
   const a = ctx(); if (!a) return;
   master.gain.value = settings.sfx * SFX_HEADROOM;
   SFX[name]?.(...args);
+}
+
+// Slow-mo: the music drops in pitch and speed for a moment, then comes back.
+let slowTimer = null;
+export function musicSlowMo(holdMs = 900) {
+  if (music.paused) return;
+  music.preservesPitch = false; music.webkitPreservesPitch = false; music.mozPreservesPitch = false;
+  clearInterval(slowTimer);
+  const ramp = (from, to, ms, then) => {
+    const t0 = performance.now();
+    slowTimer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      music.playbackRate = from + (to - from) * k;
+      if (k >= 1) { clearInterval(slowTimer); then?.(); }
+    }, 30);
+  };
+  ramp(music.playbackRate, 0.55, 250, () => { slowTimer = setTimeout(() => ramp(0.55, 1, 900), holdMs); });
 }

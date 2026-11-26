@@ -418,6 +418,7 @@ export class Battle {
       return;
     }
     const it = this.intent;
+    this.emit('enemyAct', it);
     const hitPlayer = (n) => {
       const dmg = this.calcDamage(n, e, this.player);
       const absorbed = Math.min(this.player.block, dmg);

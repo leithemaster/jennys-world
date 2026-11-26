@@ -1025,3 +1025,72 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
   .shop-top .gift-note { font-size: 11px; padding: 0 8px; }
 }
 @media (max-height: 480px) { .shop .shop-row .btn::before { display: none; } }
+
+/* ---------- boss fights: each boss has its own room (see src/ui/bossThemes.js) ---------- */
+.boss-stage { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  background: radial-gradient(ellipse at 70% 18%, var(--b1) 0%, color-mix(in srgb, var(--b1) 45%, var(--b2)) 45%, var(--b2) 100%);
+  animation: fade 900ms var(--ease-out); }
+.boss-stage::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, .45), transparent 60%); }
+.boss-stage .bit { position: absolute; top: 0; font-style: normal; font-family: var(--font-display); font-weight: 700; font-size: var(--s); line-height: 1; color: var(--fx); opacity: 0; --peak: .5; animation: var(--d) linear var(--delay) infinite; }
+.bit.go-up { top: 100%; animation-name: bit-up; }
+.bit.go-down { top: -8%; animation-name: bit-down; }
+.bit.go-drift { top: var(--y); animation-name: bit-drift; }
+.bit.b-dot { --peak: .9; width: calc(var(--s) * .8); height: calc(var(--s) * .8); border-radius: 50%; background: var(--fx); box-shadow: 0 0 10px var(--fx); }
+.bit.b-puff { --peak: .35; width: calc(var(--s) * 3); height: calc(var(--s) * 2); border-radius: 50%; background: var(--fx); filter: blur(8px); }
+.bit.b-hex { --peak: .4; width: calc(var(--s) * 2); height: calc(var(--s) * 2.3); background: var(--fx); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+@keyframes bit-up { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: var(--peak); } 85% { opacity: calc(var(--peak) * .6); } 100% { opacity: 0; transform: translate(var(--sway), -105vh); } }
+@keyframes bit-down { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: var(--peak); } 85% { opacity: calc(var(--peak) * .6); } 100% { opacity: 0; transform: translate(var(--sway), 108vh); } }
+@keyframes bit-drift { 0% { opacity: 0; transform: translate(0, 0) rotate(0); } 25% { opacity: var(--peak); } 50% { transform: translate(calc(var(--sway) * 3), 30px) rotate(12deg); } 75% { opacity: calc(var(--peak) * .7); } 100% { opacity: 0; transform: translate(calc(var(--sway) * 6), 0) rotate(-6deg); } }
+.boss-fight .vs { color: var(--sun); }
+
+/* the boss's name card slides in when the fight starts, then leaves */
+.boss-intro { position: fixed; left: 50%; top: 30%; z-index: 30; display: grid; justify-items: center; gap: 2px; pointer-events: none;
+  transform: translate(-50%, -50%); animation: boss-intro 2.2s var(--ease-out) forwards; }
+.boss-intro b { font-family: var(--font-display); font-size: clamp(30px, 6vw, 56px); color: var(--paper); -webkit-text-stroke: 7px var(--ink); paint-order: stroke fill; white-space: nowrap; }
+.boss-intro small { font-size: 15px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 999px; padding: 2px 14px; }
+@keyframes boss-intro { 0% { opacity: 0; transform: translate(-30%, -50%) skewX(-12deg); } 14% { opacity: 1; transform: translate(-50%, -50%) skewX(0); } 78% { opacity: 1; transform: translate(-52%, -50%); } 100% { opacity: 0; transform: translate(-80%, -50%) skewX(10deg); } }
+
+/* K.O.: the final blow on a boss pops big, then everything slows down */
+.ko-flash { position: fixed; inset: 0; z-index: 25; background: #fff; pointer-events: none; animation: ko-flash 500ms ease-out forwards; }
+@keyframes ko-flash { from { opacity: .85; } to { opacity: 0; } }
+.ko-stamp { position: fixed; left: 50%; top: 42%; z-index: 26; pointer-events: none; transform: translate(-50%, -50%); }
+.ko-stamp b { display: block; font-family: var(--font-display); font-size: clamp(64px, 14vw, 140px); color: var(--sun); -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; letter-spacing: .02em; animation: ko-stamp 2.4s var(--ease-pop) forwards; }
+@keyframes ko-stamp { 0% { opacity: 0; transform: scale(3) rotate(-14deg); } 12% { opacity: 1; transform: scale(.92) rotate(-6deg); } 20% { transform: scale(1.05) rotate(-6deg); } 80% { opacity: 1; transform: scale(1.12) rotate(-6deg); } 100% { opacity: 0; transform: scale(1.2) rotate(-6deg); } }
+.battle.ko .arena { animation: ko-shake 480ms ease-out; }
+@keyframes ko-shake { 15% { transform: translate(-10px, 6px); } 30% { transform: translate(9px, -6px); } 45% { transform: translate(-6px, 3px); } 60% { transform: translate(4px, -2px); } }
+.battle.ko .enemy .portrait { animation: ko-fall 2.4s cubic-bezier(.2, .7, .3, 1) forwards; z-index: 2; }
+@keyframes ko-fall { 0% { transform: none; filter: none; } 6% { transform: scale(1.4); filter: brightness(3) saturate(0); } 18% { transform: scale(1.25) rotate(-8deg); filter: none; } 100% { transform: translateY(28px) scale(.85) rotate(-22deg); filter: grayscale(1); opacity: .25; } }
+.battle.ko .intent, .battle.ko .enemy .statuses { opacity: 0; transition: opacity .3s; }
+.battle.ko .board, .battle.ko .energy-bar, .battle.ko .controls { filter: saturate(.3) brightness(.75); transition: filter .6s; pointer-events: none; }
+.battle.ko .you .portrait { animation: ko-cheer 900ms var(--ease-pop) 500ms 2; }
+@keyframes ko-cheer { 40% { transform: translateY(-14px) scale(1.06); } }
+.ko-num { position: absolute; left: 50%; top: 22%; z-index: 4; pointer-events: none; font-family: var(--font-display); font-weight: 700; font-size: clamp(44px, 7vw, 68px); color: var(--coral); -webkit-text-stroke: 8px var(--ink); paint-order: stroke fill; white-space: nowrap; animation: ko-num 2.4s var(--ease-out) forwards; }
+@keyframes ko-num { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.4); } 10% { opacity: 1; transform: translate(-50%, 0) scale(1.35) rotate(-6deg); } 22% { transform: translate(-50%, -6px) scale(1.1) rotate(-4deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1.15) rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .boss-stage .bit, .boss-intro { animation: none; }
+  .boss-stage .bit { display: none; }
+  .boss-intro { display: none; }
+  .ko-flash { display: none; }
+  .ko-num, .ko-stamp b, .battle.ko .arena, .battle.ko .enemy .portrait, .battle.ko .you .portrait { animation: none; }
+  .battle.ko .enemy .portrait { opacity: .3; filter: grayscale(1); }
+}
+
+/* ---------- run-end story ---------- */
+.run-story { width: min(640px, 100%); display: grid; gap: var(--s2); background: rgba(42, 22, 38, 0.35); border-radius: 20px; padding: var(--s3) var(--s4) var(--s4); }
+.run-story h2 { color: var(--paper); -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
+.story-body { display: flex; gap: var(--s4); align-items: center; text-align: left; }
+.story-top { margin: 0; flex: none; width: 132px; display: grid; gap: 6px; justify-items: center; }
+.story-top .card { width: 132px; transform: rotate(-3deg); }
+.story-top figcaption { font-family: var(--font-display); font-weight: 700; font-size: 14px; background: var(--sun); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 999px; padding: 1px 12px; box-shadow: var(--shadow-sm); }
+.story-text { display: grid; gap: 6px; min-width: 0; justify-items: start; }
+.end .story-text p { color: var(--on-ground); font-weight: 700; }
+.end .story-text p b { color: var(--sun); }
+.deck-strip { display: flex; flex-wrap: wrap; gap: 4px; max-height: 132px; overflow: auto; padding: 2px; }
+.deck-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-left: 6px solid var(--c-status); border-radius: 999px; padding: 0 8px 0 4px; font-size: 12px; font-weight: 800; cursor: help; }
+.deck-chip.t-attack { border-left-color: var(--c-attack); }
+.deck-chip.t-skill { border-left-color: var(--c-skill); }
+.deck-chip.t-power { border-left-color: var(--c-power); }
+.deck-chip.up { background: #e6fbf5; }
+.deck-chip svg { width: 18px; height: 18px; }
+.deck-chip b { color: var(--muted); font-size: 11px; }
+@media (max-width: 560px) { .story-body { flex-direction: column; text-align: center; } .story-text { justify-items: center; } .deck-strip { justify-content: center; } }
