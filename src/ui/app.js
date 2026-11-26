@@ -1297,17 +1297,21 @@ function shopScreen() {
   stock.snacks.forEach((c) => noteSnackSeen(c.id));
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
+    // One screen, no scrolling: title + Mina on top, the card shelf (shrinks to fit),
+    // charms and snacks as compact lists side by side, buttons at the bottom.
+    const line = (attr, i, c, icon, name, desc, extra, off) => `<div class="shop-line${c.sold ? ' sold' : ''}"><button class="shop-buy" ${attr}="${i}" ${c.sold || off ? 'disabled' : ''} data-tip="${esc(`${name}: ${desc}`)}" aria-label="Buy ${esc(name)} for ${priceOf(c)}: ${esc(desc)}"><span class="shop-ic">${icon}</span><span class="shop-txt"><b>${esc(name)}${extra}</b><small>${esc(desc)}</small></span><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></button></div>`;
     app.innerHTML = `${header()}<main class="room shop">
-      <h1>${GAME.shop}</h1>
-      <div class="shopkeep"><span class="shopkeep-art">${managerChibi()}</span><p><b>Mina</b><span data-mina>${esc(mina)}</span></p></div>
-      <p class="room-text">Snacks, cards and shiny charms.${stock.cards.some((c) => c.sale && !c.sold) ? ' <b class="sale-note">Card sale today!</b>' : ''}${run.charms.includes('giftCard') && !stock.giftUsed ? ` <b class="gift-note">${charmIcon('giftCard')} Gift Card: your first item is half price!</b>` : ''}</p>
-      <div class="shop-h"><h2>Cards</h2><button class="btn small" data-restock ${run.coins < restockCost(stock.rerolls) ? 'disabled' : ''} data-tip="Swap the cards on the shelf for a new set. Costs more each time.">Restock <small>${uiIcon('coin')} ${restockCost(stock.rerolls)}</small></button></div>
-      <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}${c.sale ? ` on-sale sale-${c.sale}` : ''}">${c.sale && !c.sold ? `<em class="sale-tag">${c.sale}% off</em>` : ''}<button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${priceOf(c)}${c.sale ? `, ${c.sale}% off` : ''}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${c.sale ? `<s>${priceOf({ price: c.was })}</s>` : ''}${priceOf(c)}</span></div>`).join('')}</div>
-      <h2>Charms</h2>
-      <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${charmIcon(c.id)}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
-      <h2>Snacks</h2>
-      <div class="charm-choices">${stock.snacks.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-snackbuy="${i}" ${c.sold || run.coins < priceOf(c) || !snackRoom(run) ? 'disabled' : ''}><span class="big-icon">${snackIcon(c.id)}</span><b>${esc(SNACKS[c.id].name)}</b><small>${esc(SNACKS[c.id].desc)}</small></button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
-      ${snackRoom(run) ? '' : '<p class="room-text">Your snack bar is full. Click a snack at the top to eat or toss it.</p>'}
+      <div class="shop-top">
+        <h1>${GAME.shop}</h1>
+        <div class="shopkeep"><span class="shopkeep-art">${managerChibi()}</span><p><b>Mina</b><span data-mina>${esc(mina)}</span></p></div>
+        ${run.charms.includes('giftCard') && !stock.giftUsed ? `<b class="gift-note">${charmIcon('giftCard')} Gift Card: first item half price!</b>` : ''}
+      </div>
+      <section class="shop-cards">
+        <div class="shop-h"><h2>Cards</h2>${stock.cards.some((c) => c.sale && !c.sold) ? '<b class="sale-note">Card sale today!</b>' : ''}<button class="btn small" data-restock ${run.coins < restockCost(stock.rerolls) ? 'disabled' : ''} data-tip="Swap the cards on the shelf for a new set. Costs more each time.">Restock <small>${uiIcon('coin')} ${restockCost(stock.rerolls)}</small></button></div>
+        <div class="choices shelf">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}${c.sale ? ` on-sale sale-${c.sale}` : ''}">${c.sale && !c.sold ? `<em class="sale-tag">${c.sale}% off</em>` : ''}<button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${priceOf(c)}${c.sale ? `, ${c.sale}% off` : ''}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${c.sale ? `<s>${priceOf({ price: c.was })}</s>` : ''}${priceOf(c)}</span></div>`).join('')}</div>
+      </section>
+      <section class="shop-list"><h2>Charms</h2>${stock.charms.map((c, i) => line('data-charm', i, c, charmIcon(c.id), CHARMS[c.id].name, CHARMS[c.id].desc, c.shopOnly ? ' <em class="tag">shop only</em>' : '', run.coins < priceOf(c))).join('')}</section>
+      <section class="shop-list"><h2>Snacks</h2>${stock.snacks.map((c, i) => line('data-snackbuy', i, c, snackIcon(c.id), SNACKS[c.id].name, SNACKS[c.id].desc, '', run.coins < priceOf(c) || !snackRoom(run))).join('')}${snackRoom(run) ? '' : '<p class="shop-note">Snack bar full: click a snack at the top to eat or toss it.</p>'}</section>
       <div class="shop-row">
         <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>${uiIcon('coin')} ${removeCost(run)}</small></button>
         <button class="btn yellow" data-go>Leave shop</button>
