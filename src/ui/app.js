@@ -949,6 +949,11 @@ function battleScreen(enemyId, kind) {
   }));
   battle.start();
   update();
+  // The board is sized from the space left over, so measure again once the energy bar and
+  // the bottom bar have their content (and whenever their height changes, e.g. a long log line).
+  fitBoard();
+  const refit = new ResizeObserver(() => { if (app.contains(boardEl)) fitBoard(); else refit.disconnect(); });
+  [$('[data-energy]'), app.querySelector('.controls')].forEach((el) => refit.observe(el));
   if (theme) setTimeout(() => sfx('motif', theme.sting), 200);
 }
 
