@@ -11,7 +11,8 @@ import { CHARACTERS, passiveText } from '../game/characters.js';
 import { OUTFITS } from '../game/outfits.js';
 import { RULES, STATUS_NAMES, STATUS_HELP, STICKERS } from '../game/battle.js';
 import { T } from '../game/terms.js';
-import { icon, roomIcon, enemySVG } from './art.js';
+import { icon, roomIcon, enemySVG, snackIcon } from './art.js';
+import { SNACKS, SNACK_SLOTS, SNACK_DROP } from '../game/snacks.js';
 import { charmIcon } from './charmIcons.js';
 import { jennyChibi, toniChibi } from './chibi.js';
 
@@ -89,6 +90,14 @@ export function buildCatalog() {
     jenny: jennyChibi(id), toni: toniChibi(id),
   }));
 
+  const snacks = Object.entries(SNACKS).map(([id, s]) => ({
+    id, name: s.name, rarity: s.rarity, style: s.style ? ARCHES[s.style].name : '', desc: s.desc,
+    when: s.anytime ? 'Fights or map' : 'Fights', art: snackIcon(id),
+  }));
+  const snackRules = { slots: SNACK_SLOTS, start: SNACK_DROP.start, step: SNACK_DROP.step, elite: SNACK_DROP.elite, coupon: SNACK_DROP.coupon,
+    charms: Object.entries(CHARMS).filter(([k]) => ['lunchbox', 'snackCoupon', 'secretRecipe', 'hamsterCheeks', 'pocketFridge'].includes(k)).map(([, c]) => `${c.name}: ${c.desc}`),
+    events: ALL_EVENTS.filter((e) => ['vending', 'samples', 'snackswap', 'konbini'].includes(e.id)).map((e) => e.title) };
+
   const rooms = ['fight', 'elite', 'event', 'shop', 'rest', 'treasure', 'boss'].map((type) => ({ type, art: roomIcon(type) }));
   const acts = ACTS.map((a) => ({ name: a.name, normals: a.normals.map((n) => ENEMIES[n].name), elites: a.elites.map((n) => ENEMIES[n].name), boss: ENEMIES[a.boss].name }));
 
@@ -97,5 +106,5 @@ export function buildCatalog() {
     stickerEvery: CHARACTERS.jenny.passive.n, specialNeed: SPECIAL_NEED,
   };
 
-  return { cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };
+  return { snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };
 }

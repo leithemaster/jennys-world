@@ -33,6 +33,7 @@ export function blankProgress() {
       charms: {},    // id -> { seen, taken }
       enemies: {},   // id -> { met, defeated }
       events: {},    // id -> { met }
+      snacks: {},    // id -> { seen, taken }
       guardians: {}, // id -> { met }
     },
     history: [],     // newest first, at most HISTORY_MAX entries
@@ -128,6 +129,8 @@ export const noteCardSeen = (id) => bump('cards', id, 'seen');
 export const noteCardTaken = (id) => { bump('cards', id, 'seen'); bump('cards', id, 'taken'); };
 export const noteCharmSeen = (id) => bump('charms', id, 'seen');
 export const noteCharmTaken = (id) => { bump('charms', id, 'seen'); bump('charms', id, 'taken'); };
+export const noteSnackSeen = (id) => bump('snacks', id, 'seen');
+export const noteSnackTaken = (id) => { bump('snacks', id, 'seen'); bump('snacks', id, 'taken'); };
 export const noteEnemyMet = (id) => bump('enemies', id, 'met');
 export const noteEnemyDefeated = (id) => bump('enemies', id, 'defeated');
 export const noteEventMet = (id) => bump('events', id, 'met');

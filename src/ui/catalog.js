@@ -21,6 +21,7 @@ const TABS = [
   { id: 'outfits', label: 'Outfits' },
   { id: 'cards', label: 'Cards' },
   { id: 'charms', label: 'Charms' },
+  { id: 'snacks', label: 'Snacks' },
   { id: 'enemies', label: 'Enemies' },
   { id: 'bosses', label: 'Bosses' },
   { id: 'events', label: 'Events' },
@@ -39,6 +40,7 @@ function withFound(D) {
     outfits: mark(D.outfits, (r) => outfitOpen(r.id)),
     cards: mark(D.cards, (r) => r.rarity === 'status' || r.rarity === 'curse' || starterOpen(r.id) || isFound('cards', r.id)),
     charms: mark(D.charms, (r) => isFound('charms', r.id)),
+    snacks: mark(D.snacks, (r) => isFound('snacks', r.id)),
     enemies: mark(D.enemies, (r) => isFound('enemies', r.id)),
     events: mark(D.events, (r) => isFound('events', r.id)),
   };
@@ -116,6 +118,16 @@ export function catalogScreen(app, { onBack }) {
     ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
     'Every charm you have been offered or picked up. Charms are passive and last the whole run.'),
 
+    snacks: () => table(D.snacks.map((r) => hide(r, ['rarity', 'art'])), [
+      { label: 'Art', cell: (r) => artBox('charm', r, r.art) },
+      { label: 'Name', key: 'name', cell: (r) => nameCell(r) },
+      { label: 'Rarity', key: 'rarity', sortVal: (r) => RAR_ORDER[r.rarity], cell: (r) => `<span class="tag ct-${r.rarity}">${cap(r.rarity)}</span>` },
+      { label: 'Style', key: 'style', cell: (r) => (!r.found ? notYet : r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">Any</span>') },
+      { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
+      { label: 'Eat it in', key: 'when', cell: (r) => (r.found ? `<span class="small">${esc(r.when)}</span>` : '') },
+    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare']], 'rarity',
+    `Snacks are one-use treats kept in your snack bar (${D.snackRules.slots} slots to start). Eating one is free: no ${'energy'}, and your turn keeps going. After a fight there's a ${D.snackRules.start}% chance of a snack (elites +${D.snackRules.elite}%); the chance goes down ${D.snackRules.step}% after a drop and up ${D.snackRules.step}% after a fight without one. Once your deck has a style, half of all snacks come from that style. Shops sell 3. Snack events: ${esc(D.snackRules.events.join(', '))}.`),
+
     enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss').map((r) => hide(r, ['kind', 'floor', 'art'])), [
       { label: 'Art', cell: (r) => artBox('enemy', r, r.art) },
       { label: 'Name', key: 'name', cell: (r) => nameCell(r) },
@@ -160,7 +172,7 @@ export function catalogScreen(app, { onBack }) {
   };
 
   const totalFound = () => {
-    const lists = [D.cards, D.charms, D.enemies, D.events, D.outfits, D.characters];
+    const lists = [D.cards, D.charms, D.snacks, D.enemies, D.events, D.outfits, D.characters];
     return { found: lists.reduce((n, l) => n + l.filter((r) => r.found).length, 0), all: lists.reduce((n, l) => n + l.length, 0) };
   };
 

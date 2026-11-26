@@ -29,6 +29,13 @@ const I = {
   luckyChopsticks: `<path d="M9 4 L13 28" stroke="${K}" stroke-width="4.4" stroke-linecap="round"/><path d="M9 4 L13 28" stroke="#d6ab7b" stroke-width="2.2" stroke-linecap="round"/><path d="M22 4 L17 28" stroke="${K}" stroke-width="4.4" stroke-linecap="round"/><path d="M22 4 L17 28" stroke="#d6ab7b" stroke-width="2.2" stroke-linecap="round"/><path d="M9 6 l1.5 -2 M22 6 l-1.5 -2" stroke="#ff5d6e" stroke-width="2.4" stroke-linecap="round"/>`,
   vpnDongle: `<rect x="6" y="11" width="16" height="10" rx="2" ${s('#6ec3ff')}/><rect x="22" y="13" width="6" height="6" ${s('#e8e2f2', 1.4)}/>${line('M10 16 l2 2 4 -4', 1.6)}`,
 
+  // snack charms
+  lunchbox: `<rect x="4" y="9" width="24" height="17" rx="3" ${s('#ff5d8f')}/><rect x="7" y="12" width="8" height="11" rx="1.5" fill="#fff4e6" stroke="${K}" stroke-width="1.4"/><rect x="17" y="12" width="8" height="5" rx="1.5" fill="#9fc46a" stroke="${K}" stroke-width="1.4"/><rect x="17" y="19" width="8" height="4" rx="1.5" fill="#ffc53d" stroke="${K}" stroke-width="1.4"/>${line('M12 9 V6 H20 V9')}`,
+  snackCoupon: `<path d="M4 10 H28 V14 A2.5 2.5 0 0 0 28 19 V23 H4 V19 A2.5 2.5 0 0 0 4 14 Z" ${s('#ffc53d')}/>${line('M20 10 V23', 1.4).replace('stroke-width="1.4"', 'stroke-width="1.4" stroke-dasharray="2 2"')}${line('M9 15 L13 19 M13 15 L9 19', 1.6)}`,
+  secretRecipe: `<path d="M8 5 H24 V27 H8 Z" ${s('#fff4e6')}/>${line('M11 10 H21 M11 14 H21 M11 18 H17', 1.4)}<circle cx="21" cy="23" r="3.4" ${s('#ff5d6e', 1.4)}/>`,
+  hamsterCheeks: `<circle cx="16" cy="17" r="10" ${s('#f0a04b')}/><circle cx="9" cy="20" r="4.5" ${s('#ffd2b0', 1.4)}/><circle cx="23" cy="20" r="4.5" ${s('#ffd2b0', 1.4)}/><circle cx="12.5" cy="14" r="1.3" fill="${K}"/><circle cx="19.5" cy="14" r="1.3" fill="${K}"/><path d="M8 9 a3 3 0 1 1 3 -3 M24 9 a3 3 0 1 0 -3 -3" ${s('#f0a04b', 1.4)}/>`,
+  pocketFridge: `<rect x="8" y="4" width="16" height="24" rx="3" ${s('#cfefff')}/>${line('M8 13 H24 M11 8 V10 M11 16 V20', 1.6)}${shine(20, 8)}`,
+
   // special event boons
   lucidDream: `<path d="M7 20 C3 20 3 14 7 14 C7 9 14 8 16 12 C18 8 26 9 25 15 C29 15 29 21 25 21 Z" ${s('#a98bf0')}/><path d="M22 3 l1.2 2.6 2.8 .4 -2 2 .5 2.8 -2.5 -1.3 -2.5 1.3 .5 -2.8 -2 -2 2.8 -.4z" ${s('#ffc53d', 1.2)}/>${line('M10 26 q3 2 6 0 M17 28 q3 2 6 0', 1.4)}`,
   grandmaSoup: `<path d="M4 15 H28 C28 22 23 27 16 27 C9 27 4 22 4 15 Z" ${s('#ff8f6b')}/><ellipse cx="16" cy="15" rx="12" ry="3" fill="#ffe3a8" stroke="${K}" stroke-width="1.6"/>${line('M11 11 q-2 -3 0 -6 M16 11 q-2 -3 0 -6 M21 11 q-2 -3 0 -6', 1.5)}`,

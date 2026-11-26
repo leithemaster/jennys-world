@@ -60,6 +60,7 @@ All storage access goes through [src/platform/storage.js](../src/platform/storag
 | `unlocks.characters` | Playable characters. `jenny` is always there. |
 | `unlocks.outfits` | Outfit sets unlocked by a milestone (ids from `src/game/outfits.js`). Sets with no unlock rule are always open, listed or not. |
 | `cosmetics.<character>` | The outfit set that character wears. Falls back to `date` if that set isn't available. |
+| `collection.snacks` | `seen`: times offered (drop, shop). `taken`: times put in the snack bar. |
 | `collection.cards` / `charms` | `seen`: times offered (reward, shop, gift). `taken`: times added to a run. Taking also counts as seeing. |
 | `collection.enemies` | `met`: fights started. `defeated`: fights won. |
 | `collection.events` / `guardians` | `met`: times visited. |
@@ -71,6 +72,6 @@ Version 1 is built from the old `sm.stats.v2` key the first time it loads, so ru
 
 ## `run` (version 1)
 
-This is the live run object from `newRun()` in [src/game/run.js](../src/game/run.js), saved whenever the player is on the map, plus `"version": 1`. Fields: `character`, `hp`, `maxHp`, `coins`, `deck` (`[{ "id": "...", "up": true }]`), `charms`, `giftPending`, `act`, `map`, `pos`, `path`, `pending`, `removeCost`, `floorsCleared`, `kills`, `loot`.
+This is the live run object from `newRun()` in [src/game/run.js](../src/game/run.js), saved whenever the player is on the map, plus `"version": 1`. Fields: `character`, `hp`, `maxHp`, `coins`, `deck` (`[{ "id": "...", "up": true }]`), `charms`, `snacks` (the snack bar: one snack id or `null` per slot), `giftPending`, `act`, `map`, `pos`, `path`, `pending`, `removeCost`, `floorsCleared`, `kills`, `loot`.
 
 If `kioku.run` is missing, the game falls back to the old `sm.run.v3` key once, so a run that was in progress during the update can still be continued.

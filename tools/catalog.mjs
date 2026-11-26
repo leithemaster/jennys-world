@@ -74,5 +74,10 @@ for (const [pool, label] of Object.entries(POOLS)) {
   out.push('');
 }
 
+const { SNACKS, SNACK_SLOTS } = await import('../src/game/snacks.js');
+out.push('## Snacks', '', `One-use items kept in the snack bar (${SNACK_SLOTS} slots to start). Eating one costs no energy.`, '', '| Snack | Rarity | Style | Effect | Eat it in |', '|---|---|---|---|---|');
+for (const s of Object.values(SNACKS)) out.push(`| ${s.name} | ${s.rarity} | ${s.style ? ARCHES[s.style].name : 'Any'} | ${cell(s.desc)} | ${s.anytime ? 'Fights or map' : 'Fights'} |`);
+out.push('');
+
 writeFileSync(new URL('../docs/catalog.md', import.meta.url), out.join('\n'));
 console.log(`docs/catalog.md: ${playable.length} cards, ${Object.keys(CHARMS).length} charms, ${Object.keys(CHARACTERS).length} characters`);

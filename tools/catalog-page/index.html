@@ -118,6 +118,7 @@ let D;
 const TABS = [
   { id: 'cards', label: 'Cards' },
   { id: 'charms', label: 'Charms' },
+  { id: 'snacks', label: 'Snacks' },
   { id: 'enemies', label: 'Enemies' },
   { id: 'bosses', label: 'Bosses' },
   { id: 'events', label: 'Events' },
@@ -172,6 +173,16 @@ const VIEWS = {
     { label: 'Only shows up if', cell: (r) => r.requires ? `<span class="small">${esc(r.requires)}</span>` : '<span class="small">—</span>' },
   ], [['all', 'All'], ['haru', "Haru's Gift"], ['drop', 'Drop'], ['shop', 'Shop only'], ['boss', 'Boss reward'], ['event', 'Event only'], ['special', 'Special event']], 'pool',
   `Charms are passive and last the whole run. Haru's Gift offers 3 of the ${D.charms.filter((c) => c.pool === 'haru').length} starters at the start. Shop-only charms never drop anywhere else.`),
+
+  snacks: () => table(D.snacks, [
+    { label: 'Art', cell: (r) => `<div class="art charm">${r.art}</div>` },
+    { label: 'Name', key: 'name', cell: nameCell },
+    { label: 'Rarity', key: 'rarity', sortVal: (r) => RAR_ORDER[r.rarity], cell: (r) => `<span class="tag ${r.rarity}">${cap(r.rarity)}</span>` },
+    { label: 'Style', key: 'style', cell: (r) => r.style ? `<span class="style">${esc(r.style)}</span>` : '<span class="small">Any</span>' },
+    { label: 'Effect', cell: (r) => esc(r.desc) },
+    { label: 'Eat it in', key: 'when', cell: (r) => `<span class="small">${esc(r.when)}</span>` },
+  ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare']], 'rarity',
+  `Snacks are one-use treats kept in your snack bar (${D.snackRules.slots} slots to start). Eating one is free: no ${'energy'}, and your turn keeps going. After a fight there's a ${D.snackRules.start}% chance of a snack (elites +${D.snackRules.elite}%); the chance goes down ${D.snackRules.step}% after a drop and up ${D.snackRules.step}% after a fight without one. Once your deck has a style, half of all snacks come from that style. Shops sell 3. Snack events: ${esc(D.snackRules.events.join(', '))}. Snack charms: ${esc(D.snackRules.charms.join(' · '))}`),
 
   enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss'), [
     { label: 'Art', cell: (r) => `<div class="art enemy">${r.art}</div>` },
@@ -256,7 +267,7 @@ fetch('data.json').then((r) => r.json()).then((data) => {
     'Every path is checked so it has at least 2 rest booths, at least 1 shop and no more than 2 elites.',
   ];
   document.getElementById('tabs').innerHTML = TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}">${t.label}</a>`).join('');
-  const n = { Characters: D.characters.length, Outfits: D.outfits.length, Cards: D.cards.length, Charms: D.charms.length, Enemies: D.enemies.filter((e) => e.kind !== 'Boss').length, Bosses: D.enemies.filter((e) => e.kind === 'Boss').length, Events: D.events.length };
+  const n = { Characters: D.characters.length, Outfits: D.outfits.length, Cards: D.cards.length, Charms: D.charms.length, Snacks: D.snacks.length, Enemies: D.enemies.filter((e) => e.kind !== 'Boss').length, Bosses: D.enemies.filter((e) => e.kind === 'Boss').length, Events: D.events.length };
   document.getElementById('counts').innerHTML = Object.entries(n).map(([k, v]) => `<span class="count"><b>${v}</b> ${k}</span>`).join('');
   render();
 }).catch(() => { document.getElementById('view').innerHTML = '<p class="loading">The catalog data didn’t load. Refresh the page to try again.</p>'; });

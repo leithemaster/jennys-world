@@ -1,3 +1,4 @@
+import { SNACKS } from '../game/snacks.js';
 import { jennyChibi, toniChibi, enemyChibi } from './chibi.js';
 import { wornOutfit } from '../game/outfits.js';
 // Hand-drawn-ish SVG art: card icons, Jenny's portrait, enemies, map icons.
@@ -69,6 +70,15 @@ export const ICONS = {
   pileDiscard: '<rect x="4" y="10" width="15" height="20" rx="3" fill="currentColor" transform="rotate(-14 11 20)"/><rect x="12" y="8" width="15" height="20" rx="3" fill="currentColor" opacity=".7" transform="rotate(12 19 18)"/>',
   static: '<path d="M2 16 L6 8 L10 22 L14 6 L18 26 L22 10 L26 20 L30 14" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linejoin="round"/>',
 };
+
+// A snack: its card icon on a round badge in the snack's color.
+export function snackIcon(id) {
+  const s = SNACKS[id];
+  // light badges get a dark icon, dark badges a white one
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(s.color.slice(i, i + 2), 16));
+  const ink = 0.299 * r + 0.587 * g + 0.114 * b > 160 ? INK : '#fff';
+  return `<svg class="snack-ic" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="${s.color}" stroke="#1a1420" stroke-width="2.2"/><g transform="translate(6.4 6.4) scale(.6)" color="${ink}">${ICONS[s.icon] || ''}</g></svg>`;
+}
 
 export function icon(name, cls = '') {
   return `<svg class="${cls}" viewBox="0 0 32 32" aria-hidden="true">${ICONS[name] || ''}</svg>`;

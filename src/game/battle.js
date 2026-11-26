@@ -9,6 +9,7 @@ import { CARDS } from './cards.js';
 import { ENEMIES } from './enemies.js';
 import { T } from './terms.js';
 import { CHARACTERS } from './characters.js';
+import { SNACKS } from './snacks.js';
 
 // Tunable rules. freeReveal = cards revealed for free on every new board.
 export const RULES = { freeReveal: 3, boardPairs: 9, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
@@ -157,7 +158,8 @@ export class Battle {
 
   miss() {
     this.emit('sfx', 'miss');
-    if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
+    if (this.flags.comboLock) { this.log(`Miss! Choco Sticks keep your ${T.combo}.`); }
+    else if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
     else if (this.has('kittenBell') && !this.bellUsed) { this.bellUsed = true; this.log(`Miss! Kitten Bell keeps your ${T.combo}.`); }
     else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log(`Miss! Groove keeps half your ${T.combo}.`); }
     else { this.combo = 0; this.log('No match…'); }
@@ -245,6 +247,20 @@ export class Battle {
 
   flash(ms = 1100) {
     this.emit('flash', ms);
+  }
+
+  // Eat a snack from the snack bar. Free: costs no energy and doesn't end the turn.
+  // The caller removes it from the bar. Returns false if it can't be eaten right now.
+  useSnack(id) {
+    const s = SNACKS[id];
+    if (!s || this.over || this.busy || this.first) return false;
+    const times = this.has('secretRecipe') ? 2 : 1;
+    for (let k = 0; k < times; k++) s.fx(this);
+    if (this.has('hamsterCheeks')) this.heal(2);
+    this.log(`You eat ${s.name}.`);
+    this.emit('sfx', 'clear');
+    if (!this.checkEnd()) { this.emit('update'); this.checkAutoEnd(); }
+    return true;
   }
 
   // ---------- combat helpers (used by card effects) ----------

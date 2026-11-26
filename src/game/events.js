@@ -1,6 +1,6 @@
 // "?" rooms. Each option: label, (optional) note, can(run) -> bool, go(run, api) -> result text.
 // api: { addCard(id), randomCard(rarity?), styleCard(arch, rarity?), addCharm(id?), upgradeAll(pred),
-//        pickRemove(), pickUpgrade(), pickCopy() }
+//        pickRemove(), pickUpgrade(), pickCopy(), addSnack(id?), pickSnack(title) -> name or null }
 //
 // requires(run): the event stays in the deck but is skipped until true; needs: the same rule in plain words.
 // gives: { cards, charms } – the event-only cards/charms it can hand out (the catalog lists where they come from).
@@ -12,6 +12,7 @@
 
 import { T } from './terms.js';
 import { CARDS, ARCHES } from './cards.js';
+import { snackRoom, snackCount } from './snacks.js';
 
 // Non-starter cards in the deck tagged with this style (hybrids count for both).
 export function styleCount(run, arch) {
@@ -50,7 +51,7 @@ export const EVENTS = [
     title: 'Vending Machine',
     text: 'A vending machine hums in the corner. The coin slot is taped over, but the snacks look great.',
     options: [
-      { label: `Buy a snack (15 ${T.coins})`, note: 'Heal 12.', can: (r) => r.coins >= 15, go: (r) => { r.coins -= 15; r.hp = Math.min(r.maxHp, r.hp + 12); return `Crunchy. +12 ${T.hp}.`; } },
+      { label: `Buy a snack (20 ${T.coins})`, note: 'Gain a random snack. Needs an empty snack slot.', can: (r) => r.coins >= 20 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 20; return `Clunk! Out drops ${api.addSnack()}.`; } },
       { label: 'Give it a kick', note: `Take 5 damage. Maybe ${T.coins} fall out.`, go: (r) => {
         r.hp = Math.max(1, r.hp - 5);
         if (Math.random() < 0.6) { r.coins += 35; return `Ouch! …but 35 ${T.coins} rattle out.`; }
@@ -166,6 +167,43 @@ export const EVENTS = [
       { label: 'Connect', note: `Gain 45 ${T.coins}. Add a Spam card to your deck.`, go: (r, api) => { r.coins += 45; api.addCard('spam'); return `A pop-up hands you 45 ${T.coins}… and something else.`; } },
       { label: `Buy a VPN (30 ${T.coins})`, note: 'Gain VPN Dongle (event charm).', can: (r) => r.coins >= 30, go: (r, api) => { r.coins -= 30; return `Safe and sound. You got ${api.addCharm('vpnDongle')}.`; } },
       { label: 'Stay offline', go: () => 'Smart choice.' },
+    ],
+  },
+  {
+    id: 'samples', gives: { charms: ['hamsterCheeks'] },
+    title: 'Free Samples',
+    text: 'A worker with a tray of tiny cups calls out: "Free samples! Try one, try two, nobody is counting!"',
+    options: [
+      { label: 'Take a sample', note: 'Gain a random snack.', can: (r) => snackRoom(r) > 0, go: (r, api) => `Tasty. You keep ${api.addSnack()} for later.` },
+      { label: 'Stuff your cheeks', note: `Lose 5 ${T.hp}. Gain Hamster Cheeks (event charm): +1 snack slot.`, go: (r, api) => { r.hp = Math.max(1, r.hp - 5); return `Brain freeze! But you got ${api.addCharm('hamsterCheeks')}.`; } },
+      { label: 'Eat them all right here', note: 'Heal 12.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 12); return `The worker looks impressed. +12 ${T.hp}.`; } },
+    ],
+  },
+  {
+    id: 'snackswap',
+    requires: (r) => snackCount(r) >= 1,
+    needs: 'a snack in your snack bar',
+    title: 'Snack Swap',
+    text: 'A kid at the counter has a binder full of rare cards and very empty pockets. "I\'ll trade you. Snacks only."',
+    options: [
+      { label: 'Trade a snack for a card', note: 'Give a snack. Gain a random uncommon card.', go: async (r, api) => { const s = await api.pickSnack('Trade which snack?'); if (!s) return 'You keep your snacks.'; return `${s} for ${api.addCard(api.randomCard('uncommon'))}. Deal!`; } },
+      { label: 'Trade 2 snacks for a charm', note: 'Give 2 snacks. Gain a random charm.', can: (r) => snackCount(r) >= 2, go: async (r, api) => {
+        const a = await api.pickSnack('Trade which snack? (1 of 2)'); if (!a) return 'You keep your snacks.';
+        const b = await api.pickSnack('Trade which snack? (2 of 2)'); if (!b) { return `The kid takes ${a} and runs. Rude.`; }
+        return `The kid unzips a pouch and hands over ${api.addCharm()}.`;
+      } },
+      { label: 'Sell a snack', note: `Give a snack. Gain 40 ${T.coins}.`, go: async (r, api) => { const s = await api.pickSnack('Sell which snack?'); if (!s) return 'You keep your snacks.'; r.coins += 40; return `${s} sold for 40 ${T.coins}.`; } },
+      { label: 'No deal', go: () => '"Your loss."' },
+    ],
+  },
+  {
+    id: 'konbini', gives: { charms: ['pocketFridge'] },
+    title: 'Midnight Konbini Run',
+    text: 'The konbini downstairs is open all night. The fridges hum, and the onigiri are half price.',
+    options: [
+      { label: `Stock up (35 ${T.coins})`, note: 'Fill all your empty snack slots.', can: (r) => r.coins >= 35 && snackRoom(r) > 0, go: (r, api) => { r.coins -= 35; const got = []; while (snackRoom(r)) got.push(api.addSnack()); return `Your bag is full: ${got.join(', ')}.`; } },
+      { label: `Buy a pocket fridge (60 ${T.coins})`, note: 'Gain Pocket Fridge (event charm): fill empty snack slots on each new floor.', can: (r) => r.coins >= 60, go: (r, api) => { r.coins -= 60; return `It even has a tiny light inside. You got ${api.addCharm('pocketFridge')}.`; } },
+      { label: 'Go back to bed', note: 'Heal 8.', go: (r) => { r.hp = Math.min(r.maxHp, r.hp + 8); return `Sleep is free. +8 ${T.hp}.`; } },
     ],
   },
 ];

@@ -10,6 +10,7 @@
 //   node tools/sim.mjs 200 chars      Jenny vs Toni (and Jenny with no passive)
 //   node tools/sim.mjs 200 styles     every character x every card style
 //   node tools/sim.mjs 200 deaths     where runs end
+//   node tools/sim.mjs 200 snacks     with and without snacks
 //   node tools/sim.mjs 200 boons      each style with and without its special-event boon
 
 // ---- fake clock so battle timeouts resolve instantly ----
@@ -29,7 +30,8 @@ globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: 
 
 const { Battle, RULES } = await import('../src/game/battle.js');
 const { newRun, gainCharm, afterFightHealing, enemyFor, cardChoices } = await import('../src/game/run.js');
-const { drawCharm, drawSpecialEvent } = await import('../src/game/loot.js');
+const { drawCharm, drawSpecialEvent, rollSnackDrop } = await import('../src/game/loot.js');
+const { SNACKS, addSnack, removeSnack } = await import('../src/game/snacks.js');
 const { CHARMS } = await import('../src/game/charms.js');
 const { canUpgrade, CARDS, ARCHES } = await import('../src/game/cards.js');
 const { CHARACTERS } = await import('../src/game/characters.js');
@@ -39,7 +41,7 @@ const SKILLS = {
   sharp: { recall: 0.85, forget: 0.06 },
 };
 
-function fight(run, enemyId, skill, stats) {
+function fight(run, enemyId, skill, stats, kind = 'fight') {
   let result = null;
   let memory = new Map(); // slot index -> key
   let boardRef = null;
@@ -55,8 +57,16 @@ function fight(run, enemyId, skill, stats) {
   const see = (s) => { if (Math.random() < skill.recall) memory.set(s.i, b.keyOf(s.card)); };
   const flip = (s) => { b.flip(s.i); see(s); flush(); };
 
+  let snackTurn = 0;
   while (!result && actions++ < 3000) {
     if (b.board !== boardRef) { boardRef = b.board; memory = new Map(); }
+    // Snacks: one per turn in elite/boss fights; heal snacks only when low.
+    if (b.turn !== snackTurn && !b.busy && !b.first) {
+      snackTurn = b.turn;
+      const low = run.hp < run.maxHp * 0.45;
+      const slot = run.snacks.findIndex((id) => id && (SNACKS[id].anytime || SNACKS[id].desc.startsWith('Heal') ? low : kind !== 'fight' || low));
+      if (slot >= 0) { const id = run.snacks[slot]; if (b.useSnack(id)) { removeSnack(run, slot); stats.snacks = (stats.snacks || 0) + 1; flush(); if (result) break; } }
+    }
     if (b.energy <= 0 && !b.first) { b.endTurn(); flush(); continue; }
     const live = b.board.filter((s) => s.state !== 'gone' && s.state !== 'up');
     if (!live.length) { flush(); continue; }
@@ -111,9 +121,10 @@ function playRun(skill, stats, opts = {}) {
         else { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
         continue;
       }
-      const won = fight(run, enemyFor(run, room), skill, stats);
+      const won = fight(run, enemyFor(run, room), skill, stats, room);
       if (!won) { stats.deaths[`${act}:${room}`] = (stats.deaths[`${act}:${room}`] || 0) + 1; return act; }
       afterFightHealing(run);
+      if (!opts.noSnacks) { const sn = rollSnackDrop(run, room); if (sn) addSnack(run, sn); }
       const offer = cardChoices(run, room);
       const pick = (opts.style && offer.find((c) => CARDS[c.id].arch === opts.style || CARDS[c.id].arch2 === opts.style)) || (opts.style ? null : offer[0]);
       if (pick) run.deck.push(pick);
@@ -146,6 +157,15 @@ function batch(skill, opts) {
   let wins = 0;
   for (let i = 0; i < N; i++) if (playRun(skill, stats, opts) === 3) wins++;
   return { stats, wins };
+}
+if (MODE === 'snacks') {
+  const out = [];
+  for (const character of Object.keys(CHARACTERS)) for (const [skillName, skill] of Object.entries(SKILLS)) for (const noSnacks of [true, false]) {
+    const { stats, wins } = batch(skill, { character, noSnacks });
+    out.push(summarize(stats, wins, { setup: `${character} ${noSnacks ? 'no snacks' : 'snacks'}`, skill: skillName, 'snacks/run': ((stats.snacks || 0) / N).toFixed(1) }));
+  }
+  console.table(out);
+  process.exit(0);
 }
 if (MODE === 'boons') {
   const out = [];

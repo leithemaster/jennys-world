@@ -3,7 +3,8 @@
 import { CARDS } from './cards.js';
 import { CHARACTERS } from './characters.js';
 import { CHARMS } from './charms.js';
-import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard } from './loot.js';
+import { cardReward, drawCard, drawCharm, drawEnemy, deckStyle, drawStyleCard, drawSnack } from './loot.js';
+import { SNACKS, SNACK_SLOTS, SNACK_PRICE, addSnackSlots, addSnack, snackRoom } from './snacks.js';
 
 import { readDoc, writeDoc, removeDoc, readLegacy } from '../platform/storage.js';
 
@@ -22,6 +23,7 @@ export function newRun(character = 'jenny') {
     hp: ch.maxHp, maxHp: ch.maxHp, coins: 99,
     deck: ch.deck.map((id) => ({ id })),
     charms: [],
+    snacks: Array(SNACK_SLOTS).fill(null), // the snack bar (see snacks.js)
     giftPending: true,
     act: 0,
     map: null,
@@ -180,6 +182,8 @@ export function gainCharm(run, id) {
   if (id === 'plush') { run.maxHp += 8; run.hp += 8; }
   if (id === 'scarf') { run.maxHp += 12; run.hp += 12; }
   if (id === 'luckyCoin') run.coins += 100;
+  if (id === 'lunchbox') addSnackSlots(run, 2);
+  if (id === 'hamsterCheeks') addSnackSlots(run, 1);
   if (id === 'glitchPen') run.deck.push({ id: 'stinger' }, { id: 'stinger' });
   if (id === 'puffyJacket') run.deck.push({ id: 'hoodieUp' });
   if (id === 'rhythmBracelet') run.deck.push({ id: 'comboKick' });
@@ -229,7 +233,14 @@ export function shopStock(run) {
     const id = drawCharm(run, pool, charms.map((c) => c.id));
     if (id) charms.push({ id, price: price((pool === 'shop' ? 150 : 175) + Math.floor(Math.random() * 20)), shopOnly: pool === 'shop' });
   }
-  return { cards, charms, removed: false };
+  const snacks = [];
+  for (const rar of ['common', 'uncommon', null]) {
+    for (let tries = 0; tries < 6; tries++) {
+      const id = drawSnack(run, rar || undefined);
+      if (id && !snacks.some((x) => x.id === id)) { snacks.push({ id, price: price(SNACK_PRICE[SNACKS[id].rarity] + Math.floor(Math.random() * 10) - 5) }); break; }
+    }
+  }
+  return { cards, charms, snacks, removed: false };
 }
 
 // ---------- save ----------
@@ -241,6 +252,7 @@ export function loadRun() {
   if (r && r.deck && r.deck.every((c) => CARDS[c.id]) && r.charms.every((k) => CHARMS[k])) {
     delete r.version;
     r.character ||= 'jenny';
+    r.snacks = (r.snacks || Array(SNACK_SLOTS).fill(null)).map((s) => (s && SNACKS[s] ? s : null));
     return r;
   }
   return null;
@@ -257,7 +269,16 @@ export function runSummary(run, won) {
     defeated: run.kills,
     deck: run.deck.map((c) => (c.up ? `${c.id}+` : c.id)),
     charms: [...run.charms],
+    snacks: run.snacks.filter(Boolean),
   };
+}
+
+// Pocket Fridge: fill the empty snack slots when you reach a new floor.
+export function fillSnacksForFloor(run) {
+  if (!run.charms.includes('pocketFridge')) return [];
+  const got = [];
+  while (snackRoom(run)) { const id = drawSnack(run); if (!id || !addSnack(run, id)) break; got.push(id); }
+  return got;
 }
 
 export const TOTAL_FLOORS = (ROWS + 1) * 3;

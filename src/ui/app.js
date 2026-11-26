@@ -4,12 +4,13 @@ import { ENEMIES, ACTS } from '../game/enemies.js';
 import { Battle, STATUS_NAMES, STATUS_HELP, PACE, RULES, STICKERS } from '../game/battle.js';
 import {
   newRun, generateMap, ROWS, availableRooms, roomAt, enemyFor, cardChoices, randomCharm, gainCharm, gainCoins,
-  afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost,
+  afterFightHealing, shopStock, saveRun, loadRun, clearRun, runSummary, TOTAL_FLOORS, removeCost, fillSnacksForFloor,
 } from '../game/run.js';
-import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard } from '../game/loot.js';
+import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
+import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop } from '../game/loot.js';
 import { ALL_EVENTS } from '../game/events.js';
 import { sfx, settings, saveSettings, music } from '../audio.js';
-import { icon, jennySVG, heroSVG, enemySVG, roomIcon } from './art.js';
+import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
 import { blobBackdrop } from './chibi.js';
@@ -18,7 +19,7 @@ import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
   getProgress, recordRunEnd, isUnlocked, isFound, unlock, noteCardSeen, noteCardTaken, noteCharmSeen, noteCharmTaken,
-  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet,
+  noteEnemyMet, noteEnemyDefeated, noteEventMet, noteGuardianMet, noteSnackSeen, noteSnackTaken,
 } from '../game/progress.js';
 
 const app = document.getElementById('app');
@@ -32,6 +33,7 @@ const TYPE_LABEL = T.types;
 // Every card or charm the player gets goes through these, so the progress
 // save (and later the collection book) sees it.
 function takeCard(card) { run.deck.push(card); noteCardTaken(card.id); }
+function takeSnack(id) { if (!addSnack(run, id)) return false; noteSnackTaken(id); return true; }
 function takeCharm(id) {
   if (!id || run.charms.includes(id)) return;
   gainCharm(run, id);
@@ -50,6 +52,7 @@ function syncUnlocks() {
     Object.keys(CHARMS).filter((id) => !isFound('charms', id)).forEach(noteCharmSeen);
     Object.keys(ENEMIES).filter((id) => !isFound('enemies', id)).forEach(noteEnemyMet);
     ALL_EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
+    Object.keys(SNACKS).filter((id) => !isFound('snacks', id)).forEach(noteSnackSeen);
     if (!isFound('guardians', 'haru')) noteGuardianMet('haru');
     history.replaceState(null, '', location.pathname);
   }
@@ -97,6 +100,7 @@ function header() {
       <span class="pill coins" aria-label="Coins">${uiIcon('coin')}<b>${run.coins}</b></span>
       <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/10</small></span>
     </div>
+    <div class="bar-snacks" aria-label="Snack bar">${snackBar(run).map((id, i) => (id ? `<button class="snack" data-snack="${i}" data-tip="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}" aria-label="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}">${snackIcon(id)}</button>` : '<span class="snack empty" title="Empty snack slot"></span>')).join('')}</div>
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="bar-right">
       <button class="btn small icon-only" data-sound aria-label="Settings" title="Settings">${uiIcon('gear')}</button>
@@ -110,6 +114,46 @@ function bindHeader(root) {
   root.querySelector('[data-deck]')?.addEventListener('click', () => { const s = deckStyle(run); showDeck(run.deck, 'Your deck', s ? `Play style: <b class="arch a-${s.arch}">${ARCHES[s.arch].name}</b> · ${esc(ARCHES[s.arch].desc)} Rewards will offer more ${ARCHES[s.arch].name} cards.` : 'No play style yet. Pick up cards from any style (Glitch, Guard, Combo, Memory, Dreamy, Cozy, Exposed) and rewards will start offering more of it.'); });
   root.querySelector('[data-menu]')?.addEventListener('click', menu);
   root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
+  root.querySelectorAll('[data-snack]').forEach((b) => b.addEventListener('click', () => snackMenu(Number(b.dataset.snack))));
+}
+let barChanged = null; // the shop re-renders its shelves when the snack bar changes
+function refreshHeader() {
+  if (barChanged) { barChanged(); return; }
+  const bar = app.querySelector('.bar');
+  if (!bar) return;
+  bar.outerHTML = header();
+  bindHeader(app);
+}
+
+// Click a snack in the bar: eat it (in a fight, or on the map for "anytime" snacks) or toss it.
+function snackMenu(slot) {
+  const id = snackBar(run)[slot];
+  const s = SNACKS[id];
+  if (!s) return;
+  const inFight = !!battle && !battle.over;
+  const canEat = inFight ? !battle.busy && !battle.first : !!s.anytime;
+  const why = inFight ? (canEat ? '' : 'Wait for the cards to settle.') : s.anytime ? '' : 'Eat this one during a fight.';
+  const m = modal(`<div class="snack-pop"><span class="big-icon">${snackIcon(id)}</span><h2>${esc(s.name)}</h2><p>${esc(s.desc)}</p>
+    ${why ? `<p class="deck-note">${esc(why)}</p>` : ''}
+    <div class="row3"><button class="btn yellow" data-eat ${canEat ? '' : 'disabled'}>Eat</button><button class="btn" data-toss>Toss</button><button class="btn ghost" data-close>Cancel</button></div></div>`);
+  m.el.querySelector('[data-eat]').addEventListener('click', () => {
+    if (inFight) { if (battle.useSnack(id)) removeSnack(run, slot); }
+    else { const out = eatOnMap(run, slot); if (out) sfx('coin'); }
+    m.close();
+    refreshHeader();
+  });
+  m.el.querySelector('[data-toss]').addEventListener('click', () => { removeSnack(run, slot); m.close(); refreshHeader(); });
+}
+
+// Pick a snack from the bar (for trades and swaps). Resolves to the slot index or null.
+function pickSnackSlot(title) {
+  return new Promise((resolve) => {
+    let done = false;
+    const bar = snackBar(run);
+    const m = modal(`<h2>${esc(title)}</h2><div class="snack-pick">${bar.map((id, i) => (id ? `<button class="charm-card" data-slot="${i}"><span class="big-icon">${snackIcon(id)}</span><b>${esc(SNACKS[id].name)}</b><small>${esc(SNACKS[id].desc)}</small></button>` : '')).join('')}</div><button class="btn ghost" data-close>Cancel</button>`,
+      { onClose: () => { if (!done) resolve(null); } });
+    m.el.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { done = true; m.close(); resolve(Number(b.dataset.slot)); }));
+  });
 }
 
 // Fast mode: shortens battle timers (via PACE) and CSS animations (via html.fast).
@@ -413,6 +457,7 @@ function harusGift() {
 
 // ---------- map ----------
 function mapScreen() {
+  barChanged = null;
   battle = null;
   run.path ||= [];
   saveRun(run);
@@ -515,6 +560,7 @@ function enterRoom(pos) {
 }
 
 function completeRoom() {
+  barChanged = null;
   run.pos = run.pending;
   run.path.push(run.pending);
   run.pending = null;
@@ -545,6 +591,7 @@ function describeMove(it, dmg = null) {
 }
 
 function battleScreen(enemyId, kind) {
+  barChanged = null;
   const def = ENEMIES[enemyId];
   noteEnemyMet(enemyId);
   app.innerHTML = `${header()}<main class="battle">
@@ -796,6 +843,9 @@ function battleWon(kind, enemyId) {
   const choices = cardChoices(run, kind);
   const charm = kind === 'elite' ? randomCharm(run, 'drop') : null;
   if (charm) takeCharm(charm);
+  const snack = rollSnackDrop(run, kind);
+  if (snack) noteSnackSeen(snack);
+  let snackState = snack ? (takeSnack(snack) ? 'taken' : 'full') : null;
   const bossCharms = [];
   if (kind === 'boss') for (let i = 0; i < 3; i++) { const k = drawCharm(run, 'boss', bossCharms); if (k) bossCharms.push(k); }
   choices.forEach((c) => noteCardSeen(c.id));
@@ -810,7 +860,9 @@ function battleWon(kind, enemyId) {
         <li>${uiIcon('coin')} ${coins} ${T.coins}</li>
         ${healed ? `<li>${uiIcon('heart')} healed ${healed}</li>` : ''}
         ${charm ? `<li>${charmIcon(charm)} ${esc(CHARMS[charm].name)} <small>${esc(CHARMS[charm].desc)}</small></li>` : ''}
+        ${snackState === 'taken' ? `<li>${snackIcon(snack)} ${esc(SNACKS[snack].name)} <small>${esc(SNACKS[snack].desc)} Added to your snack bar.</small></li>` : ''}
       </ul>
+      ${snackState === 'full' ? `<div class="snack-offer">${snackIcon(snack)}<p><b>${esc(SNACKS[snack].name)}</b> ${esc(SNACKS[snack].desc)}<br><small>Your snack bar is full.</small></p><button class="btn" data-swap>Swap one out</button><button class="btn ghost" data-leave-snack>Leave it</button></div>` : ''}
       ${bossCharms.length && !pickedBoss ? `<h2>Choose a boss charm</h2><div class="charm-choices">${bossCharms.map((k) => `<button class="charm-card" data-boss="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small></button>`).join('')}</div>` : ''}
       ${!pickedCard ? `<h2>Add a card to your deck</h2><div class="choices">${choices.map((c, i) => `<button class="card-btn" data-pick="${i}" aria-label="${esc(cardName(c))}: ${esc(cardText(c))}">${cardHTML(c)}</button>`).join('')}</div>
       <button class="btn ghost" data-skip>Skip card</button>` : ''}
@@ -820,6 +872,8 @@ function battleWon(kind, enemyId) {
     app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { takeCard({ ...choices[Number(b.dataset.pick)] }); pickedCard = true; render(); }));
     app.querySelector('[data-skip]')?.addEventListener('click', () => { pickedCard = true; render(); });
     app.querySelectorAll('[data-boss]').forEach((b) => b.addEventListener('click', () => { takeCharm(b.dataset.boss); pickedBoss = true; render(); }));
+    app.querySelector('[data-swap]')?.addEventListener('click', async () => { const i = await pickSnackSlot('Toss which snack?'); if (i === null) return; removeSnack(run, i); takeSnack(snack); snackState = 'taken'; render(); });
+    app.querySelector('[data-leave-snack]')?.addEventListener('click', () => { snackState = null; render(); });
     app.querySelector('[data-go]')?.addEventListener('click', () => (kind === 'boss' ? actCleared() : completeRoom()));
     app.querySelector('main button')?.focus();
   };
@@ -836,10 +890,13 @@ function actCleared() {
   run.act += 1;
   run.map = generateMap(run.act);
   run.pos = null; run.path = [];
+  const fridge = fillSnacksForFloor(run);
+  fridge.forEach(noteSnackTaken);
   saveRun(run);
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
     <p>${esc(hero().name)} takes the stairs up to <b>${esc(ACTS[run.act].name)}</b>. Healed ${heal} ${T.hp} on the way.</p>
+    ${fridge.length ? `<p>Pocket Fridge restocked: ${fridge.map((k) => esc(SNACKS[k].name)).join(', ')}.</p>` : ''}
     ${newHeroes.map((n) => `<div class="unlock-note"><span class="hero-art">${heroSVG(Object.keys(CHARACTERS).find((k) => CHARACTERS[k].name === n), { crop: true })}</span><p><b>${esc(n)} unlocked!</b> Pick ${esc(n)} at the start of your next run.</p></div>`).join('')}
     ${newOutfits.map(outfitNote).join('')}
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
@@ -880,6 +937,8 @@ function eventScreen() {
     styleCard: (arch, rar) => drawStyleCard(run, arch, rar || 'uncommon') || drawCard(run, rar || 'uncommon'),
     upgradeAll: (pred) => { const ups = run.deck.filter((c) => canUpgrade(c) && pred(CARDS[c.id])); ups.forEach((c) => (c.up = true)); return ups.length; },
     pickCopy: async () => { const i = await pickFromDeck('Copy a card', (c) => CARDS[c.id].rarity !== 'curse' && CARDS[c.id].rarity !== 'status'); if (i === null) return 'No card copied.'; const c = run.deck[i]; takeCard({ id: c.id, ...(c.up ? { up: true } : {}) }); return `${cardName(c)} copied!`; },
+    addSnack: (id) => { const k = id || drawSnack(run); noteSnackSeen(k); return takeSnack(k) ? SNACKS[k].name : `${SNACKS[k].name} (no room, so you eat it)`; },
+    pickSnack: async (t) => { const i = await pickSnackSlot(t); if (i === null) return null; return SNACKS[removeSnack(run, i)].name; },
     addCharm: (id) => { if (id) { takeCharm(id); return CHARMS[id].name; } const k = randomCharm(run, 'drop'); if (!k) { run.coins += 50; return `50 ${T.coins} (you have every charm!)`; } takeCharm(k); return CHARMS[k].name; },
     pickUpgrade: async () => { const i = await pickFromDeck('Upgrade a card', canUpgrade); if (i === null) return 'You change your mind.'; run.deck[i].up = true; return `${cardName(run.deck[i])} upgraded!`; },
     pickRemove: async () => { const i = await pickFromDeck('Remove a card'); if (i === null) return 'No card removed.'; const n = cardName(run.deck[i]); run.deck.splice(i, 1); return `${n} removed.`; },
@@ -937,6 +996,7 @@ function shopScreen() {
   const stock = shopStock(run);
   stock.cards.forEach((c) => noteCardSeen(c.id));
   stock.charms.forEach((c) => noteCharmSeen(c.id));
+  stock.snacks.forEach((c) => noteSnackSeen(c.id));
   const priceOf = (item) => (run.charms.includes('giftCard') && !stock.giftUsed ? Math.round(item.price / 2) : item.price);
   const render = () => {
     app.innerHTML = `${header()}<main class="room shop">
@@ -945,6 +1005,9 @@ function shopScreen() {
       <div class="choices">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${c.price}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
       <h2>Charms</h2>
       <div class="charm-choices">${stock.charms.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-charm="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''}><span class="big-icon">${charmIcon(c.id)}</span><b>${esc(CHARMS[c.id].name)}</b><small>${esc(CHARMS[c.id].desc)}</small>${c.shopOnly ? '<em class="tag">shop only</em>' : ''}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
+      <h2>Snacks</h2>
+      <div class="charm-choices">${stock.snacks.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}"><button class="charm-card" data-snackbuy="${i}" ${c.sold || run.coins < priceOf(c) || !snackRoom(run) ? 'disabled' : ''}><span class="big-icon">${snackIcon(c.id)}</span><b>${esc(SNACKS[c.id].name)}</b><small>${esc(SNACKS[c.id].desc)}</small></button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${priceOf(c)}</span></div>`).join('')}</div>
+      ${snackRoom(run) ? '' : '<p class="room-text">Your snack bar is full. Click a snack at the top to eat or toss it.</p>'}
       <div class="shop-row">
         <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>${uiIcon('coin')} ${removeCost(run)}</small></button>
         <button class="btn yellow" data-go>Leave shop</button>
@@ -958,6 +1021,11 @@ function shopScreen() {
       const c = stock.charms[Number(b.dataset.charm)];
       run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeCharm(c.id); sfx('coin'); render();
     }));
+    app.querySelectorAll('[data-snackbuy]').forEach((b) => b.addEventListener('click', () => {
+      const c = stock.snacks[Number(b.dataset.snackbuy)];
+      if (!snackRoom(run)) return;
+      run.coins -= priceOf(c); stock.giftUsed = true; c.sold = true; takeSnack(c.id); sfx('coin'); render();
+    }));
     app.querySelector('[data-remove]').addEventListener('click', async () => {
       const i = await pickFromDeck('Remove a card');
       if (i === null) return;
@@ -966,6 +1034,7 @@ function shopScreen() {
     });
     app.querySelector('[data-go]').addEventListener('click', completeRoom);
   };
+  barChanged = render;
   render();
 }
 

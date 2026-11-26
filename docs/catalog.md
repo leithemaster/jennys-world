@@ -208,7 +208,7 @@ Stack Exposed and hit where it hurts.
 | Hot Water Bottle | Cozy | Start with Group Hug. Heal 4 after each fight. |  |
 | Gossip Phone | Exposed | Start with Call Out. Enemies start each fight with 1 Exposed. |  |
 
-### Drops (treasure, elites, events) (15)
+### Drops (treasure, elites, events) (16)
 
 | Charm | Style | Effect | Conditional |
 |---|---|---|---|
@@ -227,29 +227,32 @@ Stack Exposed and hit where it hurts.
 | Glitch Vial |  | Whenever you apply Glitch, apply 2 more. | yes |
 | Fuzzy Socks |  | Guard and Hoodie Up give 3 more Block. | yes |
 | Power Bank |  | Matching a Power card gives +1 energy. | yes |
+| Snack Coupon |  | Snacks drop 20% more often after fights. |  |
 
-### Shop only (7)
+### Shop only (8)
 
 | Charm | Style | Effect | Conditional |
 |---|---|---|---|
+| Lunchbox |  | +2 snack slots. |  |
 | Member Card |  | Everything in shops costs 20% less. |  |
 | Stamp Card |  | Removing a card at shops always costs 50. |  |
 | Kimbap Roll |  | +10 max HP. |  |
 | Neon Sign |  | Enemies start each fight with 2 Exposed. |  |
-| Snack Bag |  | Clearing a board heals 2. |  |
+| Popcorn Bucket |  | Clearing a board heals 2. |  |
 | Neck Pillow |  | Naps at rest booths heal 45% instead of 30%. |  |
 | Shiba Plush |  | The first time you would be knocked out each fight, survive with 1 HP. |  |
 
-### Boss rewards (4)
+### Boss rewards (5)
 
 | Charm | Style | Effect | Conditional |
 |---|---|---|---|
 | Gaming Chair |  | +1 energy every turn. |  |
 | Clicky Keyboard |  | Each match adds 2 combo instead of 1. |  |
 | Big Headphones |  | At the start of each turn, reveal 1 card. |  |
+| Secret Recipe |  | Your snacks work twice. |  |
 | Giant Plushie |  | Heal 12 after each fight. +8 max HP. |  |
 
-### Event only (4)
+### Event only (6)
 
 | Charm | Style | Effect | Conditional |
 |---|---|---|---|
@@ -257,6 +260,8 @@ Stack Exposed and hit where it hurts.
 | Golden Mic |  | Clearing a board deals 5 damage. |  |
 | Lucky Chopsticks |  | +1 energy on your first turn against elites and bosses. |  |
 | VPN Dongle |  | Matching a Spam, Lag or Bug card gives 4 Block. |  |
+| Hamster Cheeks |  | +1 snack slot. Eating a snack heals 2. |  |
+| Pocket Fridge |  | When you reach a new floor, fill your empty snack slots. |  |
 
 ### Special event boons (8)
 
@@ -270,3 +275,28 @@ Stack Exposed and hit where it hurts.
 | Encore | Combo | The first Combo card you match each turn adds 1 more combo. |  |
 | Trending | Exposed | Exposed enemies take 75% more damage instead of 50%. |  |
 | Crossover |  | The first hybrid card you match in each fight gives +2 energy. |  |
+
+## Snacks
+
+One-use items kept in the snack bar (3 slots to start). Eating one costs no energy.
+
+| Snack | Rarity | Style | Effect | Eat it in |
+|---|---|---|---|---|
+| Chamomile Tea | common | Dreamy | Apply 2 Sleepy. | Fights |
+| Lullaby Gummies | rare | Dreamy | The enemy falls Asleep right away (fills its Sleepy). | Fights |
+| Banana Milk | common | Cozy | Heal 10. Can be eaten on the map. | Fights or map |
+| Hotteok | uncommon | Cozy | Heal 12. Cozy. | Fights |
+| Pop Rocks | common | Glitch | Apply 5 Glitch. | Fights |
+| Mystery Jelly | uncommon | Glitch | Apply 2 Glitch, then double the enemy's Glitch. | Fights |
+| Protein Bar | common | Guard | Block 10. | Fights |
+| Big Mochi | uncommon | Guard | Gain 3 Block at the start of each of your turns this fight. | Fights |
+| Blueberry Yogurt | common | Memory | Reveal 6 hidden cards. | Fights |
+| Walnut Cookies | uncommon | Memory | Reveal every card on this board. | Fights |
+| Sugar Rush Candy | common | Combo | +3 combo. | Fights |
+| Choco Sticks | uncommon | Combo | +1 combo. This turn, missing doesn't reset your combo. | Fights |
+| Hot Sauce Packet | common | Exposed | Apply 3 Exposed. | Fights |
+| Fire Noodles | uncommon | Exposed | Apply 2 Exposed, then deal 8. | Fights |
+| Iced Coffee | common | Any | +2 energy. | Fights |
+| Fried Chicken | common | Any | Deal 10. | Fights |
+| Ginseng Drink | uncommon | Any | Gain 2 Fighting Spirit for this fight. | Fights |
+| Birthday Cake | rare | Any | Heal 25% of your max HP and gain 5 max HP. Can be eaten on the map. | Fights or map |

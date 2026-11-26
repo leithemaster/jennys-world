@@ -12,11 +12,13 @@
 //   event                                      "?" rooms (no repeats per run)
 //   event:special                              special events (once each per run)
 //   enemy:<act>:normal / enemy:<act>:elite     who you fight
+//   snack:<rarity> / snack:<style>             snack drops, shop snacks, events
 
 import { CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
 import { EVENTS, SPECIAL_EVENTS } from './events.js';
 import { ACTS } from './enemies.js';
+import { SNACKS, SNACK_DROP } from './snacks.js';
 
 const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -120,6 +122,32 @@ const charmIds = (pool) => Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 
 
 export function drawCharm(run, pool = 'drop', exclude = []) {
   return drawFrom(run, `charm:${pool}`, () => charmIds(pool), (k) => !exclude.includes(k) && charmAllowed(run, k));
+}
+
+// ---------- snacks ----------
+// Once your deck has a style, half of all snacks come from that style's snacks.
+export function drawSnack(run, rarity) {
+  const style = deckStyle(run);
+  if (!rarity) { const r = Math.random() * 100; rarity = r < 8 ? 'rare' : r < 38 ? 'uncommon' : 'common'; }
+  if (style && Math.random() < 0.5) {
+    const id = drawFrom(run, `snack:${style.arch}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].style === style.arch));
+    if (id) return id;
+  }
+  return drawFrom(run, `snack:${rarity}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === rarity))
+    || drawFrom(run, 'snack:common', () => Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === 'common'));
+}
+
+// After a fight: a snack drops with a chance that moves toward a drop each time one doesn't.
+export function rollSnackDrop(run, kind) {
+  const loot = ensure(run);
+  loot.snackChance ??= SNACK_DROP.start;
+  const chance = loot.snackChance + (kind === 'elite' ? SNACK_DROP.elite : 0) + (run.charms.includes('snackCoupon') ? SNACK_DROP.coupon : 0);
+  if (Math.random() * 100 < chance) {
+    loot.snackChance = Math.max(0, loot.snackChance - SNACK_DROP.step);
+    return drawSnack(run);
+  }
+  loot.snackChance = Math.min(100, loot.snackChance + SNACK_DROP.step);
+  return null;
 }
 
 // ---------- events & enemies ----------
