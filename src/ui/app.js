@@ -813,7 +813,7 @@ document.addEventListener('keydown', (e) => {
 
 // Wide PC layout: pick the column count that gives the biggest cards for the
 // space in the middle column, then size the board to match.
-const WIDE = matchMedia('(min-width: 1000px)');
+const WIDE = matchMedia('(min-width: 1000px), (orientation: landscape) and (max-height: 520px)'); // PC, or a phone on its side
 const CARD_RATIO = 6.2 / 5; // slot height / width
 // Narrow (phone) columns that fill every spot without scrolling: 16 cards 4x4,
 // 18 cards 6x3, 20 cards 5x4. Wide screens pick their own in fitBoard().
