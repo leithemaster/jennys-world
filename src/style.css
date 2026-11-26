@@ -802,3 +802,15 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .sale-50 .sale-tag { background: var(--coral); color: #fff; }
 .price s { opacity: .5; font-weight: 600; margin-right: 4px; }
 .sale-note { color: var(--coral); }
+
+/* guardian gifts */
+.tag.gift-cards { background: var(--sun); color: var(--ink); }
+.r-gift { box-shadow: inset 0 0 0 3px #f6b74a; }
+.r-gift .card-type::after { content: ' ♥'; color: #e0485f; }
+.cat .tag.ct-gift, .cat .tag.ct-guardian { background: #f6b74a; }
+.guardian-row .art { width: 120px; height: 120px; flex: none; }
+.guardian-row .charm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 14px; margin: 8px 0 0; padding: 0; list-style: none; }
+.guardian-row .charm-list li { display: flex; gap: 8px; align-items: flex-start; }
+.guardian-row .charm-list .ci { width: 26px; height: 26px; flex: none; }
+.guardian-row .charm-list .muted { opacity: .5; }
+.guardian-row .charm-list .muted .ci { filter: brightness(0); opacity: .25; }

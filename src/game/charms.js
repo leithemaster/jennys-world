@@ -4,6 +4,8 @@
 //   shop – only sold at the Konbini Corner
 //   boss – only offered after beating a boss
 //   haru – Haru's Gift, pick 1 of 3 at the start of a run
+//   guardian – a floor 2 or 3 guardian's gift (from: guardian id; see guardians.js)
+//   gives: cards added to your deck when you take it (gift cards, see cards.js)
 //   special – boons from special events only (see events.js); they power up one style
 //   event – only given by regular "?" events
 // requires(run, h): optional; the charm stays hidden until this is true.
@@ -26,6 +28,37 @@ export const CHARMS = {
   sleepMask: { name: 'Sleep Mask', icon: '😴', pool: 'haru', style: 'dreamy', desc: `Start with Lights Out. Enemies start each fight with 1 ${T.sleepy}.` },
   hotWaterBottle: { name: 'Hot Water Bottle', icon: '♨️', pool: 'haru', style: 'cozy', desc: 'Start with Group Hug. Heal 4 after each fight.' },
   gossipPhone: { name: 'Gossip Phone', icon: '📞', pool: 'haru', style: 'exposed', desc: `Start with Call Out. Enemies start each fight with 1 ${T.exposed}.` },
+
+  // ----- guardian gifts (see guardians.js): 6 each, pick 1 of 3 when you meet them -----
+  // Floor 2 guardians: solid picks.
+  zoomies: { name: 'Zoomies', icon: '💨', pool: 'guardian', from: 'issei', style: 'combo', gives: ['zoomie', 'zoomie'], desc: `Start with 2 Zoomie cards (deal 4, +1 ${T.combo}, reveal 1).` },
+  chewedCable: { name: 'Chewed Cable', icon: '🔌', pool: 'guardian', from: 'issei', style: 'glitch', desc: `Enemies start each fight with 3 ${T.glitch}.` },
+  tennisBall: { name: 'Tennis Ball', icon: '🎾', pool: 'guardian', from: 'issei', style: 'combo', desc: `Your first miss each turn doesn't reset your ${T.combo}.` },
+  puppyEyes: { name: 'Puppy Eyes', icon: '🥺', pool: 'guardian', from: 'issei', desc: `Start each fight with 7 ${T.block}.` },
+  treatPouch: { name: 'Treat Pouch', icon: '🦴', pool: 'guardian', from: 'issei', desc: '+1 snack slot, and a random snack to fill it.' },
+  bandana: { name: 'Little Bandana', icon: '🧣', pool: 'guardian', from: 'issei', desc: `+1 ${T.energy} on your first turn. Every new board reveals 1 more card.` },
+
+  burrow: { name: 'Blanket Burrow', icon: '🛏️', pool: 'guardian', from: 'hana', style: 'dreamy', gives: ['snuggle', 'snuggle'], desc: `Start with 2 Snuggle cards (${T.block} 6, apply 2 ${T.sleepy}).` },
+  bellyRubs: { name: 'Belly Rubs', icon: '🐾', pool: 'guardian', from: 'hana', style: 'cozy', desc: `Whenever you heal in a fight, gain 2 ${T.block}.` },
+  napBuddy: { name: 'Nap Buddy', icon: '💤', pool: 'guardian', from: 'hana', style: 'dreamy', desc: `${T.asleep} enemies take 30% more damage.` },
+  warmLap: { name: 'Warm Lap', icon: '🧶', pool: 'guardian', from: 'hana', desc: 'Heal 6 after each fight.' },
+  doggyBed: { name: 'Doggy Bed', icon: '🛋️', pool: 'guardian', from: 'hana', desc: `Naps at ${T.rest}s also upgrade a random card.` },
+  hanaSigh: { name: 'Happy Sigh', icon: '😌', pool: 'guardian', from: 'hana', style: 'cozy', desc: 'Heal 2 at the start of each of your turns.' },
+
+  bigBark: { name: 'Big Bark', icon: '📣', pool: 'guardian', from: 'kaiba', style: 'exposed', gives: ['bark', 'bark', 'bark'], desc: `Start with 3 Bark cards (apply 2 ${T.exposed}, reveal 1).` },
+  guardDog: { name: 'Guard Dog', icon: '🛡️', pool: 'guardian', from: 'kaiba', style: 'guard', desc: `Every card that gives ${T.block} gives 2 more.` },
+  sharpTeeth: { name: 'Sharp Teeth', icon: '🦷', pool: 'guardian', from: 'kaiba', style: 'guard', desc: `Start each fight with 2 ${T.spikes}.` },
+  growl: { name: 'Low Growl', icon: '😤', pool: 'guardian', from: 'kaiba', style: 'exposed', desc: `${T.exposed} enemies deal 25% less damage.` },
+  spikedCollar: { name: 'Spiked Collar', icon: '⛓️', pool: 'guardian', from: 'kaiba', desc: `Your first match each turn gives 3 ${T.block}.` },
+  chewToy: { name: 'Squeaky Chew Toy', icon: '🧸', pool: 'guardian', from: 'kaiba', desc: `Gain 75 ${T.coins}. Shops cost 10% less.` },
+
+  // Floor 3 guardians: strong picks that help a build snowball.
+  sushiBoat: { name: 'Sushi Boat', icon: '🚢', pool: 'guardian', from: 'sushiQueen', gives: ['sushiRoll', 'sushiRoll', 'sushiRoll'], desc: `Start with 3 Sushi Roll cards (deal 7, +1 ${T.energy}).` },
+  rainbowRoll: { name: 'Rainbow Roll', icon: '🌈', pool: 'guardian', from: 'sushiQueen', style: 'combo', desc: `Start each turn with 2 ${T.combo}.` },
+  toroCrown: { name: 'Toro Crown', icon: '👑', pool: 'guardian', from: 'sushiQueen', style: 'exposed', desc: `Enemies start each fight with 3 ${T.exposed} and 4 ${T.glitch}.` },
+  greenTea: { name: 'Bottomless Green Tea', icon: '🍵', pool: 'guardian', from: 'sushiQueen', style: 'cozy', desc: `+10 max ${T.hp}. Heal 15 after each fight.` },
+  conveyorBelt: { name: 'Conveyor Belt', icon: '🍣', pool: 'guardian', from: 'sushiQueen', style: 'memory', desc: 'At the start of each turn, reveal 2 cards.' },
+  bambooMat: { name: 'Bamboo Mat', icon: '🎋', pool: 'guardian', from: 'sushiQueen', style: 'guard', desc: `Half your ${T.block} stays at the start of your turn instead of all of it going away.` },
 
   // ----- drops -----
   luckyCat: { name: 'Lucky Cat', icon: '🐱', pool: 'drop', desc: 'Every new board is shown for a moment.' },

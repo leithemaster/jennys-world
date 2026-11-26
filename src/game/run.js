@@ -182,6 +182,10 @@ export function gainCharm(run, id) {
   if (id === 'plush') { run.maxHp += 8; run.hp += 8; }
   if (id === 'scarf') { run.maxHp += 12; run.hp += 12; }
   if (id === 'luckyCoin') run.coins += 100;
+  if (id === 'chewToy') run.coins += 75;
+  if (id === 'greenTea') { run.maxHp += 10; run.hp += 10; }
+  if (id === 'treatPouch') { addSnackSlots(run, 1); addSnack(run, drawSnack(run)); }
+  for (const card of CHARMS[id]?.gives || []) run.deck.push({ id: card });
   if (id === 'lunchbox') addSnackSlots(run, 2);
   if (id === 'hamsterCheeks') addSnackSlots(run, 1);
   if (id === 'glitchPen') run.deck.push({ id: 'stinger' }, { id: 'stinger' });
@@ -208,6 +212,8 @@ export function afterFightHealing(run) {
   if (run.charms.includes('plush')) h += 12;
   if (run.charms.includes('thermos')) h += 7;
   if (run.charms.includes('hotWaterBottle')) h += 4;
+  if (run.charms.includes('warmLap')) h += 6;
+  if (run.charms.includes('greenTea')) h += 15;
   const before = run.hp;
   run.hp = Math.min(run.maxHp, run.hp + h);
   return run.hp - before;
@@ -227,7 +233,7 @@ function rollSale() {
 }
 
 export function shopStock(run) {
-  const off = run.charms.includes('memberCard') ? 0.8 : 1;
+  const off = (run.charms.includes('memberCard') ? 0.8 : 1) * (run.charms.includes('chewToy') ? 0.9 : 1);
   const price = (n) => Math.round(n * off);
   const cards = [];
   const style = deckStyle(run);

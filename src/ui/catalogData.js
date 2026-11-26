@@ -14,8 +14,9 @@ import { T } from '../game/terms.js';
 import { icon, roomIcon, enemySVG, snackIcon } from './art.js';
 import { SNACKS, SNACK_SLOTS, SNACK_DROP } from '../game/snacks.js';
 import { CARD_SALE } from '../game/run.js';
+import { GUARDIANS } from '../game/guardians.js';
 import { charmIcon } from './charmIcons.js';
-import { jennyChibi, toniChibi } from './chibi.js';
+import { jennyChibi, toniChibi, guardianChibi } from './chibi.js';
 
 export function moveText(m) {
   switch (m.t) {
@@ -49,6 +50,8 @@ export function buildCatalog() {
     for (const k of ['cards', 'charms', 'snacks']) for (const id of e.gives?.[k] || []) (fromEvents[k][id] ||= []).push(e.title);
     if (e.boon) (fromEvents.charms[e.boon] ||= []).push(e.title);
   }
+  for (const [id, c] of Object.entries(CHARMS)) for (const card of c.gives || []) (fromEvents.cards[card] ||= []).includes(c.name) || fromEvents.cards[card].push(c.name);
+  for (const [id, c] of Object.entries(CHARMS)) if (c.pool === 'guardian') (fromEvents.charms[id] ||= []).push(`${GUARDIANS[c.from].name}'s Gift`);
   const fromText = (k, id) => (fromEvents[k][id] ? `Only from: ${fromEvents[k][id].join(', ')}` : '');
 
   const styleName = (d) => [d.arch, d.arch2].filter(Boolean).map((a) => ARCHES[a].name).join(' / ');
@@ -62,6 +65,13 @@ export function buildCatalog() {
 
   const charms = Object.entries(CHARMS).map(([id, c]) => ({
     id, name: c.name, pool: c.pool, style: c.style ? ARCHES[c.style].name : '', desc: c.desc, requires: c.needs || fromText('charms', id), art: charmIcon(id),
+  }));
+
+  const FLOOR_NAMES = ACTS.map((a) => a.name);
+  const guardians = Object.entries(GUARDIANS).map(([id, g]) => ({
+    id, name: g.name, kind: g.kind, blurb: g.blurb, floor: FLOOR_NAMES[g.floor], floorNo: g.floor,
+    charms: Object.keys(CHARMS).filter((k) => (id === 'haru' ? CHARMS[k].pool === 'haru' : CHARMS[k].from === id)),
+    art: guardianChibi(g.art),
   }));
 
   const floorOf = (id) => ACTS.find((a) => a.normals.includes(id) || a.elites.includes(id) || a.bosses.includes(id))?.name || '';
@@ -120,5 +130,5 @@ export function buildCatalog() {
   };
 
   const bagRules = { combo: Math.round(COMBO_CHANCE * 100), maxRun: MAX_ATTACK_RUN };
-  return { cardSale: CARD_SALE, bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, boardPairs: RULES.boardPairs, rules };
+  return { guardians, cardSale: CARD_SALE, bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, boardPairs: RULES.boardPairs, rules };
 }

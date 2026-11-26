@@ -542,3 +542,83 @@ export function enemyChibi(art, color) {
   const draw = ART[art] || ART.slime;
   return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${draw(color)}</svg>`;
 }
+
+// ---------------- guardians ----------------
+// Haru and Issei (shibas), Hana and Kaiba (wiener dogs), the Sushi Queen.
+const eyes2 = (cx, cy, gap, r = 4.6) => [cx - gap, cx + gap].map((x) => `<ellipse cx="${x}" cy="${cy}" rx="${r}" ry="${r * 1.25}" fill="${INK}"/><circle cx="${x - 1.5}" cy="${cy - 2.2}" r="${r * 0.38}" fill="#fff"/>`).join('');
+const blushes = (cx, cy, gap) => [cx - gap, cx + gap].map((x) => `<ellipse cx="${x}" cy="${cy}" rx="5" ry="3" fill="#f59ab0" opacity=".75"/>`).join('');
+
+function shiba({ fur = '#e39a4c', cream = CREAM, points = '', scale = 1, extra = '' } = {}) {
+  return `<g transform="translate(60 60) scale(${scale}) translate(-60 -60)">${shadow(60, 112, 34)}
+    <path d="M86 84 C102 78 104 60 92 58 C84 57 84 68 90 70" ${o(fur)}/>
+    <path d="M38 80 C36 100 42 110 60 110 C78 110 84 100 82 80 Z" ${o(fur)}/>
+    <path d="M50 92 C50 104 70 104 70 92 C66 84 54 84 50 92 Z" fill="${cream}"/>
+    <path d="M44 108 v-8 M76 108 v-8" stroke="${INK}" stroke-width="${SW}" stroke-linecap="round"/>
+    <path d="M30 40 L28 12 L52 28 Z" ${o(fur)}/><path d="M34 34 L33 20 L45 29 Z" fill="${cream}"/>
+    <path d="M90 40 L92 12 L68 28 Z" ${o(fur)}/><path d="M86 34 L87 20 L75 29 Z" fill="${cream}"/>
+    <ellipse cx="60" cy="54" rx="34" ry="29" ${o(fur)}/>
+    <path d="M34 62 C40 82 80 82 86 62 C80 52 70 58 60 58 C50 58 40 52 34 62 Z" fill="${cream}"/>
+    ${points ? `<ellipse cx="47" cy="41" rx="4" ry="2.6" fill="${points}"/><ellipse cx="73" cy="41" rx="4" ry="2.6" fill="${points}"/><path d="M36 60 C38 66 42 68 46 66 M84 60 C82 66 78 68 74 66" fill="none" stroke="${points}" stroke-width="4" stroke-linecap="round"/>` : ''}
+    ${shine(78, 36, 6, 3.5)}
+    ${eyes2(60, 52, 13)}${blushes(60, 64, 22)}
+    <ellipse cx="60" cy="62" rx="4.5" ry="3.2" fill="${INK}"/>
+    <path d="M54 68 Q57 72 60 68 Q63 72 66 68" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    ${extra}</g>`;
+}
+
+function wiener({ fur = '#7a4528', dark = fur, ear = dark, belly = fur, patches = '', extra = '', face = '' } = {}) {
+  return `${shadow(60, 104, 50)}
+    <path d="M104 74 C114 68 116 60 112 56" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M104 74 C114 68 116 60 112 56" fill="none" stroke="${dark}" stroke-width="4.5" stroke-linecap="round"/>
+    <rect x="20" y="64" width="88" height="30" rx="15" ${o(fur)}/>
+    ${patches}
+    <path d="M30 88 C50 96 80 96 100 88" fill="none" stroke="${belly}" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+    <path d="M24 92 l-3 6 M108 80 l5 4" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>
+    ${[30, 42, 88, 100].map((x) => `<rect x="${x - 5}" y="88" width="10" height="16" rx="5" ${o(dark)}/>`).join('')}
+    <path d="M18 70 C10 50 18 30 38 30 C54 30 60 42 58 58 C56 70 44 76 32 76" ${o(fur)}/>
+    <path d="M10 58 C4 58 2 64 6 68 C12 72 22 70 26 64" ${o(fur)}/>
+    <ellipse cx="6" cy="61" rx="4" ry="3.2" fill="${INK}"/>
+    <path d="M40 32 C52 28 60 40 58 54 C60 60 56 64 57 68 C53 70 51 66 49 70 C46 68 46 64 43 64 C44 58 42 50 44 44 Z" ${o(ear)}/>
+    ${shine(30, 38, 5, 3)}
+    <ellipse cx="28" cy="50" rx="4" ry="5" fill="${INK}"/><circle cx="26.6" cy="48" r="1.6" fill="#fff"/>
+    <ellipse cx="24" cy="60" rx="4.5" ry="2.6" fill="#f59ab0" opacity=".75"/>
+    ${face}${extra}`;
+}
+
+function sushiQueen() {
+  const skin = '#fde6da', hair = '#3a2230', robe = '#d6334a', trim = '#ffd34d';
+  return `${shadow(60, 113, 36)}
+    <path d="M30 112 C30 86 40 74 60 74 C80 74 90 86 90 112 Z" ${o(robe)}/>
+    <path d="M60 74 L50 112 M60 74 L70 112" stroke="${trim}" stroke-width="4"/>
+    <path d="M24 46 C20 74 30 92 40 90 L80 90 C90 92 100 74 96 46 Z" ${o(hair)}/>
+    <ellipse cx="60" cy="50" rx="28" ry="26" ${o(skin)}/>
+    <path d="M32 46 C36 26 84 26 88 46 C78 38 70 36 60 40 C50 36 42 38 32 46 Z" ${o(hair)}/>
+    <path d="M40 24 L44 8 L52 18 L60 4 L68 18 L76 8 L80 24 Z" ${o(trim)}/>
+    <circle cx="60" cy="13" r="3" fill="#ff5d6e" stroke="${INK}" stroke-width="2"/>
+    ${eyes2(60, 52, 11, 4.2)}${blushes(60, 62, 19)}
+    <path d="M54 64 Q60 69 66 64" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(78 84) rotate(-12)">
+      <rect x="-6" y="0" width="36" height="12" rx="6" ${o('#fff8ee', 3)}/>
+      <path d="M-4 0 C4 -10 22 -10 28 0 Z" ${o('#ff8a5c', 3)}/>
+      <path d="M4 -4 L8 0 M12 -5 L16 0 M20 -4 L23 0" stroke="#fff" stroke-width="2"/>
+    </g>
+    <ellipse cx="80" cy="96" rx="7" ry="6" ${o(skin, 3)}/>
+    ${shine(74, 34, 6, 3.5)}`;
+}
+
+// Colors follow the real dogs: Haru is a black-and-tan shiba, Issei a red
+// shiba; Hana a long-haired red wiener dog, Kaiba a long-haired blue merle.
+const GUARDIAN_ART = {
+  haru: () => shiba({ fur: '#2b2329', cream: '#f3ead8', points: '#c98a4a', extra: `<path d="M40 82 Q60 92 80 82" fill="none" stroke="#c8323c" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="88" r="4" fill="#ffd34d" stroke="${INK}" stroke-width="2"/>` }),
+  issei: () => shiba({ fur: '#c9672c', cream: '#f8ecd8', scale: 0.86, extra: `<path d="M38 80 L82 80 L60 96 Z" fill="#5fa8e8" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><circle cx="54" cy="85" r="2" fill="#fff"/><circle cx="66" cy="85" r="2" fill="#fff"/>` }),
+  hana: () => wiener({ fur: '#b8622a', dark: '#9c4f20', ear: '#8e451b', belly: '#d58a4c', extra: `<path d="M50 62 C52 72 46 78 40 78" fill="none" stroke="#ff8fb0" stroke-width="5" stroke-linecap="round"/><circle cx="44" cy="80" r="3.2" fill="#ff5d8f" stroke="${INK}" stroke-width="2"/>` }),
+  kaiba: () => wiener({ fur: '#e9e7ec', dark: '#e9e7ec', ear: '#4a4552', belly: '#ffffff',
+    patches: `<path d="M58 66 C66 62 76 66 74 74 C70 80 60 78 58 72 Z M80 70 C88 66 98 70 96 78 C92 84 84 82 80 78 Z M66 82 C70 80 76 82 74 86 C70 88 66 86 66 82 Z" fill="#4a4552"/><path d="M86 66 C92 64 96 66 98 70" fill="none" stroke="#8a8fa3" stroke-width="4" stroke-linecap="round"/>`,
+    face: `<path d="M22 34 C30 30 38 34 40 44 C34 42 26 44 22 40 Z" fill="#4a4552"/><ellipse cx="31" cy="55" rx="3.2" ry="2" fill="#c98a4a"/><path d="M8 64 C14 68 20 68 24 64" fill="none" stroke="#c98a4a" stroke-width="3"/>`,
+    extra: `<path d="M50 62 C52 72 46 78 40 78" fill="none" stroke="#b9a27a" stroke-width="5" stroke-linecap="round"/><circle cx="44" cy="80" r="3.2" fill="#ffd34d" stroke="${INK}" stroke-width="2"/>` }),
+  sushiQueen,
+};
+
+export function guardianChibi(art) {
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${(GUARDIAN_ART[art] || GUARDIAN_ART.haru)()}</svg>`;
+}

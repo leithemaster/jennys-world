@@ -1,5 +1,5 @@
-// The Kioku Catalog: every character, outfit, card, charm, enemy, boss and
-// event, with the in-game art. Built from buildCatalog() (catalogData.js), so
+// The Kioku Catalog: every character, outfit, card, charm, enemy (bosses
+// included), guardian and event, with the in-game art. Built from buildCatalog() (catalogData.js), so
 // anything added to the game files shows up here on its own. Things the
 // player hasn't found or unlocked yet are greyed out and their names hidden,
 // using the progress save's collection.
@@ -11,8 +11,8 @@ import { outfitOpen } from '../game/outfits.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
-const POOL = { haru: "Haru's Gift", drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', event: 'Event only', special: 'Special event' };
-const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, event: 4, status: 5, curse: 6 };
+const POOL = { haru: "Haru's Gift", guardian: 'Guardian gift', drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', event: 'Event only', special: 'Special event' };
+const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, event: 4, gift: 5, status: 6, curse: 7 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 const HIDDEN = '???';
 
@@ -23,7 +23,7 @@ const TABS = [
   { id: 'charms', label: 'Charms' },
   { id: 'snacks', label: 'Snacks' },
   { id: 'enemies', label: 'Enemies' },
-  { id: 'bosses', label: 'Bosses' },
+  { id: 'guardians', label: 'Guardians' },
   { id: 'events', label: 'Events' },
   { id: 'styles', label: 'Styles & statuses' },
   { id: 'rules', label: 'Rooms & floors' },
@@ -43,6 +43,7 @@ function withFound(D) {
     snacks: mark(D.snacks, (r) => isFound('snacks', r.id)),
     enemies: mark(D.enemies, (r) => isFound('enemies', r.id)),
     events: mark(D.events, (r) => isFound('events', r.id)),
+    guardians: mark(D.guardians, (r) => isFound('guardians', r.id)),
   };
 }
 // A locked row keeps only what's safe to show; search can't reveal it.
@@ -126,27 +127,29 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Eat it in', key: 'when', cell: (r) => (r.found ? `<span class="small">${esc(r.when)}</span>` : '') },
       { label: 'Where from', cell: (r) => (r.found ? `<span class="small">${esc(r.from || 'Drops and shops')}</span>` : '') },
-    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare'], ['event', 'Event only']], 'rarity',
+    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare'], ['event', 'Event only'], ['gift', 'Guardian gift']], 'rarity',
     `Snacks are one-use treats kept in your snack bar (${D.snackRules.slots} slots to start). Eating one is free: no ${'energy'}, and your turn keeps going. After a fight there's a ${D.snackRules.start}% chance of a snack (elites +${D.snackRules.elite}%); the chance goes down ${D.snackRules.step}% after a drop and up ${D.snackRules.step}% after a fight without one. Once your deck has a style, half of all snacks come from that style. Shops sell 3. Snack events: ${esc(D.snackRules.events.join(', '))}.`),
 
-    enemies: () => table(D.enemies.filter((e) => e.kind !== 'Boss').map((r) => hide(r, ['kind', 'floor', 'art'])), [
-      { label: 'Art', cell: (r) => artBox('enemy', r, r.art) },
+    enemies: () => table(D.enemies.map((r) => hide(r, ['kind', 'floor', 'art'])), [
+      { label: 'Art', cell: (r) => artBox(`enemy${r.kind === 'Boss' ? ' boss' : ''}`, r, r.art) },
       { label: 'Name', key: 'name', cell: (r) => nameCell(r) },
       { label: 'Kind', key: 'kind', sortVal: (r) => KIND_ORDER[r.kind], cell: (r) => `<span class="tag ct-${r.kind}">${r.kind}</span>` },
       { label: 'Floor', key: 'floor', cell: (r) => esc(r.floor) },
       { label: 'HP', key: 'hpMax', num: true, cell: (r) => (r.found ? esc(r.hp) : '?') },
-      { label: 'Moves', cell: (r) => (r.found ? `<ul class="moves">${r.moves.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : notYet) },
+      { label: 'Moves', cell: (r) => (!r.found ? (r.kind === 'Boss' ? '<span class="small">Reach the end of this floor to meet it.</span>' : notYet)
+        : `<ul class="moves${r.bag ? ' bag-moves' : ''}">${r.moves.map((m, i) => `<li>${r.bag ? `<span class="marbles" aria-label="${r.bag[i]} marbles">${`<i class="mb-${r.bagKinds[i]}"></i>`.repeat(r.bag[i])}</span>` : ''}${esc(m)}</li>`).join('')}</ul>${r.combos?.length ? `<p class="small"><b>Combos:</b> ${esc(r.combos.join('. '))}.</p>` : ''}${r.extra ? `<p class="small">${esc(r.extra)}</p>` : ''}`) },
       { label: 'Move order', key: 'ai', cell: (r) => (r.found ? `<span class="small">${esc(r.ai)}</span>` : '') },
-    ], [['all', 'All'], ['Normal', 'Normal'], ['Elite', 'Elite']], 'kind',
-    'Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row.'),
+    ], [['all', 'All'], ['Normal', 'Normal'], ['Elite', 'Elite'], ['Boss', 'Boss']], 'kind',
+    `Every enemy you have fought. "In order" enemies repeat their moves top to bottom; "Random" ones never use the same move 3 times in a row. Each floor has 3 possible bosses: one is picked when a run reaches the floor, and the map shows which one is waiting.<br><b>Boss move bags:</b> a boss keeps a bag of 10 marbles, one per move (some moves have more). Each turn it draws one and doesn't put it back; when the bag is empty it refills. Its first move is never its biggest hit, it never attacks ${D.bagRules.maxRun + 1} turns in a row while the bag has anything else, and a combo makes a follow-up move likely (${D.bagRules.combo}%). In battle, the marbles next to its statuses show what's left.`),
 
-    bosses: () => `<section class="sheet"><p class="note">Each floor has 3 possible bosses. One is picked when a run reaches the floor, and the map shows which one is waiting.</p>
-      <p class="note"><b>Move bags:</b> a boss keeps a bag of 10 marbles, one per move (some moves have more). Each turn it draws one and doesn't put it back; when the bag is empty it refills. Its first move is never its biggest hit, it never attacks ${D.bagRules.maxRun + 1} turns in a row while the bag has anything else, and a combo makes a follow-up move likely (${D.bagRules.combo}%). In battle, the marbles under its intent show what's left.</p>
-      <p class="note"><b>Found ${D.enemies.filter((e) => e.kind === 'Boss' && e.found).length} of ${D.enemies.filter((e) => e.kind === 'Boss').length}</b></p>
-      ${D.enemies.filter((e) => e.kind === 'Boss').map((b) => (b.found ? `<div class="tile boss-row"><div class="art enemy boss">${b.art}</div>
-        <div class="boss-info"><h3>${esc(b.name)}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)} · <b>${esc(b.hp)} HP</b> · moves ${esc(b.ai.toLowerCase())}</p>
-        <ul class="moves bag-moves">${b.moves.map((m, i) => `<li>${b.bag ? `<span class="marbles" aria-label="${b.bag[i]} marbles">${`<i class="mb-${b.bagKinds[i]}"></i>`.repeat(b.bag[i])}</span>` : ''}${esc(m)}</li>`).join('')}</ul>${b.combos?.length ? `<p class="small"><b>Combos:</b> ${esc(b.combos.join('. '))}.</p>` : ''}${b.extra ? `<p class="small">${esc(b.extra)}</p>` : ''}</div></div>`
-        : `<div class="tile boss-row locked"><div class="art enemy boss unseen">${b.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-Boss">Boss</span> ${esc(b.floor)}</p><p class="small">Reach the end of this floor to meet it.</p></div></div>`)).join('')}</section>`,
+    guardians: () => {
+      const charm = Object.fromEntries(D.charms.map((c) => [c.id, c]));
+      return `<section class="sheet"><p class="note">Family who look out for you on the climb. Haru always meets you at the start of a run. On Floors 2 and 3, one of that floor's guardians is waiting when you arrive. Each has their own set of charms and offers 3 to pick 1. Floor 3 gifts are the strongest, made to help a build snowball. Some charms come with special cards that only that guardian gives. <b>Found ${D.guardians.filter((g) => g.found).length} of ${D.guardians.length}</b></p>
+      ${D.guardians.map((g) => (g.found ? `<div class="tile boss-row guardian-row"><div class="art">${g.art}</div>
+        <div class="boss-info"><h3>${esc(g.name)}</h3><p><span class="tag ct-guardian">${esc(g.kind)}</span> ${esc(g.floor)}${g.floorNo ? ' · one of the floor guardians' : ' · every run'}</p><p>${esc(g.blurb)}</p>
+        <ul class="charm-list">${g.charms.map((k) => { const c = charm[k]; return c.found ? `<li>${c.art}<span><b>${esc(c.name)}</b>${c.style ? ` <span class="small">(${esc(c.style)})</span>` : ''}<br><span class="small">${esc(c.desc)}</span></span></li>` : `<li class="muted">${c.art}<span><b>${HIDDEN}</b><br><span class="small">Not offered yet</span></span></li>`; }).join('')}</ul></div></div>`
+        : `<div class="tile boss-row guardian-row locked"><div class="art unseen">${g.art}</div><div class="boss-info"><h3>${HIDDEN}</h3><p><span class="tag ct-guardian">Guardian</span> ${esc(g.floor)}</p><p class="small">Reach ${esc(g.floor)} to meet them.</p></div></div>`)).join('')}</section>`;
+    },
 
     events: () => `<section class="sheet"><p class="note">"?" rooms. You never see the same one twice in a run. <b>Found ${D.events.filter((e) => e.found).length} of ${D.events.length}</b></p>
       <p class="note"><b>Special events</b> wait for your deck: once you own ${D.rules.specialNeed}+ cards of a style (or 2+ hybrid cards), the next "?" room is that style's special event. At most one per floor, each once per run. Their boons only come from there.</p>
@@ -175,7 +178,7 @@ export function catalogScreen(app, { onBack }) {
   };
 
   const totalFound = () => {
-    const lists = [D.cards, D.charms, D.snacks, D.enemies, D.events, D.outfits, D.characters];
+    const lists = [D.cards, D.charms, D.snacks, D.enemies, D.events, D.outfits, D.characters, D.guardians];
     return { found: lists.reduce((n, l) => n + l.filter((r) => r.found).length, 0), all: lists.reduce((n, l) => n + l.length, 0) };
   };
 

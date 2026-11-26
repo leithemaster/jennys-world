@@ -19,7 +19,7 @@ Climb three floors of the Net Café Tower (Lobby, Server Room, Rooftop), each en
 
 **Phones play in landscape:** held upright, a phone shows a "turn your phone sideways" screen (on Android, its Play fullscreen button also locks the screen to landscape; iPhones don't allow a lock, so you rotate by hand). On its side, a phone gets the PC layout (Jenny | board | enemy), squeezed to fit. See `src/ui/orientation.js` and the end of `src/style.css`.
 
-**Kioku Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies, bosses, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
+**Kioku Catalog:** a button on the main menu opens the in-game catalog: characters, outfits, cards, charms, enemies (bosses included, with their move bags), guardians, events, styles and rules, with the in-game art. Anything not found or unlocked yet is greyed out with its name hidden. It's built by `src/ui/catalogData.js` straight from the game files, so new content shows up there on its own.
 
 The full list of characters, cards and charms is in **[docs/catalog.md](docs/catalog.md)**. There's also a visual catalog page with the in-game art (`tools/catalog-page/`, published as a private artifact). Both are generated from the game files: run `npm run catalog` after changing cards, charms, enemies, characters or outfits, then republish `tools/catalog-page/index.html` with its `data.json`.
 
@@ -34,9 +34,15 @@ Pick who climbs at the start of each run. Every card style is open to every char
 
 Jenny and Toni have 5 matching outfit sets (Outfits button on the title screen): Date Night, Cat & Shiba (the original cat hoodie), Lilac Twins, Café Shift and Christmas Knits. Sets unlock at milestones (5 runs, the Floor 2 boss, December). Open the game with `?unlockall` at the end of the address to unlock every character and outfit and fill in the whole Kioku Catalog, for testing. The sets are in `src/game/outfits.js`, the drawings in `src/ui/chibi.js`.
 
-## Haru's Gift
+## Guardians
 
-Every run starts by picking 1 of 3 starter charms from Haru (15 in total). Some of them push you toward a play style, including Sleep Mask (Dreamy), Hot Water Bottle (Cozy) and Gossip Phone (Exposed).
+Family who meet you on the climb and offer 3 of their charms to pick 1 (`src/game/guardians.js`):
+
+- **Floor 1: Haru** (black-and-tan shiba, the big brother), every run. 15 charms; some push a play style, like Sleep Mask (Dreamy), Hot Water Bottle (Cozy) and Gossip Phone (Exposed).
+- **Floor 2:** one of **Issei** (red shiba, Haru's little brother: Combo, Glitch), **Hana** (long-haired red wiener dog: Dreamy, Cozy) or **Kaiba** (long-haired blue merle wiener dog: Guard, Exposed). 6 solid charms each.
+- **Floor 3: the Sushi Queen** of the Sushi Palace. 6 strong charms made to help a build snowball. Two more Floor 3 guardian slots are open.
+
+Each guardian mixes style charms with all-round ones, and some charms come with gift cards only that guardian gives (Zoomie, Snuggle, Bark, Sushi Roll). The offer is saved, so reloading doesn't reroll it. `node tools/sim.mjs 300 guardians` compares runs with and without the Floor 2/3 gifts.
 
 ## Play styles
 

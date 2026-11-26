@@ -14,7 +14,8 @@ import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js
 import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
 import { moveText, comboText } from './catalogData.js';
-import { blobBackdrop } from './chibi.js';
+import { blobBackdrop, guardianChibi } from './chibi.js';
+import { GUARDIANS, guardianFor, guardiansOn } from '../game/guardians.js';
 import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
@@ -54,7 +55,7 @@ function syncUnlocks() {
     Object.keys(ENEMIES).filter((id) => !isFound('enemies', id)).forEach(noteEnemyMet);
     ALL_EVENTS.filter((e) => !isFound('events', e.id)).forEach((e) => noteEventMet(e.id));
     Object.keys(SNACKS).filter((id) => !isFound('snacks', id)).forEach(noteSnackSeen);
-    if (!isFound('guardians', 'haru')) noteGuardianMet('haru');
+    Object.keys(GUARDIANS).filter((id) => !isFound('guardians', id)).forEach(noteGuardianMet);
     history.replaceState(null, '', location.pathname);
   }
   syncOutfitUnlocks();
@@ -71,7 +72,7 @@ function beginRun(character) {
   run = newRun(character);
   run.deck.forEach((c) => noteCardTaken(c.id));
   saveRun(run);
-  harusGift();
+  guardianGift();
 }
 const hero = () => CHARACTERS[run?.character] || CHARACTERS.jenny;
 
@@ -358,7 +359,7 @@ export function title() {
   app.querySelector('[data-help]').addEventListener('click', help);
   app.querySelector('[data-sound]').addEventListener('click', soundSettings);
   app.querySelector('[data-outfits]').addEventListener('click', outfitScreen);
-  app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) harusGift(); else mapScreen(); });
+  app.querySelector('[data-continue]')?.addEventListener('click', () => { run = saved; if (run.giftPending) guardianGift(); else mapScreen(); });
   app.querySelector('[data-new]').addEventListener('click', () => {
     if (saved && !confirm('Start over? Your current run will be lost.')) return;
     startNewRun();
@@ -437,28 +438,41 @@ function pickCharacter() {
   app.querySelector('[data-hero]').focus();
 }
 
-// ---------- Haru's Gift ----------
-function harusGift() {
+// ---------- guardian gifts ----------
+// A guardian's gift: Haru at the start of a run, then the guardian waiting on
+// floors 2 and 3 (see guardians.js). Pick 1 of 3 charms from their set.
+function guardianGift() {
   battle = null;
-  const ids = Object.keys(CHARMS).filter((k) => CHARMS[k].pool === 'haru').sort(() => Math.random() - 0.5).slice(0, 3);
-  noteGuardianMet('haru');
+  const gid = guardianFor(run, run.act);
+  if (!gid) { run.giftPending = false; saveRun(run); mapScreen(); return; }
+  const g = GUARDIANS[gid];
+  const mine = (k) => (gid === 'haru' ? CHARMS[k].pool === 'haru' : CHARMS[k].pool === 'guardian' && CHARMS[k].from === gid);
+  // the offer is saved, so reloading the page doesn't reroll it
+  if (!run.giftOffer?.length) run.giftOffer = Object.keys(CHARMS).filter((k) => mine(k) && !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3);
+  const ids = run.giftOffer;
+  saveRun(run);
+  noteGuardianMet(gid);
   ids.forEach(noteCharmSeen);
-  app.innerHTML = `<main class="room gift">
-    <div class="gift-art" data-hero-art="${run.character}">${blobBackdrop()}${heroSVG(run.character)}</div>
-    <h1>${GAME.gift}</h1>
-    <p class="room-text">Before the climb, Haru hands you a little bag. Pick one thing to take with you.</p>
-    <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}</button>`).join('')}</div>
+  const tags = (k) => `${CHARMS[k].style ? `<em class="tag style-${CHARMS[k].style}">${ARCHES[CHARMS[k].style].name} style</em>` : ''}${CHARMS[k].gives ? `<em class="tag gift-cards">+${CHARMS[k].gives.length} ${esc(CARDS[CHARMS[k].gives[0]].name)} cards</em>` : ''}`;
+  app.innerHTML = `${gid === 'haru' ? '' : header()}<main class="room gift">
+    <div class="gift-art guardian-art">${blobBackdrop('#f6b74a', '#ffe08a')}${guardianChibi(g.art)}</div>
+    ${gid === 'haru' ? '' : `<span class="special-tag">${esc(ACTS[run.act].name)} guardian</span>`}
+    <h1>${gid === 'haru' ? GAME.gift : `${esc(g.name)}'s Gift`}</h1>
+    <p class="room-text">${esc(g.line)}</p>
+    <div class="charm-choices">${ids.map((k) => `<button class="charm-card" data-gift="${k}"><span class="big-icon">${charmIcon(k)}</span><b>${esc(CHARMS[k].name)}</b><small>${esc(CHARMS[k].desc)}</small>${tags(k)}</button>`).join('')}</div>
+    ${ids.length ? '' : `<p class="room-text">${esc(g.name)} has nothing left to give you.</p><button class="btn big yellow" data-skip-gift>Keep climbing</button>`}
   </main>`;
-  app.querySelectorAll('[data-gift]').forEach((b) => b.addEventListener('click', () => {
-    takeCharm(b.dataset.gift);
-    run.giftPending = false;
+  if (gid !== 'haru') bindHeader(app);
+  const done = () => {
+    run.giftPending = false; run.giftOffer = null;
     saveRun(run);
-    if (!localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
+    if (gid === 'haru' && !localStorage.getItem('sm.helped')) { localStorage.setItem('sm.helped', '1'); help(); }
     mapScreen();
-  }));
-  app.querySelector('[data-gift]').focus();
+  };
+  app.querySelectorAll('[data-gift]').forEach((b) => b.addEventListener('click', () => { takeCharm(b.dataset.gift); done(); }));
+  app.querySelector('[data-skip-gift]')?.addEventListener('click', done);
+  app.querySelector('[data-gift], [data-skip-gift]')?.focus();
 }
-
 
 // ---------- map ----------
 function mapScreen() {
@@ -926,6 +940,7 @@ function actCleared() {
   run.pos = null; run.path = [];
   const fridge = fillSnacksForFloor(run);
   fridge.forEach(noteSnackTaken);
+  run.giftPending = guardiansOn(run.act).length > 0;
   saveRun(run);
   app.innerHTML = `${header()}<main class="reward">
     <h1>Floor cleared!</h1>
@@ -935,7 +950,7 @@ function actCleared() {
     ${newOutfits.map(outfitNote).join('')}
     <button class="btn big yellow" data-go>Keep climbing</button></main>`;
   bindHeader(app);
-  app.querySelector('[data-go]').addEventListener('click', mapScreen);
+  app.querySelector('[data-go]').addEventListener('click', () => (run.giftPending ? guardianGift() : mapScreen()));
 }
 
 function gameOver(won, abandoned) {
@@ -1001,11 +1016,16 @@ function restScreen() {
     <div class="room-icon">${roomIcon('rest')}</div>
     <h1>Cozy Booth</h1><p class="room-text">A quiet booth with a blanket and free tea. Take a breather.</p>
     <div class="stack narrow">
-      <button class="btn option" data-heal>Nap <small>Heal ${heal} ${T.hp}</small></button>
+      <button class="btn option" data-heal>Nap <small>Heal ${heal} ${T.hp}${run.charms.includes('doggyBed') ? ' and upgrade a random card' : ''}</small></button>
       <button class="btn option" data-up ${run.deck.some(canUpgrade) ? '' : 'disabled'}>Practice <small>Upgrade a card</small></button>
     </div></main>`;
   bindHeader(app);
-  app.querySelector('[data-heal]').addEventListener('click', () => { if (run.charms.includes('pillowPet')) { run.maxHp += 2; run.hp += 2; } run.hp = Math.min(run.maxHp, run.hp + heal); completeRoom(); });
+  app.querySelector('[data-heal]').addEventListener('click', () => {
+    if (run.charms.includes('pillowPet')) { run.maxHp += 2; run.hp += 2; }
+    run.hp = Math.min(run.maxHp, run.hp + heal);
+    if (run.charms.includes('doggyBed')) { const ups = run.deck.filter(canUpgrade); if (ups.length) ups[Math.floor(Math.random() * ups.length)].up = true; }
+    completeRoom();
+  });
   app.querySelector('[data-up]').addEventListener('click', async () => {
     const i = await pickFromDeck('Upgrade a card', canUpgrade);
     if (i === null) return;

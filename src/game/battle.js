@@ -78,6 +78,10 @@ export class Battle {
     if (this.has('neon')) this.enemy.vuln += 2;
     if (this.has('gossipPhone')) this.enemy.vuln += 1;
     if (this.has('sleepMask')) this.enemy.weak += 1;
+    if (this.has('puppyEyes')) this.player.block += 7;
+    if (this.has('chewedCable')) this.enemy.poison += 3;
+    if (this.has('sharpTeeth')) this.player.thorns += 2;
+    if (this.has('toroCrown')) { this.enemy.vuln += 3; this.enemy.poison += 4; }
     // one-fight buffs from events (e.g. the spicy ramen)
     const nf = this.run.nextFight;
     if (nf) { if (nf.strength) this.player.strength += nf.strength; this.run.nextFight = null; }
@@ -110,7 +114,7 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act);
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + perFloor(RULES.freeReveal, this.run.act);
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);
@@ -168,6 +172,7 @@ export class Battle {
     if (this.flags.comboLock) { this.log(`Miss! Choco Sticks keep your ${T.combo}.`); }
     else if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
     else if (this.has('kittenBell') && !this.bellUsed) { this.bellUsed = true; this.log(`Miss! Kitten Bell keeps your ${T.combo}.`); }
+    else if (this.has('tennisBall') && !this.flags.tennisBall) { this.flags.tennisBall = true; this.log(`Miss! Tennis Ball keeps your ${T.combo}.`); }
     else if (this.powers.groove) { this.combo = Math.floor(this.combo / 2); this.log(`Miss! Groove keeps half your ${T.combo}.`); }
     else { this.combo = 0; this.log('No match…'); }
     if (!this.flags.missRefunded && (this.powers.freeMiss || this.has('mint'))) {
@@ -189,6 +194,7 @@ export class Battle {
     if (def.type === 'power' && this.has('powerBank')) this.gainEnergy(1);
     if (def.rarity === 'status' && this.has('vpnDongle')) this.gainBlock(4);
     if (this.matchesThisTurn === 1 && this.has('keychain')) this.attack(3, { raw: true, quiet: true });
+    if (this.matchesThisTurn === 1 && this.has('spikedCollar')) this.gainBlock(3);
     if (this.has('encore') && (def.arch === 'combo' || def.arch2 === 'combo') && !this.flags.encore) { this.flags.encore = true; this.combo += 1; }
     if (this.has('crossover') && def.arch2 && !this.crossoverUsed) { this.crossoverUsed = true; this.gainEnergy(2); this.log(`Crossover! +2 ${T.energy}.`); }
     this.playing = def;
@@ -275,6 +281,8 @@ export class Battle {
     let d = base + from.strength;
     if (from.weak > 0) d *= 0.75;
     if (to.vuln > 0) d *= to === this.enemy && this.has('trending') ? 1.75 : 1.5;
+    if (to === this.enemy && to.asleep > 0 && this.has('napBuddy')) d *= 1.3;
+    if (from === this.enemy && from.vuln > 0 && this.has('growl')) d *= 0.75;
     return Math.max(0, Math.floor(d));
   }
 
@@ -298,6 +306,7 @@ export class Battle {
   gainBlock(n) {
     let b = n;
     if (this.has('bouncerStance') && this.playingStyle('guard')) b += 2;
+    if (this.has('guardDog') && this.playing) b += 2;
     this.player.block += b;
     this.emit('float', 'player', `+${b}`, 'block');
   }
@@ -318,6 +327,7 @@ export class Battle {
     const extra = n - healed;
     if (opts.cozy && extra > 0) { this.attack(extra, { raw: true }); this.log(`Cozy: ${extra} extra healing hits ${this.enemy.name}.`); }
     if (this.powers.sweetDreams && healed > 0) this.attack(healed, { raw: true });
+    if (this.has('bellyRubs') && n > 0) this.gainBlock(2);
   }
   selfDamage(n) {
     this.run.hp = Math.max(0, this.run.hp - n);
@@ -349,13 +359,15 @@ export class Battle {
   // ---------- turns ----------
   startTurn() {
     this.turn += 1;
-    if (!this.powers.fortress) this.player.block = this.turn === 1 ? this.player.block : 0;
-    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
-    this.combo = this.has('stickers') ? 1 : 0;
+    if (!this.powers.fortress) this.player.block = this.turn === 1 ? this.player.block : this.has('bambooMat') ? Math.floor(this.player.block / 2) : 0;
+    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('bandana') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
+    this.combo = (this.has('stickers') ? 1 : 0) + (this.has('rainbowRoll') ? 2 : 0);
     this.matchesThisTurn = 0;
     this.flags = {};
     this.turnEnergy = this.energy;
     if (this.has('headset')) this.reveal(1, true);
+    if (this.has('conveyorBelt')) this.reveal(2, true);
+    if (this.has('hanaSigh')) this.heal(2);
     if (this.powers.armor) this.gainBlock(this.powers.armor);
     if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
     if (this.powers.bedtime) this.applyEnemy('weak', this.powers.bedtime);

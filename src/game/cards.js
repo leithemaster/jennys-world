@@ -8,6 +8,7 @@
 // type: attack | skill | power | status
 // rarity: starter | common | uncommon | rare | event | status
 //   event: only given by events (see `gives` in events.js), never in rewards or shops
+//   gift: only come with a guardian's charm (see `gives` in charms.js)
 // fx(b, up) runs the effect inside a Battle (b); `up` is true when upgraded.
 // requires(run, h): card stays out of rewards until true; needs: the same rule in plain words (catalog).
 
@@ -426,6 +427,28 @@ export const CARDS = {
     name: 'Power Ballad', type: 'attack', rarity: 'event', icon: 'mic', exhaust: true,
     text: (u) => `Deal ${u ? 20 : 14}. ${T.exhaust}.`,
     fx: (b, u) => b.attack(u ? 20 : 14),
+  },
+
+  // ---------- guardian gifts: only come with a guardian's charm (see `gives` in charms.js) ----------
+  zoomie: {
+    arch: 'combo', name: 'Zoomie', type: 'attack', rarity: 'gift', icon: 'bounce',
+    text: (u) => `Deal ${u ? 6 : 4}. +1 ${T.combo}. Reveal ${u ? 2 : 1}.`,
+    fx: (b, u) => { b.attack(u ? 6 : 4); b.combo += 1; b.reveal(u ? 2 : 1); },
+  },
+  snuggle: {
+    arch: 'dreamy', name: 'Snuggle', type: 'skill', rarity: 'gift', icon: 'pillow',
+    text: (u) => `${T.block} ${u ? 9 : 6}. Apply 2 ${T.sleepy}.`,
+    fx: (b, u) => { b.gainBlock(u ? 9 : 6); b.applyEnemy('weak', 2); },
+  },
+  bark: {
+    arch: 'exposed', name: 'Bark', type: 'skill', rarity: 'gift', icon: 'megaphone',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.exposed}. Reveal ${u ? 2 : 1}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.reveal(u ? 2 : 1); },
+  },
+  sushiRoll: {
+    name: 'Sushi Roll', type: 'attack', rarity: 'gift', icon: 'rice',
+    text: (u) => `Deal ${u ? 10 : 7}. +1 ${T.energy}.`,
+    fx: (b, u) => { b.attack(u ? 10 : 7); b.gainEnergy(1); },
   },
 
   // ---------- status (added by enemies, gone after the fight) ----------

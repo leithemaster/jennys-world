@@ -12,6 +12,7 @@
 //   node tools/sim.mjs 200 deaths     where runs end
 //   node tools/sim.mjs 200 bosses     win rate against each boss (of the runs that reach it)
 //   node tools/sim.mjs 200 snacks     with and without snacks
+//   node tools/sim.mjs 200 guardians  with and without the floor 2/3 guardian gifts, and each guardian
 //   node tools/sim.mjs 200 boons      each style with and without its special-event boon
 
 // ---- fake clock so battle timeouts resolve instantly ----
@@ -36,6 +37,7 @@ const { SNACKS, addSnack, removeSnack } = await import('../src/game/snacks.js');
 const { CHARMS } = await import('../src/game/charms.js');
 const { canUpgrade, CARDS, ARCHES } = await import('../src/game/cards.js');
 const { CHARACTERS } = await import('../src/game/characters.js');
+const { guardianFor, GUARDIANS } = await import('../src/game/guardians.js');
 
 const SKILLS = {
   casual: { recall: 0.6, forget: 0.2 },
@@ -105,6 +107,15 @@ function fight(run, enemyId, skill, stats, kind = 'fight') {
   return result === 'win';
 }
 
+// A floor guardian's gift: 3 of their charms, take the one that fits the style (else random).
+function guardianPick(run, floor, style, opts = {}) {
+  const gid = opts.force && GUARDIANS[opts.force].floor === floor ? opts.force : guardianFor(run, floor);
+  if (!gid) return;
+  const offer = Object.keys(CHARMS).filter((k) => CHARMS[k].from === gid).sort(() => Math.random() - 0.5).slice(0, 3);
+  const pick = (style && offer.find((k) => CHARMS[k].style === style)) || offer[Math.floor(Math.random() * offer.length)];
+  gainCharm(run, pick);
+}
+
 function playRun(skill, stats, opts = {}) {
   const run = newRun(opts.character || 'jenny');
   stats.runBoons = 0;
@@ -136,6 +147,7 @@ function playRun(skill, stats, opts = {}) {
         gainCharm(run, drawCharm(run, 'boss'));
         stats.bossKills[act]++;
         run.hp += Math.round((run.maxHp - run.hp) * 0.75);
+        if (!opts.noGuardians && act < 2) guardianPick(run, act + 1, opts.style, opts);
       }
     }
   }
@@ -169,6 +181,22 @@ if (MODE === 'bosses') {
     for (const [id, [f, w]] of Object.entries(stats.bossRes || {})) { const r = (res[id] ||= [0, 0]); r[0] += f; r[1] += w; }
   }
   console.table(ACTS.flatMap((a, i) => a.bosses.map((id) => ({ floor: i + 1, boss: ENEMIES[id].name, fights: res[id]?.[0] || 0, 'beaten': res[id] ? `${Math.round((res[id][1] / res[id][0]) * 100)}%` : '-' }))));
+  process.exit(0);
+}
+if (MODE === 'guardians') {
+  // with vs without the floor 2/3 guardian gifts, then each guardian forced
+  const out = [];
+  for (const character of Object.keys(CHARACTERS)) for (const [skillName, skill] of Object.entries(SKILLS)) for (const noGuardians of [true, false]) {
+    const { stats, wins } = batch(skill, { character, noGuardians });
+    out.push(summarize(stats, wins, { setup: `${character} ${noGuardians ? 'no guardians' : 'guardians'}`, skill: skillName }));
+  }
+  console.table(out);
+  const per = [];
+  for (const gid of Object.keys(GUARDIANS).filter((g) => GUARDIANS[g].floor > 0)) {
+    const { stats, wins } = batch(SKILLS.sharp, { character: 'jenny', force: gid });
+    per.push(summarize(stats, wins, { guardian: GUARDIANS[gid].name }));
+  }
+  console.table(per);
   process.exit(0);
 }
 if (MODE === 'snacks') {
