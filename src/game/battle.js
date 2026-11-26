@@ -17,7 +17,7 @@ export const MAX_ATTACK_RUN = 2;
 const DAMAGING = ['atk', 'atkBlock', 'atkStatus', 'steal', 'drain'];
 export const moveDamage = (m) => (DAMAGING.includes(m.t) || (m.t === 'ban' && m.n) ? m.n * (m.times || 1) : 0);
 export const moveIs = (m, kind) => (kind === 'attack' ? moveDamage(m) > 0 : m.t === kind);
-export const RULES = { freeReveal: 3, boardPairs: 9, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
+export const RULES = { freeReveal: 4, boardPairs: 10, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
 const wait = (fn, ms) => setTimeout(fn, ms * PACE.scale);

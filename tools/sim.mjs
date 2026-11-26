@@ -209,7 +209,7 @@ if (MODE === 'chars' || MODE === 'styles') {
 const rows = [];
 // default: compare free reveals 0/1/2. `node tools/sim.mjs 200 pairs` compares board sizes instead.
 const PAIRS_MODE = process.argv[3] === 'pairs';
-const setups = PAIRS_MODE ? [{ free: 2, pairs: 8 }, { free: 2, pairs: 9 }, { free: 3, pairs: 9 }] : [0, 1, 2].map((f) => ({ free: f, pairs: RULES.boardPairs }));
+const setups = PAIRS_MODE ? [{ free: 3, pairs: 9 }, { free: 3, pairs: 10 }, { free: 4, pairs: 10 }] : [0, 1, 2].map((f) => ({ free: f, pairs: RULES.boardPairs }));
 for (const { free, pairs } of setups) {
   for (const [skillName, skill] of Object.entries(SKILLS)) {
     RULES.freeReveal = free;
