@@ -657,7 +657,7 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .cat .art.boss { width: 120px; height: 120px; }
 .cat .art.unseen { background: #d9d0cb; }
 .cat .art.unseen svg { filter: brightness(0); opacity: .3; }
-.cat .tag { color: var(--ink); text-transform: none; letter-spacing: 0; display: inline-block; border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 12px; background: #fff; text-align: center; }
+.cat .tag { color: var(--ink); text-transform: none; letter-spacing: 0; display: inline-block; border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-weight: 800; font-size: 12px; background: #fff; text-align: center; white-space: nowrap; }
 .cat .tag.ct-attack { background: var(--coral); } .cat .tag.ct-skill { background: var(--sky); } .cat .tag.ct-power { background: var(--lilac); } .cat .tag.ct-status, .cat .tag.ct-curse { background: #b9b3b0; }
 .cat .tag.ct-common, .cat .tag.ct-drop, .cat .tag.ct-Normal { background: #eee6df; } .cat .tag.ct-uncommon { background: var(--mint); } .cat .tag.ct-rare, .cat .tag.ct-shop { background: var(--sun); }
 .cat .tag.ct-haru { background: var(--ring); } .cat .tag.ct-boss, .cat .tag.ct-Boss { background: var(--pink); color: #fff; } .cat .tag.ct-Elite { background: var(--lilac); }
