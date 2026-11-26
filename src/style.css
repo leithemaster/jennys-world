@@ -1014,3 +1014,11 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
   .shop-top { justify-content: start; }
   .shop .shop-row .btn { font-size: 13px; padding: 2px 10px 6px; }
 }
+@media (max-height: 480px) {
+  .shop .wide-only { display: none; }
+  .shop .shop-row .btn { white-space: nowrap; font-size: 12px; padding: 2px 7px 6px; flex-direction: row; gap: 3px; min-height: 34px; }
+  .shop .shop-row { gap: 4px; min-width: 0; }
+  .shop .shop-row .btn small { display: inline-flex; align-items: center; margin-left: 2px; }
+  .shop .shop-row .btn .ui-i { width: 14px; height: 14px; }
+  .shop-top .gift-note { font-size: 11px; padding: 0 8px; }
+}

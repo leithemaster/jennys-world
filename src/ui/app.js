@@ -1307,14 +1307,15 @@ function shopScreen() {
         ${run.charms.includes('giftCard') && !stock.giftUsed ? `<b class="gift-note">${charmIcon('giftCard')} Gift Card: first item half price!</b>` : ''}
       </div>
       <section class="shop-cards">
-        <div class="shop-h"><h2>Cards</h2>${stock.cards.some((c) => c.sale && !c.sold) ? '<b class="sale-note">Card sale today!</b>' : ''}<button class="btn small" data-restock ${run.coins < restockCost(stock.rerolls) ? 'disabled' : ''} data-tip="Swap the cards on the shelf for a new set. Costs more each time.">Restock <small>${uiIcon('coin')} ${restockCost(stock.rerolls)}</small></button></div>
+        <div class="shop-h"><h2>Cards</h2>${stock.cards.some((c) => c.sale && !c.sold) ? '<b class="sale-note">Card sale today!</b>' : ''}</div>
         <div class="choices shelf">${stock.cards.map((c, i) => `<div class="shop-item${c.sold ? ' sold' : ''}${c.sale ? ` on-sale sale-${c.sale}` : ''}">${c.sale && !c.sold ? `<em class="sale-tag">${c.sale}% off</em>` : ''}<button class="card-btn" data-card="${i}" ${c.sold || run.coins < priceOf(c) ? 'disabled' : ''} aria-label="Buy ${esc(cardName(c))} for ${priceOf(c)}${c.sale ? `, ${c.sale}% off` : ''}">${cardHTML(c)}</button><span class="price${run.coins < priceOf(c) ? ' poor' : ''}">${uiIcon('coin')}${c.sale ? `<s>${priceOf({ price: c.was })}</s>` : ''}${priceOf(c)}</span></div>`).join('')}</div>
       </section>
       <section class="shop-list"><h2>Charms</h2>${stock.charms.map((c, i) => line('data-charm', i, c, charmIcon(c.id), CHARMS[c.id].name, CHARMS[c.id].desc, c.shopOnly ? ' <em class="tag">shop only</em>' : '', run.coins < priceOf(c))).join('')}</section>
       <section class="shop-list"><h2>Snacks</h2>${stock.snacks.map((c, i) => line('data-snackbuy', i, c, snackIcon(c.id), SNACKS[c.id].name, SNACKS[c.id].desc, '', run.coins < priceOf(c) || !snackRoom(run))).join('')}${snackRoom(run) ? '' : '<p class="shop-note">Snack bar full: click a snack at the top to eat or toss it.</p>'}</section>
       <div class="shop-row">
-        <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove a card <small>${uiIcon('coin')} ${removeCost(run)}</small></button>
-        <button class="btn yellow" data-go>Leave shop</button>
+        <button class="btn" data-restock ${run.coins < restockCost(stock.rerolls) ? 'disabled' : ''} data-tip="Swap the cards on the shelf for a new set. Costs more each time.">Restock<span class="wide-only"> cards</span> <small>${uiIcon('coin')} ${restockCost(stock.rerolls)}</small></button>
+        <button class="btn" data-remove ${stock.removed || run.coins < removeCost(run) ? 'disabled' : ''}>Remove<span class="wide-only"> a card</span> <small>${uiIcon('coin')} ${removeCost(run)}</small></button>
+        <button class="btn yellow" data-go>Leave<span class="wide-only"> shop</span></button>
       </div></main>`;
     bindHeader(app);
     app.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => {
