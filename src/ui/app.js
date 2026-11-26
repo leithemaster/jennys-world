@@ -472,7 +472,7 @@ function guardianGift() {
   const g = GUARDIANS[gid];
   const mine = (k) => (gid === 'haru' ? CHARMS[k].pool === 'haru' : CHARMS[k].pool === 'guardian' && CHARMS[k].from === gid);
   // the offer is saved, so reloading the page doesn't reroll it
-  if (!run.giftOffer?.length) run.giftOffer = Object.keys(CHARMS).filter((k) => mine(k) && !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, climbOn(run, 6) ? CLIMB_RULES.guardianChoices : 3);
+  if (!run.giftOffer?.length) run.giftOffer = Object.keys(CHARMS).filter((k) => mine(k) && !run.charms.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3);
   const ids = run.giftOffer;
   saveRun(run);
   noteGuardianMet(gid);

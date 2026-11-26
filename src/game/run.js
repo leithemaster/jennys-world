@@ -176,7 +176,7 @@ export function roomAt(run, row, col) {
 export const enemyFor = (run, type) => drawEnemy(run, type);
 
 // ---------- rewards ----------
-export const cardChoices = (run, kind) => cardReward(run, kind);
+export const cardChoices = (run, kind) => cardReward(run, kind, climbOn(run, 6) ? CR.rewardChoices : 3); // climb level 6: one fewer
 export const randomCharm = (run, pool = 'drop') => drawCharm(run, pool);
 
 export function gainCharm(run, id) {

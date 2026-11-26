@@ -489,6 +489,13 @@ export const CARDS = {
     text: () => 'Curse. Does nothing. Remove it at a shop.',
     fx: () => {},
   },
+  // Climb level 9: a curse you can clear out for the fight by matching it (it exhausts),
+  // but it costs a pair's energy and comes back next fight.
+  leftovers: {
+    name: 'Leftovers', type: 'status', rarity: 'curse', icon: 'takeout', exhaust: true,
+    text: () => 'Curse. Does nothing. Exhaust. Remove it at a shop.',
+    fx: () => {},
+  },
 };
 
 export const ARCHES = {

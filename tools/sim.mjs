@@ -112,7 +112,7 @@ function fight(run, enemyId, skill, stats, kind = 'fight') {
 function guardianPick(run, floor, style, opts = {}) {
   const gid = opts.force && GUARDIANS[opts.force].floor === floor ? opts.force : guardianFor(run, floor);
   if (!gid) return;
-  const offer = Object.keys(CHARMS).filter((k) => CHARMS[k].from === gid).sort(() => Math.random() - 0.5).slice(0, climbOn(run, 6) ? CLIMB_RULES.guardianChoices : 3);
+  const offer = Object.keys(CHARMS).filter((k) => CHARMS[k].from === gid).sort(() => Math.random() - 0.5).slice(0, 3);
   const pick = (style && offer.find((k) => CHARMS[k].style === style)) || offer[Math.floor(Math.random() * offer.length)];
   gainCharm(run, pick);
 }

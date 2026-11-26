@@ -68,6 +68,7 @@ export const ICONS = {
   crown: '<path d="M3 24 L5 8 L11 15 L16 5 L21 15 L27 8 L29 24 Z" fill="currentColor"/><rect x="3" y="25" width="26" height="4" rx="1" fill="currentColor"/><circle cx="16" cy="18" r="2.4" fill="#fff"/>',
   pileDraw: '<rect x="9" y="3" width="15" height="20" rx="3" fill="currentColor" opacity=".45"/><rect x="6" y="6" width="15" height="20" rx="3" fill="currentColor" opacity=".7"/><rect x="3" y="9" width="15" height="20" rx="3" fill="currentColor"/>',
   pileDiscard: '<rect x="4" y="10" width="15" height="20" rx="3" fill="currentColor" transform="rotate(-14 11 20)"/><rect x="12" y="8" width="15" height="20" rx="3" fill="currentColor" opacity=".7" transform="rotate(12 19 18)"/>',
+  takeout: '<path d="M6 12 H26 L23 28 H9 Z" fill="currentColor"/><path d="M6 12 L9 5 H23 L26 12" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linejoin="round"/><path d="M12 5 C12 1 20 1 20 5" stroke="currentColor" stroke-width="2.2" fill="none"/>',
   static: '<path d="M2 16 L6 8 L10 22 L14 6 L18 26 L22 10 L26 20 L30 14" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linejoin="round"/>',
 };
 

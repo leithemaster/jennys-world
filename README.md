@@ -46,7 +46,7 @@ Each guardian mixes style charms with all-round ones, and some charms come with 
 
 ## Climb levels
 
-Harder runs for after you've won (`src/game/climb.js`). Winning a run unlocks climb level 1 for that climber, and winning at your highest level unlocks the next, up to 10. Each level keeps every twist below it: tougher elites, smaller naps, harder hits, pricier shops, bigger bosses, 2 guardian charms instead of 3, one fewer free reveal, less max HP, a Static curse, and finally elites and bosses starting with 1 Spirit. Pick the level under the climber when you start a run; the header shows a flag with the level, and the Kioku Catalog's Rooms & floors tab lists them all. `node tools/sim.mjs 300 climb` shows the bot's win rate at each level.
+Harder runs for after you've won (`src/game/climb.js`). Winning a run unlocks climb level 1 for that climber, and winning at your highest level unlocks the next, up to 10. Each level keeps every twist below it: tougher elites, smaller naps, harder hits, pricier shops, bigger bosses, 2 card choices instead of 3 after fights, one fewer free reveal, less max HP, a Leftovers curse (it exhausts when matched but comes back each fight), and finally elites and bosses starting with 1 Spirit. Pick the level under the climber when you start a run; the header shows a flag with the level, and the Kioku Catalog's Rooms & floors tab lists them all. `node tools/sim.mjs 300 climb` shows the bot's win rate at each level.
 
 ## Play styles
 
