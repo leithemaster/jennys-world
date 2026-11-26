@@ -196,7 +196,7 @@ function soundSettings() {
 document.addEventListener('click', (e) => {
   const t = e.target.closest?.('button, .node.avail');
   if (!t || t.disabled) return;
-  if (t.matches('.slot, [data-sound], [data-mute-sfx]')) return;
+  if (t.matches('.slot, [data-mute-sfx]')) return;
   if (t.matches('.card-btn, .charm-card, [data-pick], [data-boss]')) sfx('pick');
   else if (t.matches('.node')) sfx('enter');
   else sfx('click');
