@@ -706,8 +706,7 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 @media (max-width: 999px) { .snack { width: 28px; height: 28px; } .snack.empty { width: 22px; height: 22px; } }
 
 /* boss move bag */
-.bag-row { display: flex; justify-content: center; min-height: 18px; margin-top: 6px; }
-.bag-chip { display: inline-flex; gap: 3px; padding: 3px 8px; border-radius: 999px; background: var(--paper); border: var(--line); cursor: help; }
+.bag-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 999px; background: var(--paper); border: var(--line); cursor: help; }
 .mb { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--ink); display: inline-block; }
 .mb-atk { background: var(--coral); } .mb-def { background: var(--sky); } .mb-buff { background: var(--sun); } .mb-hex { background: var(--lilac); }
 .mb.used { background: transparent; opacity: .35; }

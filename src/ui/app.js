@@ -305,7 +305,7 @@ function help() {
     <p><b>Every card in your deck shows up twice</b> on the board, face down. Flip two cards: if they match, that card is played.</p>
     <p><b>Flipping a pair costs 1 ${T.energy}.</b> You get 3 ${T.energy} a turn. When it runs out, the enemy does what its bubble says.</p>
     <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 ${T.energy} and a fresh board.</p>
-    <p><b>Free peek:</b> every board has ${RULES.boardPairs * 2} cards, and each new board starts with ${RULES.freeReveal} of them revealed.</p>
+    <p><b>Free peek:</b> boards grow as you climb: ${RULES.boardPairs.map((p) => p * 2).join(', ')} cards on Floors 1, 2 and 3, and each new board starts with ${RULES.freeReveal.join(', ')} of them revealed.</p>
     <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
     <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
     <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
@@ -613,7 +613,6 @@ function battleScreen(enemyId, kind) {
         <div class="f-name">${esc(def.name)}</div>
         <div class="hpbar enemy"><i data-ehpbar></i><span data-ehptext></span><em class="blk" data-eblk hidden></em></div>
         <div class="statuses" data-estat></div>
-        <div class="bag-row" data-ebag></div>
       </div>
     </section>
     <section class="energy-bar" data-energy aria-live="polite"></section>
@@ -653,7 +652,7 @@ function battleScreen(enemyId, kind) {
   const renderBoard = () => {
     const b = battle;
     const hadFocus = boardEl.contains(document.activeElement);
-    boardEl.style.setProperty('--cols', b.board.length > 16 ? 5 : 4);
+    boardEl.style.setProperty('--cols', gridCols(b.board.length));
     boardEl.innerHTML = b.board.map((s, i) => `<button class="slot" data-i="${i}">
         <span class="face back">${icon('star')}</span>
         <span class="face front">${cardHTML(s.card)}</span>
@@ -734,9 +733,8 @@ function battleScreen(enemyId, kind) {
     const pasTip = pas.id === 'stickerBook' ? `${passiveText(b.character)} Next: ${STICKERS[b.nextSticker()].name} sticker (${STICKERS[b.nextSticker()].text}) in ${b.stickersIn()} match${b.stickersIn() > 1 ? 'es' : ''}.` : passiveText(b.character);
     $('[data-pstat]').innerHTML = `<span class="status s-power" data-tip="${esc(pasTip)}">${pasLabel}</span>` + statusHTML(b.player) + (b.powers.bedtime ? `<span class="status s-power" data-tip="Bedtime Story: apply ${b.powers.bedtime} ${T.sleepy} each turn.">Story ${b.powers.bedtime}</span>` : '') + (b.powers.deepSleep ? `<span class="status s-power" data-tip="Deep Sleep: enemies stay ${T.asleep} ${b.powers.deepSleep} turn longer.">Deep Sleep</span>` : '') + (b.powers.sweetDreams ? '<span class="status s-power" data-tip="Sweet Dreams: whenever you heal, deal that much damage.">Sweet Dreams</span>' : '') + (b.powers.roast ? `<span class="status s-power" data-tip="Roast Battle: ${T.exposed} on enemies no longer wears off.">Roast</span>` : '') + (b.powers.energy ? `<span class="status s-power" data-tip="Energy Drink: +${b.powers.energy} ${T.energy} each turn.">+${b.powers.energy} ${T.energy}</span>` : '') + (b.powers.fortress ? '<span class="status s-power" data-tip="Blanket Fort: Block stays between turns.">Fort</span>' : '') + (b.powers.freeMiss ? '<span class="status s-power" data-tip="Photo Memory: first miss each turn is free.">Memory</span>' : '') + (b.powers.malware ? `<span class="status s-power" data-tip="Malware: apply ${b.powers.malware} ${T.glitch} each turn.">Malware ${b.powers.malware}</span>` : '') + (b.powers.armor ? `<span class="status s-power" data-tip="Iron Hoodie: gain ${b.powers.armor} ${T.block} each turn.">Armor ${b.powers.armor}</span>` : '') + (b.powers.groove ? '<span class="status s-power" data-tip="Groove: a miss only halves your combo.">Groove</span>' : '') + (b.powers.spotlight ? `<span class="status s-power" data-tip="Spotlight: matching a revealed card deals ${b.powers.spotlight}.">Spotlight</span>` : '');
     if (b.pendingReveal) $('[data-pstat]').insertAdjacentHTML('beforeend', `<span class="status s-reveal" data-tip="Saved reveals: these cards will be revealed as soon as the next board is dealt.">${uiIcon('eye')} ${b.pendingReveal} saved</span>`);
-    $('[data-estat]').innerHTML = statusHTML(e);
+    $('[data-estat]').innerHTML = statusHTML(e) + bagHTML(); // the boss's marble bag sits in its status row so both fighters line up
     $('[data-intent]').innerHTML = intentHTML();
-    $('[data-ebag]').innerHTML = bagHTML();
     const en = $('[data-energy]');
     // While the first card of a pair is face up, its energy is "in use", not spent:
     // the pip glows and nothing says "out of energy" until the pair is finished.
@@ -817,6 +815,9 @@ document.addEventListener('keydown', (e) => {
 // space in the middle column, then size the board to match.
 const WIDE = matchMedia('(min-width: 1000px)');
 const CARD_RATIO = 6.2 / 5; // slot height / width
+// Narrow (phone) columns that fill every spot without scrolling: 16 cards 4x4,
+// 18 cards 6x3, 20 cards 5x4. Wide screens pick their own in fitBoard().
+const gridCols = (n) => [4, 5, 6].find((c) => n % c === 0 && n / c <= c) || (n > 16 ? 5 : 4);
 function fitBoard() {
   const battleEl = app.querySelector('main.battle');
   const board = battleEl?.querySelector('[data-board]');
@@ -832,7 +833,8 @@ function fitBoard() {
   const gap = parseFloat(bs.columnGap);
   const n = board.children.length;
   let best = { c: 4, w: 0 };
-  for (let c = 3; c <= 8; c++) {
+  const full = [3, 4, 5, 6, 7, 8].filter((c) => n % c === 0); // layouts with no empty spots
+  for (const c of full.length ? full : [3, 4, 5, 6, 7, 8]) {
     const r = Math.ceil(n / c);
     const w = Math.min((W - pad - gap * (c - 1)) / c, (H - pad - gap * (r - 1)) / r / CARD_RATIO);
     if (w > best.w) best = { c, w };

@@ -209,7 +209,7 @@ if (MODE === 'chars' || MODE === 'styles') {
 const rows = [];
 // default: compare free reveals 0/1/2. `node tools/sim.mjs 200 pairs` compares board sizes instead.
 const PAIRS_MODE = process.argv[3] === 'pairs';
-const setups = PAIRS_MODE ? [{ free: 3, pairs: 9 }, { free: 3, pairs: 10 }, { free: 4, pairs: 10 }] : [0, 1, 2].map((f) => ({ free: f, pairs: RULES.boardPairs }));
+const setups = PAIRS_MODE ? (process.env.PAIRS ? JSON.parse(process.env.PAIRS) : [{ free: [4, 4, 4], pairs: [10, 10, 10] }, { free: [3, 3, 4], pairs: [8, 9, 10] }, { free: [3, 4, 4], pairs: [8, 9, 10] }]) : [0, 1, 2].map((f) => ({ free: f, pairs: RULES.boardPairs }));
 for (const { free, pairs } of setups) {
   for (const [skillName, skill] of Object.entries(SKILLS)) {
     RULES.freeReveal = free;
@@ -218,7 +218,7 @@ for (const { free, pairs } of setups) {
     let wins = 0;
     for (let i = 0; i < N; i++) if (playRun(skill, stats) === 3) wins++;
     rows.push({
-      ...(PAIRS_MODE ? { 'board cards': pairs * 2, free } : { free }), skill: skillName,
+      ...(PAIRS_MODE ? { 'board pairs': String(pairs), free: String(free) } : { free }), skill: skillName,
       'beat boss 1': `${Math.round((stats.bossKills[0] / N) * 100)}%`,
       'beat boss 2': `${Math.round((stats.bossKills[1] / N) * 100)}%`,
       'win run': `${Math.round((wins / N) * 100)}%`,

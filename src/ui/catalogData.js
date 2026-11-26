@@ -119,5 +119,5 @@ export function buildCatalog() {
   };
 
   const bagRules = { combo: Math.round(COMBO_CHANCE * 100), maxRun: MAX_ATTACK_RUN };
-  return { bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, rules };
+  return { bagRules, snacks, snackRules, cards, charms, enemies, events, statuses, styles, characters, stickers, outfits, rooms, acts, freeReveal: RULES.freeReveal, boardPairs: RULES.boardPairs, rules };
 }

@@ -17,7 +17,8 @@ export const MAX_ATTACK_RUN = 2;
 const DAMAGING = ['atk', 'atkBlock', 'atkStatus', 'steal', 'drain'];
 export const moveDamage = (m) => (DAMAGING.includes(m.t) || (m.t === 'ban' && m.n) ? m.n * (m.times || 1) : 0);
 export const moveIs = (m, kind) => (kind === 'attack' ? moveDamage(m) > 0 : m.t === kind);
-export const RULES = { freeReveal: 4, boardPairs: 10, sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs: deck cards per board (each shows as a pair)
+export const RULES = { freeReveal: [3, 3, 4], boardPairs: [8, 9, 10], sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs / freeReveal: per floor (1, 2, 3); boardPairs = deck cards per board, each shown as a pair
+export const perFloor = (v, act = 0) => (Array.isArray(v) ? v[Math.min(act, v.length - 1)] : v);
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
 const wait = (fn, ms) => setTimeout(fn, ms * PACE.scale);
@@ -91,7 +92,7 @@ export class Battle {
     // Discard whatever's left on the old board.
     for (const c of this.boardCards || []) (c._exhaust ? this.exhaust : this.discard).push(c);
     const hand = [];
-    while (hand.length < RULES.boardPairs) {
+    while (hand.length < perFloor(RULES.boardPairs, this.run.act)) {
       if (!this.draw.length) {
         if (!this.discard.length) break;
         this.draw = shuffle(this.discard);
@@ -109,7 +110,7 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + RULES.freeReveal;
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + perFloor(RULES.freeReveal, this.run.act);
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);

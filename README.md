@@ -9,7 +9,7 @@ A memory card battler made for my sister. Part of Jenny's World.
 - Every card in your deck shows up **twice**, face down. Flip two: if they match, that card is played.
 - Flipping a pair costs **1 energy**. You get 3 a turn; when you run out, the enemy acts on the intent shown in its bubble.
 - Unmatched cards **stay where they are** between turns, so memory pays off. Clearing the whole board gives +1 energy and a fresh board.
-- A board holds **20 cards** (10 pairs), filling the whole 5×4 grid. Every new board starts with **4 cards revealed** for free.
+- The board **grows as you climb**: **16 cards** (8 pairs, 4×4) on Floor 1, **18** (9 pairs, 6×3) on Floor 2 and **20** (10 pairs, 5×4) on Floor 3. Every new board starts with **3 / 3 / 4 cards revealed** for free.
 - **Combo:** matches in a row add +2 damage to attacks. A miss resets it.
 - Some enemies **scramble** the board or slip junk cards (Bug, Lag, Spam) into your deck.
 
