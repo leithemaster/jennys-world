@@ -171,7 +171,6 @@ applyPace();
 function soundSettings() {
   const pct = (v) => Math.round(v * 100);
   const m = modal(`<h2>Settings</h2>
-    <button class="btn" data-outfits>Couple outfits</button>
     <label class="slider"><span>Music <b data-mv>${pct(settings.music)}%</b></span>
       <input type="range" min="0" max="100" step="5" value="${pct(settings.music)}" data-music aria-label="Music volume"></label>
     <label class="slider"><span>Effects <b data-sv>${pct(settings.sfx)}%</b></span>
@@ -184,7 +183,6 @@ function soundSettings() {
     <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
     <button class="btn" data-close>Done</button>`);
   const el = m.el;
-  el.querySelector('[data-outfits]').addEventListener('click', () => { m.close(); outfitScreen(); });
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
