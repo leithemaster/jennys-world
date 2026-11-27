@@ -437,6 +437,28 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
 .combo { font-family: var(--font-display); font-weight: 700; color: var(--sun); font-size: 18px; min-height: 22px; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
 .combo small { font-family: var(--font-ui); color: var(--on-ground-muted); font-size: 12px; -webkit-text-stroke: 0; }
 .log { font-weight: 800; color: var(--on-ground); font-size: 14px; min-height: 1.4em; }
+.mid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 320px); gap: var(--s3); align-items: start; }
+.mid-now { min-width: 0; }
+.hist { min-width: 0; border-left: 2px solid rgba(255, 246, 236, .15); padding-left: var(--s3); }
+.hist-sum { font-size: 12px; font-weight: 800; color: var(--on-ground-muted); white-space: nowrap; }
+.hist-sum b { color: var(--sun); font-size: 14px; } .hist-sum b.t { color: var(--coral); }
+.hist-sum small { margin-left: 6px; font-size: 11px; }
+.hist-list { list-style: none; margin: 2px 0 0; padding: 0; height: 70px; overflow-y: auto; font-size: 12.5px; font-weight: 700; color: var(--on-ground); scrollbar-width: thin; }
+.hist-list li { display: flex; gap: 6px; align-items: baseline; line-height: 17px; }
+.hist-list li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-list li b { margin-left: auto; color: var(--sun); }
+.hist-list li.h-taken b { color: var(--coral); }
+.hist-list li small, .hist-list li i { color: var(--on-ground-muted); font-size: 11px; font-style: normal; }
+.hist-list li i { margin-left: auto; }
+.hist-list li.h-turn { color: var(--on-ground-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-top: 1px dashed rgba(255, 246, 236, .2); margin-top: 2px; }
+.hist-list li.h-turn:first-child { border-top: 0; margin-top: 0; }
+/* the look-only map opened from inside a room */
+.map-modal { display: grid; gap: var(--s2); }
+.map-modal .map-scroll { overflow-x: auto; }
+.map-modal svg.map { width: 100%; height: auto; min-width: 640px; }
+.map-modal .node.here circle { stroke: var(--sun); stroke-width: 6; }
+.map-modal .legend { margin: 0; }
+.map-modal .btn { justify-self: center; }
 .piles { display: flex; gap: var(--s2); }
 .pile { display: grid; justify-items: center; background: var(--paper); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 12px; padding: 4px 9px; font-family: var(--font-display); font-weight: 700; font-size: 13px; box-shadow: var(--shadow-sm); }
 .pile svg { width: 18px; height: 18px; }
@@ -1099,3 +1121,9 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 .deck-chip svg { width: 18px; height: 18px; }
 .deck-chip b { color: var(--muted); font-size: 11px; }
 @media (max-width: 560px) { .story-body { flex-direction: column; text-align: center; } .story-text { justify-items: center; } .deck-strip { justify-content: center; } }
+/* the room you just left (a shop, or skipped cards): open it again from the map */
+.node.back circle { stroke: var(--sun); stroke-width: 5; stroke-dasharray: 7 4; }
+.node.back { opacity: 1; filter: none; }
+@media (max-width: 640px) { .mid { grid-template-columns: 1fr; } .hist { border-left: 0; padding-left: 0; } .hist-list { height: 34px; } }
+.node.back.t-shop circle { fill: var(--sun); } .node.back.t-fight circle { fill: var(--coral); } .node.back.t-elite circle { fill: var(--pink); }
+.node.back.done { color: var(--ink); }

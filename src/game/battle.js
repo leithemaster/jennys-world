@@ -341,7 +341,7 @@ export class Battle {
   }
   selfDamage(n) {
     this.run.hp = Math.max(0, this.run.hp - n);
-    this.emit('hit', 'player', n, 0);
+    this.emit('hit', 'player', n, 0, 'self');
     this.checkEnd();
   }
   applyEnemy(k, n) {

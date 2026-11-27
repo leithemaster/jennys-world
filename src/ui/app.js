@@ -109,6 +109,7 @@ function header() {
     <div class="bar-charms">${run.charms.map((k) => charmBadge(k)).join('')}</div>
     <div class="bar-right">
       <button class="btn small icon-only" data-sound aria-label="Settings" title="Settings">${uiIcon('gear')}</button>
+      ${run.map ? '<button class="btn small" data-showmap title="See the floor map (M)">Map</button>' : ''}
       <button class="btn small" data-deck>Deck <b>${run.deck.length}</b></button>
       <button class="btn small icon-only" data-menu aria-label="Menu" title="Menu">${uiIcon('menu')}</button>
     </div>
@@ -118,6 +119,9 @@ function header() {
 function bindHeader(root) {
   root.querySelector('[data-deck]')?.addEventListener('click', () => { const s = deckStyle(run); showDeck(run.deck, 'Your deck', s ? `Play style: <b class="arch a-${s.arch}">${ARCHES[s.arch].name}</b> · ${esc(ARCHES[s.arch].desc)} Rewards will offer more ${ARCHES[s.arch].name} cards.` : 'No play style yet. Pick up cards from any style (Glitch, Guard, Combo, Memory, Dreamy, Cozy, Exposed) and rewards will start offering more of it.'); });
   root.querySelector('[data-menu]')?.addEventListener('click', menu);
+  const mapBtn = root.querySelector('[data-showmap]');
+  if (mapBtn && root.querySelector('.map-screen')) mapBtn.remove(); // already looking at it
+  mapBtn?.addEventListener('click', showMap);
   root.querySelector('[data-sound]')?.addEventListener('click', soundSettings);
   root.querySelectorAll('[data-snack]').forEach((b) => b.addEventListener('click', () => snackMenu(Number(b.dataset.snack))));
 }
@@ -606,11 +610,9 @@ function guardianGift() {
 }
 
 // ---------- map ----------
-function mapScreen() {
-  barChanged = null;
-  battle = null;
+// The floor map as an SVG. `here` marks the room you are in right now (seen from inside a room).
+function mapSVG(here = null) {
   run.path ||= [];
-  saveRun(run);
   const rows = run.map.rows;
   // Landscape map: the climb runs left → right, the 5 lanes stack top → bottom, boss on the far right.
   const colW = 104, laneH = 84, padX = 56, padY = 52;
@@ -621,6 +623,8 @@ function mapScreen() {
   const avail = availableRooms(run);
   const isAvail = (r, c) => avail.some((a) => a.row === r && (r === 'boss' || a.col === c));
   const visited = (r, c) => run.path.some((p) => p.row === r && p.col === c);
+  // the room you just left, if it can be opened again (a shop, or a card reward you skipped)
+  const isBack = (r, c) => !here && !!run.revisit && run.pos?.row === r && run.pos?.col === c;
   // rooms you can still reach from where you are; everything else is greyed out
   const reach = new Set();
   const walk = (r, c) => {
@@ -629,8 +633,9 @@ function mapScreen() {
     reach.add(key);
     if (r < rows.length - 1) rows[r].find((n) => n.col === c).next.forEach((nc) => walk(r + 1, nc));
   };
-  if (!run.pos) rows[0].forEach((n) => walk(0, n.col));
-  else if (run.pos.row !== 'boss') walk(run.pos.row, run.pos.col);
+  const from = here || run.pos;
+  if (!from) rows[0].forEach((n) => walk(0, n.col));
+  else if (from.row !== 'boss') walk(from.row, from.col);
   const live = (r, c) => reach.has(`${r},${c}`);
 
   let lines = '';
@@ -644,19 +649,60 @@ function mapScreen() {
   }));
   let nodes = '';
   rows.forEach((row, r) => row.forEach((n) => {
-    const a = isAvail(r, n.col), v = visited(r, n.col), gone = !v && !live(r, n.col);
-    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}${gone ? ' skipped' : ''}" transform="translate(${xOf(r)} ${yOf(n.col)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
+    const h = here && here.row === r && here.col === n.col;
+    const a = !here && (isAvail(r, n.col) || isBack(r, n.col)), v = visited(r, n.col), gone = !v && !h && !live(r, n.col);
+    nodes += `<g class="node t-${n.type}${a ? ' avail' : ''}${v ? ' done' : ''}${gone ? ' skipped' : ''}${h ? ' here' : ''}${isBack(r, n.col) ? ' back' : ''}" transform="translate(${xOf(r)} ${yOf(n.col)})" ${a ? `tabindex="0" role="button" data-room="${r},${n.col}" aria-label="${n.type} room"` : ''}>
       <circle r="19"/><g transform="translate(-12 -12) scale(.75)">${roomIcon(n.type).replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
   }));
-  const bossA = isAvail('boss');
+  const bossA = !here && isAvail('boss');
   nodes += `<g class="node t-boss${bossA ? ' avail' : ''}" transform="translate(${xOf('boss')} ${H / 2})" ${bossA ? 'tabindex="0" role="button" data-room="boss" aria-label="Boss room"' : ''}>
     <circle r="30"/><g transform="translate(-18 -18) scale(1.125)">${roomIcon('boss').replace('<svg viewBox="0 0 32 32" aria-hidden="true">', '').replace('</svg>', '')}</g></g>`;
 
+  return { W, H, svg: `<svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg>` };
+}
+
+// The map from inside a room (fight, shop, event...): look only, no picking.
+function showMap() {
+  if (!run?.map || document.querySelector('.map-modal')) return;
+  const { svg } = mapSVG(run.pending || run.pos);
+  const m = modal(`<div class="map-modal"><h2>${esc(ACTS[run.act].name)}</h2><p class="muted">Boss: <b>${esc(ENEMIES[bossFor(run)].name)}</b>${run.pending ? ' · the glowing ring is the room you are in' : ''}</p>
+    <div class="map-scroll">${svg}</div>
+    <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${T.rooms[t][0]}</span></li>`).join('')}</ul>
+    <button class="btn yellow" data-close>Back <kbd>M</kbd></button></div>`, { wide: true, onClose: () => document.removeEventListener('keydown', onKey) });
+  const onKey = (e) => { if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); m.close(); } };
+  document.addEventListener('keydown', onKey);
+}
+
+// Back into the room you just left: a shop (same shelves) or the cards you skipped.
+function reopenRoom() {
+  if (run.revisit?.type === 'shop') shopScreen(run.revisit.stock);
+  else if (run.revisit?.type === 'cards') skippedCardsScreen();
+}
+
+function skippedCardsScreen() {
+  const { choices } = run.revisit;
+  app.innerHTML = `${header()}<main class="reward">
+    <h1>Cards you skipped</h1><p class="muted">Still on the table. Take one, or head back to the map.</p>
+    <div class="choices">${choices.map((c, i) => `<button class="card-btn" data-pick="${i}" aria-label="${esc(cardName(c))}: ${esc(cardText(c))}">${cardHTML(c)}</button>`).join('')}</div>
+    <button class="btn yellow" data-go>Back to the map</button>
+  </main>`;
+  bindHeader(app);
+  app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { takeCard({ ...choices[Number(b.dataset.pick)] }); run.revisit = null; mapScreen(); }));
+  app.querySelector('[data-go]').addEventListener('click', mapScreen);
+  app.querySelector('main button')?.focus();
+}
+
+function mapScreen() {
+  barChanged = null;
+  battle = null;
+  saveRun(run);
+  const rows = run.map.rows;
+  const { W, svg } = mapSVG();
   const boss = ENEMIES[bossFor(run)];
   const upstairs = run.act < ACTS.length - 1 ? guardianFor(run, run.act + 1) : null; // picked once, like the boss
   app.innerHTML = `${header()}<main class="map-screen">
-    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p>${upstairs ? `<p class="map-guardian" data-tip="${esc(`${GUARDIANS[upstairs].name} is waiting at the top of ${ACTS[run.act + 1].name} with a gift.`)}"><span class="mini-guardian">${guardianChibi(GUARDIANS[upstairs].art)}</span>Waiting upstairs: <b>${esc(GUARDIANS[upstairs].name)}</b></p>` : ''}<p class="map-note">Every path has a shop and at least two ${T.rest}s.</p></div>
-    <div class="map-scroll"><svg class="map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}${nodes}</svg></div>
+    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p>${upstairs ? `<p class="map-guardian" data-tip="${esc(`${GUARDIANS[upstairs].name} is waiting at the top of ${ACTS[run.act + 1].name} with a gift.`)}"><span class="mini-guardian">${guardianChibi(GUARDIANS[upstairs].art)}</span>Waiting upstairs: <b>${esc(GUARDIANS[upstairs].name)}</b></p>` : ''}<p class="map-note">Every path has at least two ${T.rest}s. Shops aren't on every path.</p></div>
+    <div class="map-scroll">${svg}</div>
     <div class="map-pick" data-pick aria-live="polite"></div>
     <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${T.rooms[t][0]}</span></li>`).join('')}</ul>
   </main>`;
@@ -676,6 +722,7 @@ function mapScreen() {
   const typeOf = (g) => [...g.classList].find((c) => c.startsWith('t-')).slice(2);
   const enter = () => {
     if (!sel) return;
+    if (sel.classList.contains('back')) { reopenRoom(); return; }
     const v = sel.dataset.room;
     if (v === 'boss') enterRoom({ row: 'boss' });
     else { const [r, c] = v.split(',').map(Number); enterRoom({ row: r, col: c }); }
@@ -683,7 +730,9 @@ function mapScreen() {
   const select = (g) => {
     sel = g;
     rooms.forEach((x) => x.classList.toggle('sel', x === g));
-    const [name, what] = T.rooms[typeOf(g)];
+    const [name, what] = g.classList.contains('back')
+      ? ['Go back', run.revisit.type === 'shop' ? 'Back into the shop you just left. Same shelves, nothing restocks.' : 'See the cards you skipped again.']
+      : T.rooms[typeOf(g)];
     pickEl.innerHTML = `<div class="pick-room t-${typeOf(g)}">${roomIcon(typeOf(g))}<div><b>${esc(name)}</b><span>${esc(what)}</span></div></div><button class="btn yellow" data-go>Go <kbd>Enter</kbd></button>`;
     pickEl.querySelector('[data-go]').addEventListener('click', enter);
     g.focus({ preventScroll: true });
@@ -700,6 +749,7 @@ function mapScreen() {
 }
 
 function enterRoom(pos) {
+  run.revisit = null; // moving on: the last room can't be reopened any more
   const room = roomAt(run, pos.row, pos.col);
   run.pending = pos;
   const type = room.type;
@@ -772,9 +822,15 @@ function battleScreen(enemyId, kind) {
     <section class="board" data-board aria-label="Card board"></section>
     <footer class="controls">
       <div class="mid">
-        <div class="combo" data-combo></div>
-        <div class="log" data-log aria-live="polite"></div>
-        <div class="keys-hint" aria-hidden="true"><kbd>←↑→↓</kbd> move · <kbd>Enter</kbd> flip · <kbd>E</kbd> end turn · <kbd>D</kbd> deck · <kbd>Esc</kbd> menu</div>
+        <div class="mid-now">
+          <div class="combo" data-combo></div>
+          <div class="log" data-log aria-live="polite"></div>
+          <div class="keys-hint" aria-hidden="true"><kbd>←↑→↓</kbd> move · <kbd>Enter</kbd> flip · <kbd>E</kbd> end turn · <kbd>D</kbd> deck · <kbd>M</kbd> map · <kbd>Esc</kbd> menu</div>
+        </div>
+        <div class="hist" aria-label="Combat history">
+          <div class="hist-sum" data-histsum></div>
+          <ol class="hist-list" data-hist></ol>
+        </div>
       </div>
       <div class="piles">
         <button class="pile" data-pile="draw" aria-label="Draw pile" data-tip="Draw pile: cards that will come up on the next boards.">${icon('pileDraw')}<b data-draw></b><small>Draw</small></button>
@@ -901,6 +957,22 @@ function battleScreen(enemyId, kind) {
     updateSlots();
   };
 
+  // Combat history: newest first. A card's line adds up every hit it lands on the enemy;
+  // the enemy's hits on its turn share one line. The top line totals the current turn.
+  const hist = [];
+  let cur = null, turnNo = 1, dealt = 0, taken = 0, fightDealt = 0, enemyPhase = false;
+  const histLine = (h) => h.kind === 'turn' ? `<li class="h-turn">Turn ${h.n}</li>`
+    : h.kind === 'play' ? `<li class="h-play"><span>${esc(h.name)}</span>${h.dmg ? `<b>${h.dmg}</b>` : h.blocked ? '' : '<i>no damage</i>'}${h.blocked ? `<small>${h.blocked} blocked</small>` : ''}</li>`
+    : h.kind === 'dot' ? `<li class="h-play"><span>${esc(h.name)}</span><b>${h.dmg}</b></li>`
+    : `<li class="h-taken"><span>${esc(h.name)}</span><b>${h.dmg ? `-${h.dmg}` : 0}</b>${h.blocked ? `<small>${h.blocked} blocked</small>` : ''}</li>`;
+  const renderHist = () => {
+    const el = $('[data-hist]'), sum = $('[data-histsum]');
+    if (!el) return;
+    sum.innerHTML = `This turn: <b>${dealt}</b> dealt · <b class="t">${taken}</b> taken <small>Fight: ${fightDealt}</small>`;
+    el.innerHTML = hist.slice(-40).reverse().map(histLine).join('');
+  };
+  const pushHist = (h) => { hist.push(h); renderHist(); return h; };
+
   battle = new Battle(run, enemyId, {
     log: (m) => { const l = $('[data-log]'); if (l) l.textContent = m; },
     sfx: (n, a) => sfx(n, a),
@@ -912,16 +984,30 @@ function battleScreen(enemyId, kind) {
       if (map[k] && !(k === 'energy' && text.startsWith('-'))) sfx(map[k]);
     },
     hit: (who, dmg, blocked, why) => {
+      if (who === 'enemy') {
+        dealt += dmg; fightDealt += dmg;
+        if (why === 'poison' || why === 'thorns') pushHist({ kind: 'dot', name: why === 'poison' ? T.glitch : 'Thorns', dmg });
+        else if (cur && cur.kind === 'play') { cur.dmg += dmg; cur.blocked += blocked; renderHist(); }
+        else pushHist({ kind: 'dot', name: 'Bonus hit', dmg });
+      } else {
+        taken += dmg;
+        const last = hist[hist.length - 1], mine = why === 'self' || !enemyPhase;
+        if (!mine && last?.kind === 'taken' && last.enemy && last.turn === turnNo) { last.dmg += dmg; last.blocked += blocked; renderHist(); }
+        else { pushHist({ kind: 'taken', enemy: !mine, name: mine ? 'You lose HP' : def.name, dmg, blocked, turn: turnNo }); cur = null; }
+      }
       if (dmg > 0) sfx(who === 'enemy' ? 'hit' : 'hurt'); else if (blocked > 0) sfx('block');
       if (who === 'enemy' && dmg > (run.bestHit || 0)) run.bestHit = dmg;
-      if (dmg > 0) { float(who, `-${dmg}`, why || 'dmg'); shake(who); }
+      if (dmg > 0) { float(who, `-${dmg}`, why && why !== 'self' ? why : 'dmg'); shake(who); }
       if (blocked > 0) float(who, `${blocked} blocked`, 'block');
     },
     flash: (ms) => { boardEl.classList.add('peek'); setTimeout(() => boardEl.classList.remove('peek'), ms); },
     scramble: () => { sfx('scramble'); boardEl.classList.remove('scramble'); void boardEl.offsetWidth; boardEl.classList.add('scramble'); },
-    turn: () => { if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
-    play: (card) => { run.plays[card.id] = (run.plays[card.id] || 0) + 1; },
-    enemyAct: () => { if (theme) sfx('motif', theme.voice, true); },
+    turn: () => {
+      enemyPhase = false;
+      if (battle) { turnNo = battle.turn; dealt = 0; taken = 0; cur = null; pushHist({ kind: 'turn', n: turnNo }); }
+      if (battle && battle.turn > 1) { sfx('turn'); const l = $('[data-log]'); if (l && !l.textContent) l.textContent = 'Your turn.'; } },
+    play: (card) => { run.plays[card.id] = (run.plays[card.id] || 0) + 1; cur = pushHist({ kind: 'play', name: cardName(card), dmg: 0, blocked: 0 }); },
+    enemyAct: () => { cur = null; enemyPhase = true; if (theme) sfx('motif', theme.voice, true); },
     end: (result) => {
       if (result === 'win' && kind === 'boss') { bossKO(); return; }
       sfx(result === 'win' ? 'win' : 'lose');
@@ -965,6 +1051,7 @@ document.addEventListener('keydown', (e) => {
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (key === 'Escape' && app.querySelector('[data-menu]')) { e.preventDefault(); menu(); return; }
   if (key === 'd' && app.querySelector('[data-deck]')) { e.preventDefault(); app.querySelector('[data-deck]').click(); return; }
+  if (key === 'm' && app.querySelector('[data-showmap]')) { e.preventDefault(); showMap(); return; }
   if (battle && app.querySelector('.battle')) {
     if (key === 'e' || (key === ' ' && !e.target.closest?.('button'))) { e.preventDefault(); if (!battle.over) battle.endTurn(); return; }
     if (key.startsWith('Arrow')) { e.preventDefault(); moveBoardFocus(key); }
@@ -1068,7 +1155,7 @@ function battleWon(kind, enemyId) {
   choices.forEach((c) => noteCardSeen(c.id));
   bossCharms.forEach(noteCharmSeen);
   setTimeout(() => sfx('coin'), 250);
-  let pickedCard = false, pickedBoss = !bossCharms.length;
+  let pickedCard = false, skipped = false, pickedBoss = !bossCharms.length;
 
   const render = () => {
     app.innerHTML = `${header()}<main class="reward">
@@ -1087,7 +1174,7 @@ function battleWon(kind, enemyId) {
     </main>`;
     bindHeader(app);
     app.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { takeCard({ ...choices[Number(b.dataset.pick)] }); pickedCard = true; render(); }));
-    app.querySelector('[data-skip]')?.addEventListener('click', () => { pickedCard = true; render(); });
+    app.querySelector('[data-skip]')?.addEventListener('click', () => { pickedCard = true; skipped = true; render(); });
     app.querySelectorAll('[data-boss]').forEach((b) => b.addEventListener('click', () => { takeCharm(b.dataset.boss); pickedBoss = true; render(); }));
     app.querySelector('[data-swap]')?.addEventListener('click', async () => {
       // a slot may have opened up (eaten or tossed from the bar): then just take it
@@ -1096,7 +1183,12 @@ function battleWon(kind, enemyId) {
       render();
     });
     app.querySelector('[data-leave-snack]')?.addEventListener('click', () => { snackState = null; render(); });
-    app.querySelector('[data-go]')?.addEventListener('click', () => { barChanged = null; kind === 'boss' ? actCleared() : completeRoom(); });
+    app.querySelector('[data-go]')?.addEventListener('click', () => {
+      barChanged = null;
+      if (kind === 'boss') { actCleared(); return; }
+      run.revisit = skipped && choices.length ? { type: 'cards', choices } : null; // skipped cards can be looked at again from the map
+      completeRoom();
+    });
     app.querySelector('main button')?.focus();
   };
   barChanged = render; // eating or tossing from the bar updates the snack offer
@@ -1111,7 +1203,7 @@ function actCleared() {
   const heal = Math.round((run.maxHp - run.hp) * 0.75);
   run.hp += heal;
   run.act += 1;
-  run.map = generateMap(run.act);
+  run.map = generateMap(run.act, run.climb);
   run.pos = null; run.path = [];
   const fridge = fillSnacksForFloor(run);
   fridge.forEach(noteSnackTaken);
@@ -1373,9 +1465,9 @@ function toast(html, ms = 3200) {
   setTimeout(() => t.remove(), ms);
 }
 
-function shopScreen() {
-  const stock = shopStock(run);
-  stock.rerolls = 0;
+function shopScreen(saved = null) {
+  const stock = saved || shopStock(run);
+  stock.rerolls ||= 0;
   let bought = false;
   const cheapest = () => Math.min(...[...stock.cards, ...stock.charms, ...stock.snacks].filter((c) => !c.sold).map((c) => c.price), Infinity);
   let mina = stock.cards.some((c) => c.sale) ? pickLine('sale') : run.coins < cheapest() ? pickLine('poor') : pickLine('hello');
@@ -1434,7 +1526,8 @@ function shopScreen() {
       sfx('scramble'); say(stock.cards.some((c) => c.sale) ? 'sale' : 'restock'); render();
     });
     app.querySelector('[data-go]').addEventListener('click', () => {
-      completeRoom();
+      run.revisit = { type: 'shop', stock }; // the shop stays open until you pick the next room
+      if (saved) mapScreen(); else completeRoom();
       toast(`${managerChibi()}<span><b>Mina:</b> ${esc(pickLine(bought ? 'bye' : 'tease'))}</span>`);
     });
   };

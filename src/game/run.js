@@ -41,19 +41,32 @@ export function newRun(character = 'jenny', climb = 0) {
   };
   if (climbOn(run, 8)) run.hp = run.maxHp = Math.round(run.maxHp * CR.maxHp);
   if (climbOn(run, 9)) run.deck.push({ id: CR.curse });
-  run.map = generateMap(0);
+  run.map = generateMap(0, run.climb);
   return run;
 }
 
 // ---------- map ----------
 // Fixed rows: 0 = fights, 4 = treasure, 8 = rest (right before the boss).
+// The map starts with 3 rooms in the middle lanes and fans out to all 5.
 // Other rows draw room types from a shuffled "room deck" sized to the map,
 // then the map is repaired so EVERY path has:
 //   • a rest booth somewhere in rows 3–6 (so 2 rests per floor at minimum)
-//   • a shop somewhere in rows 2–7
-//   Elites are not capped: an unlucky (or greedy) path can hold several.
+//   • no more than 2 shops (a path can have none)
+//   • no more elites than the climb level allows (see ELITES)
 const FIXED = { 0: 'fight', 4: 'treasure', 8: 'rest' };
-const MIX = { fight: 0.42, event: 0.26, elite: 0.18, shop: 0.06, rest: 0.08 };
+const START_LANES = [1, 2, 3];
+const MIX = { fight: 0.40, event: 0.23, elite: 0.12, shop: 0.17, rest: 0.08 };
+// Elites by climb level: their share of the room deck, whether two can sit
+// back to back, and the most one path may hold (Infinity = no cap).
+// Level 10 is the full-on version; low levels keep elites rare.
+export function eliteRules(climb = 0) {
+  const c = Math.max(0, Math.min(10, climb | 0));
+  return {
+    share: 0.10 + 0.008 * c, // 10% at level 0 → 18% at level 10
+    stack: c >= 5,
+    cap: c <= 2 ? 2 : c <= 6 ? 3 : Infinity,
+  };
+}
 const ALLOWED = {
   fight: () => true,
   event: () => true,
@@ -62,12 +75,14 @@ const ALLOWED = {
   rest: (r) => r >= 3 && r <= 6,
 };
 
-export function generateMap(act) {
+export function generateMap(act, climb = 0) {
+  const er = eliteRules(climb);
+  const mix = { ...MIX, elite: er.share, fight: MIX.fight - (er.share - MIX.elite) };
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
-    // 5 starting rooms (one per lane), then 3–5 rooms per column so paths keep branching
-    const count = r === 0 ? COLS : 3 + Math.floor(Math.random() * 3);
-    const cols = shuffle([...Array(COLS).keys()]).slice(0, count).sort((a, b) => a - b);
+    // 3 starting rooms in the middle, then 3–5 rooms per column so paths fan out and keep branching
+    const count = 3 + Math.floor(Math.random() * 3);
+    const cols = r === 0 ? START_LANES : shuffle([...Array(COLS).keys()]).slice(0, count).sort((a, b) => a - b);
     rows.push(cols.map((col) => ({ row: r, col, type: FIXED[r] || null, next: [] })));
   }
   // links: each room connects to the nearest 1–2 rooms above; every room gets a parent
@@ -90,21 +105,21 @@ export function generateMap(act) {
   // room deck for the free rows
   const free = rows.flat().filter((n) => !n.type);
   const deck = [];
-  for (const [type, share] of Object.entries(MIX)) for (let i = 0; i < Math.round(free.length * share); i++) deck.push(type);
+  for (const [type, share] of Object.entries(mix)) for (let i = 0; i < Math.round(free.length * share); i++) deck.push(type);
   while (deck.length < free.length) deck.push('fight');
   let pile = shuffle(deck);
   for (const n of free.sort((a, b) => a.row - b.row)) {
     const idx = pile.findIndex((t) => ALLOWED[t](n.row));
     n.type = idx >= 0 ? pile.splice(idx, 1)[0] : 'fight';
   }
-  // no back-to-back rests or shops on a link (elites may stack)
+  // no back-to-back rests or shops on a link; elites only stack at higher climb levels
   for (const n of rows.flat()) {
     for (const c of n.next) {
       const m = rows[n.row + 1]?.find((x) => x.col === c);
-      if (m && !FIXED[m.row] && m.type === n.type && (m.type === 'rest' || m.type === 'shop')) m.type = 'event';
+      if (m && !FIXED[m.row] && m.type === n.type && (m.type === 'rest' || m.type === 'shop' || (m.type === 'elite' && !er.stack))) m.type = 'event';
     }
   }
-  repair(rows);
+  repair(rows, er);
   return { act, rows };
 }
 
@@ -119,10 +134,9 @@ function allPaths(rows) {
   return out;
 }
 
-function repair(rows) {
+function repair(rows, er) {
   const need = [
     { type: 'rest', rows: [5, 3, 6], ok: (p) => p.some((n) => n.type === 'rest' && n.row >= 3 && n.row <= 6) },
-    { type: 'shop', rows: [6, 3, 5, 7, 2], ok: (p) => p.some((n) => n.type === 'shop' && n.row >= 2 && n.row <= 7) },
   ];
   // Greedy fix: convert the single room that sits on the MOST failing paths,
   // repeat until every path passes. This changes as few rooms as possible.
@@ -144,6 +158,19 @@ function repair(rows) {
       best[0].type = rule.type;
     }
   }
+  // caps per path: shops (2) and elites (by climb level). Extra shops become
+  // events, extra elites become fights; the room on the most over-cap paths goes first.
+  const caps = [['shop', 2, 'event'], ['elite', er.cap, 'fight']];
+  for (const [type, cap, into] of caps) {
+    if (cap === Infinity) continue;
+    for (let guard = 0; guard < 40; guard++) {
+      const over = allPaths(rows).filter((p) => p.filter((n) => n.type === type).length > cap);
+      if (!over.length) break;
+      const score = new Map();
+      for (const p of over) for (const n of p) if (n.type === type) score.set(n, (score.get(n) || 0) + 1);
+      [...score.entries()].sort((a, b) => b[1] - a[1])[0][0].type = into;
+    }
+  }
 }
 
 export function mapGuarantees(map) {
@@ -153,6 +180,7 @@ export function mapGuarantees(map) {
     paths: paths.length,
     minRests: Math.min(...paths.map((p) => count(p, 'rest'))),
     minShops: Math.min(...paths.map((p) => count(p, 'shop'))),
+    maxShops: Math.max(...paths.map((p) => count(p, 'shop'))),
     maxElites: Math.max(...paths.map((p) => count(p, 'elite'))),
   };
 }
