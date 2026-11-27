@@ -212,9 +212,9 @@ b { font-weight: 800; }
 }
 .modal.wide { width: min(880px, 100%); }
 .modal h2 { font-size: 26px; }
-.modal .btn.ghost { --c: var(--paper-2); --lip: var(--cream-lip); color: var(--ink); border-color: var(--ink); }
-.modal .btn.ghost::before { opacity: 0.75; }
-.modal .btn.ghost small { color: var(--muted); }
+.modal .btn.ghost, .snack-offer .btn.ghost { --c: var(--paper-2); --lip: var(--cream-lip); color: var(--ink); border-color: var(--ink); }
+.modal .btn.ghost::before, .snack-offer .btn.ghost::before { opacity: 0.75; }
+.modal .btn.ghost small, .snack-offer .btn.ghost small { color: var(--muted); }
 @keyframes pop { from { transform: scale(0.92); opacity: 0; } }
 .help-text p { margin: 0 0 var(--s3); line-height: 1.55; }
 .help-text { columns: 2 320px; column-gap: var(--s5); }
