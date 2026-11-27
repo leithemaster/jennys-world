@@ -53,7 +53,7 @@ export function newRun(character = 'jenny', climb = 0) {
 //   • a shop somewhere in rows 2–7
 //   Elites are not capped: an unlucky (or greedy) path can hold several.
 const FIXED = { 0: 'fight', 4: 'treasure', 8: 'rest' };
-const MIX = { fight: 0.46, event: 0.28, elite: 0.12, shop: 0.06, rest: 0.08 };
+const MIX = { fight: 0.42, event: 0.26, elite: 0.18, shop: 0.06, rest: 0.08 };
 const ALLOWED = {
   fight: () => true,
   event: () => true,
@@ -97,11 +97,11 @@ export function generateMap(act) {
     const idx = pile.findIndex((t) => ALLOWED[t](n.row));
     n.type = idx >= 0 ? pile.splice(idx, 1)[0] : 'fight';
   }
-  // no back-to-back rests or elites on a link
+  // no back-to-back rests or shops on a link (elites may stack)
   for (const n of rows.flat()) {
     for (const c of n.next) {
       const m = rows[n.row + 1]?.find((x) => x.col === c);
-      if (m && !FIXED[m.row] && m.type === n.type && (m.type === 'rest' || m.type === 'elite' || m.type === 'shop')) m.type = 'event';
+      if (m && !FIXED[m.row] && m.type === n.type && (m.type === 'rest' || m.type === 'shop')) m.type = 'event';
     }
   }
   repair(rows);
