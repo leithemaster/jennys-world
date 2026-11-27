@@ -271,11 +271,11 @@ export class Battle {
     this.emit('flash', ms);
   }
 
-  // Eat a snack from the snack bar. Free: costs no energy and doesn't end the turn.
+  // Eat a snack from the snack bar. Free: costs no energy, doesn't end the turn, and works with one card flipped.
   // The caller removes it from the bar. Returns false if it can't be eaten right now.
   useSnack(id) {
     const s = SNACKS[id];
-    if (!s || this.over || this.busy || this.first) return false;
+    if (!s || this.over || this.busy) return false;
     const times = this.has('secretRecipe') ? 2 : 1;
     for (let k = 0; k < times; k++) s.fx(this);
     if (this.has('hamsterCheeks')) this.heal(2);

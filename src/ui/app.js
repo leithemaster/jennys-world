@@ -140,7 +140,7 @@ function snackMenu(slot) {
   const s = SNACKS[id];
   if (!s) return;
   const inFight = !!battle && !battle.over;
-  const canEat = inFight ? !battle.busy && !battle.first : !!s.anytime;
+  const canEat = inFight ? !battle.busy : !!s.anytime;
   const why = inFight ? (canEat ? '' : 'Wait for the cards to settle.') : s.anytime ? '' : 'Eat this one during a fight.';
   const m = modal(`<div class="snack-pop"><span class="big-icon">${snackIcon(id)}</span><h2>${esc(s.name)}</h2><p>${esc(s.desc)}</p>
     ${why ? `<p class="deck-note">${esc(why)}</p>` : ''}
