@@ -177,9 +177,8 @@ export function catalogScreen(app, { onBack }) {
       const nm = (n) => (seen[n] ? n : HIDDEN);
       return `<section class="sheet"><h3>Floors</h3>
       <div class="scroll"><table class="slim"><thead><tr><th>Floor</th><th>Normal enemies</th><th>Elites</th><th>Bosses</th></tr></thead><tbody>${D.acts.map((a) => `<tr><td><span class="name">${esc(a.name)}</span></td><td>${esc(a.normals.map(nm).join(', '))}</td><td>${esc(a.elites.map(nm).join(', '))}</td><td><b>${esc(a.bosses.map(nm).join(', '))}</b></td></tr>`).join('')}</tbody></table></div>
-      <ul class="opts"><li>Boards grow as you climb: ${D.boardPairs.map((p) => p * 2).join(' / ')} cards (${D.boardPairs.join(' / ')} pairs) on Floors 1 / 2 / 3.</li><li>Every new board starts with ${D.freeReveal.join(' / ')} cards revealed for free on Floors 1 / 2 / 3.</li><li>Reveals that don't fit on a nearly cleared board carry over to the next board.</li><li>The first room is always a fight, the 5th a treasure, and the last room before the boss a rest booth.</li><li>Every path has at least 2 rest booths, at least 1 shop and no more than 2 elites.</li><li>Shop cards are sometimes 25% or 50% off. Charms and snacks never are.</li></ul></section>
+</section>
       <section class="sheet"><h3>Levels</h3>
-      <p class="small">Win at your highest level to unlock the next. Twists stack. Unlocked: ${Object.keys(CHARACTERS).map((id) => `${esc(CHARACTERS[id].name)} ${climbUnlocked(id)}/${CLIMB.length - 1}`).join(', ')}.</p>
       <div class="scroll"><table class="slim"><thead><tr><th>Level</th><th>Twist</th><th>What changes</th></tr></thead><tbody>${CLIMB.slice(1).map((c, i) => `<tr><td>${i + 1}</td><td><span class="name">${esc(c.name)}</span></td><td>${esc(c.text)}</td></tr>`).join('')}</tbody></table></div></section>`;
     },
   };

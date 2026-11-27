@@ -51,7 +51,7 @@ export function newRun(character = 'jenny', climb = 0) {
 // then the map is repaired so EVERY path has:
 //   • a rest booth somewhere in rows 3–6 (so 2 rests per floor at minimum)
 //   • a shop somewhere in rows 2–7
-//   • at most 2 elites
+//   Elites are not capped: an unlucky (or greedy) path can hold several.
 const FIXED = { 0: 'fight', 4: 'treasure', 8: 'rest' };
 const MIX = { fight: 0.46, event: 0.28, elite: 0.12, shop: 0.06, rest: 0.08 };
 const ALLOWED = {
@@ -143,11 +143,6 @@ function repair(rows) {
       if (!best) break;
       best[0].type = rule.type;
     }
-  }
-  // cap elites at 2 per path
-  for (const p of allPaths(rows)) {
-    const elites = p.filter((n) => n.type === 'elite');
-    if (elites.length > 2) elites.slice(2).forEach((n) => (n.type = 'fight'));
   }
 }
 
