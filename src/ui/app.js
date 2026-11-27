@@ -324,7 +324,7 @@ function help() {
     <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo, Memory, Dreamy, Cozy or Exposed build a style. Every character can play every style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
     <p><b>Between fights:</b> add new cards, collect charms, shop, rest or try your luck at "?" rooms. A smaller, sharper deck is often stronger.</p>
     <p class="muted">Keys: Space ends your turn · Esc closes windows</p>
-  </div><button class="btn" data-close>Got it</button>`);
+  </div><button class="btn" data-close>Got it</button>`, { wide: true });
 }
 
 // ---------- title ----------

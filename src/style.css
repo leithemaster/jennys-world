@@ -217,6 +217,9 @@ b { font-weight: 800; }
 .modal .btn.ghost small { color: var(--muted); }
 @keyframes pop { from { transform: scale(0.92); opacity: 0; } }
 .help-text p { margin: 0 0 var(--s3); line-height: 1.55; }
+.help-text { columns: 2 320px; column-gap: var(--s5); }
+.help-text p { break-inside: avoid; }
+.help-text .muted { column-span: all; }
 .help-text .muted { color: var(--muted); font-size: 13px; }
 .deck-note { margin: 0; color: var(--muted); line-height: 1.5; font-weight: 500; }
 

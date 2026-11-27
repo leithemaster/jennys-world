@@ -257,14 +257,14 @@ export const CARDS = {
     text: (u) => `${T.power}: matching a revealed card deals ${u ? 6 : 4}.`,
     fx: (b, u) => { b.powers.spotlight += u ? 6 : 4; },
   },
-  dejaVu: {
-    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'rare', icon: 'loop',
+  secondSight: {
+    arch: 'memory', name: 'Second Sight', type: 'skill', rarity: 'rare', icon: 'crystal',
     text: (u) => `Reveal all cards, or the next board if none are left.${u ? ` +1 ${T.energy}.` : ''} ${T.exhaust}.`,
     exhaust: true,
     fx: (b, u) => {
       // Played as the last pair there's nothing left to reveal, so save it for the next board.
       if (b.board.some((s) => s.state === 'down')) b.reveal(99, false, true);
-      else { b.pendingReveal = 16; b.log('Déjà Vu: the whole next board will be revealed.'); }
+      else { b.pendingReveal = 16; b.log('Second Sight: the whole next board will be revealed.'); }
       if (u) b.gainEnergy(1);
     },
   },
