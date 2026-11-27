@@ -312,20 +312,15 @@ function menu() {
 
 function help() {
   modal(`<h2>How to play</h2><div class="help-text">
-    <p><b>Climb the ${GAME.tower}.</b> Three floors, each ending with a boss. Pick your path on the map.</p>
-    <p><b>Every card in your deck shows up twice</b> on the board, face down. Flip two cards: if they match, that card is played.</p>
-    <p><b>Flipping a pair costs 1 ${T.energy}.</b> You get 3 ${T.energy} a turn. When it runs out, the enemy does what its bubble says.</p>
-    <p><b>Unmatched cards stay put</b> between turns, so remember where things are. Clear the whole board for +1 ${T.energy} and a fresh board.</p>
-    <p><b>Free peek:</b> boards grow as you climb: ${RULES.boardPairs.map((p) => p * 2).join(', ')} cards on Floors 1, 2 and 3, and each new board starts with ${RULES.freeReveal.join(', ')} of them revealed.</p>
-    <p><b>Reveals carry over:</b> if a reveal effect has nothing left to show (say it's the last pair on the board), it's saved and used on the next board.</p>
-    <p><b>Combo:</b> matches in a row add +2 damage to your attacks. A miss resets it.</p>
-    <p><b>Watch out:</b> some enemies scramble the board or sneak junk cards into your deck.</p>
-    <p><b>Keyboard:</b> in a fight, arrow keys move between cards, Enter flips, E ends your turn. On the map, arrow keys pick a room and Enter goes in. D shows your deck and Esc opens the menu anywhere. Fast mode in Settings speeds up the animations.</p>
-    <p><b>${T.sleepy} and ${T.asleep}:</b> an enemy with ${RULES.sleepAt} ${T.sleepy} falls ${T.asleep} and skips its next ${RULES.sleepTurns} turns (bosses ${RULES.bossSleepTurns}). Each time it wakes up, it takes ${RULES.sleepGrow} more ${T.sleepy}.</p>
-    <p><b>${T.cozy}:</b> on a ${T.cozy} card, healing past your max ${T.hp} hits the enemy instead.</p>
-    <p><b>Play styles:</b> cards tagged Glitch, Guard, Combo, Memory, Dreamy, Cozy or Exposed build a style. Every character can play every style. Once your deck leans one way, rewards and shops offer more of that style. Check the Deck button to see yours.</p>
-    <p><b>Between fights:</b> add new cards, collect charms, shop, rest or try your luck at "?" rooms. A smaller, sharper deck is often stronger.</p>
-    <p class="muted">Keys: Space ends your turn · Esc closes windows</p>
+    <p><b>Climb the ${GAME.tower}.</b> Three floors, a boss at the top of each.</p>
+    <p><b>Match pairs to play cards.</b> Each card in your deck is a face-down pair on the board.</p>
+    <p><b>Flipping a pair costs 1 ${T.energy}.</b> You get 3 a turn, then the enemy acts.</p>
+    <p><b>Cards stay where they are</b> between turns, so remember them. Clear the board for +1 ${T.energy}.</p>
+    <p><b>Combo:</b> matches in a row hit harder. A miss resets it.</p>
+    <p><b>${T.sleepy}:</b> enough of it and the enemy falls ${T.asleep} and skips turns.</p>
+    <p><b>${T.cozy}:</b> healing past max ${T.hp} hits the enemy.</p>
+    <p><b>Styles:</b> pick up cards of one style and you'll be offered more of it.</p>
+    <p class="muted">Keys: arrows move · Enter flips · E ends turn · D deck · M map · Esc menu</p>
   </div><button class="btn" data-close>Got it</button>`, { wide: true });
 }
 
