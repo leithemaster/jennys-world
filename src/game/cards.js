@@ -64,13 +64,13 @@ export const CARDS = {
     fx: (b, u) => { b.attack(u ? 5 : 4); b.attack(u ? 5 : 4); },
   },
   bigSwing: {
-    name: 'Big Swing', type: 'attack', rarity: 'common', icon: 'hammer',
+    name: 'Big Swing', type: 'attack', rarity: 'common', icon: 'bat',
     text: (u) => `Deal ${u ? 17 : 13}.`,
     fx: (b, u) => b.attack(u ? 17 : 13),
   },
   stinger: {
     arch: 'glitch',
-    name: 'Stinger', type: 'attack', rarity: 'common', icon: 'drop',
+    name: 'Stinger', type: 'attack', rarity: 'common', icon: 'bee',
     text: (u) => `Deal 3. Apply ${u ? 6 : 4} ${T.glitch}.`,
     fx: (b, u) => { b.attack(3); b.applyEnemy('poison', u ? 6 : 4); },
   },
@@ -94,7 +94,7 @@ export const CARDS = {
   },
   comboKick: {
     arch: 'combo',
-    name: 'Combo Kick', type: 'attack', rarity: 'common', icon: 'star',
+    name: 'Combo Kick', type: 'attack', rarity: 'common', icon: 'kick',
     text: (u) => `Deal 4, +${u ? 5 : 3} for each ${T.combo}.`,
     fx: (b, u) => b.attack(4 + (u ? 5 : 3) * b.combo),
   },
