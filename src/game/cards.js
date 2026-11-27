@@ -362,107 +362,107 @@ export const CARDS = {
 
   // Hybrids: count toward two styles
   napTime: {
-    arch: 'dreamy', arch2: 'cozy', name: 'Nap Time', type: 'skill', rarity: 'uncommon', icon: 'pillow',
+    arch: 'dreamy', arch2: 'cozy', name: 'Nap Time', type: 'skill', rarity: 'uncommon', icon: 'nap',
     text: (u) => `Heal ${u ? 4 : 3}, or ${u ? 9 : 7} if the enemy is ${T.asleep}. ${T.cozy}.`,
     fx: (b, u) => b.heal(b.enemy.asleep ? (u ? 9 : 7) : (u ? 4 : 3), { cozy: true }),
   },
   dreamJournal: {
-    arch: 'dreamy', arch2: 'memory', name: 'Dream Journal', type: 'skill', rarity: 'common', icon: 'book',
+    arch: 'dreamy', arch2: 'memory', name: 'Dream Journal', type: 'skill', rarity: 'common', icon: 'journal',
     text: (u) => `Apply ${u ? 2 : 1} ${T.sleepy}. Reveal 2 hidden cards.`,
     fx: (b, u) => { b.applyEnemy('weak', u ? 2 : 1); b.reveal(2); },
   },
   heckle: {
-    arch: 'exposed', arch2: 'combo', name: 'Heckle', type: 'attack', rarity: 'common', icon: 'megaphone',
+    arch: 'exposed', arch2: 'combo', name: 'Heckle', type: 'attack', rarity: 'common', icon: 'tomato',
     text: (u) => `Deal ${u ? 7 : 5}. Apply 1 ${T.exposed}. +1 ${T.combo}.`,
     fx: (b, u) => { b.attack(u ? 7 : 5); b.applyEnemy('vuln', 1); b.combo += 1; },
   },
   leak: {
-    arch: 'exposed', arch2: 'glitch', name: 'Data Leak', type: 'skill', rarity: 'uncommon', icon: 'upload',
+    arch: 'exposed', arch2: 'glitch', name: 'Data Leak', type: 'skill', rarity: 'uncommon', icon: 'leak',
     text: (u) => `Apply ${u ? 3 : 2} ${T.exposed} and ${u ? 4 : 3} ${T.glitch}. ${T.block} ${u ? 6 : 4}.`,
     fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); b.gainBlock(u ? 6 : 4); },
   },
 
   // ---------- event only: never in card rewards or shops ----------
   sheepStampede: {
-    arch: 'dreamy', name: 'Sheep Stampede', type: 'attack', rarity: 'event', icon: 'sheep',
+    arch: 'dreamy', name: 'Sheep Stampede', type: 'attack', rarity: 'event', icon: 'stampede',
     text: (u) => `Deal ${u ? 6 : 4} twice. Apply 2 ${T.sleepy}.`,
     fx: (b, u) => { b.attack(u ? 6 : 4); b.attack(u ? 6 : 4); b.applyEnemy('weak', 2); },
   },
   dumplings: {
-    arch: 'cozy', name: "Grandma's Dumplings", type: 'skill', rarity: 'event', icon: 'bowl', exhaust: true,
+    arch: 'cozy', name: "Grandma's Dumplings", type: 'skill', rarity: 'event', icon: 'dumpling', exhaust: true,
     text: (u) => `Heal ${u ? 12 : 8}. ${T.cozy}. ${T.exhaust}.`,
     fx: (b, u) => b.heal(u ? 12 : 8, { cozy: true }),
   },
   zeroDay: {
-    arch: 'glitch', name: 'Zero Day', type: 'attack', rarity: 'event', icon: 'chip',
+    arch: 'glitch', name: 'Zero Day', type: 'attack', rarity: 'event', icon: 'zeroDay',
     text: (u) => `Deal 5. Apply ${u ? 6 : 4} ${T.glitch}.`,
     fx: (b, u) => { b.attack(5); b.applyEnemy('poison', u ? 6 : 4); },
   },
   velvetRope: {
-    arch: 'guard', name: 'Velvet Rope', type: 'skill', rarity: 'event', icon: 'fort',
+    arch: 'guard', name: 'Velvet Rope', type: 'skill', rarity: 'event', icon: 'rope',
     text: (u) => `${T.block} ${u ? 12 : 9}. Gain 2 ${T.spikes}.`,
     fx: (b, u) => { b.gainBlock(u ? 12 : 9); b.applyPlayer('thorns', 2); },
   },
   dejaVu: {
-    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'event', icon: 'eye',
+    arch: 'memory', name: 'Déjà Vu', type: 'skill', rarity: 'event', icon: 'loop',
     text: (u) => `Reveal ${u ? 6 : 4} hidden cards. +1 ${T.energy}.`,
     fx: (b, u) => { b.reveal(u ? 6 : 4); b.gainEnergy(1); },
   },
   perfectChain: {
-    arch: 'combo', name: 'Perfect Chain', type: 'attack', rarity: 'event', icon: 'loop',
+    arch: 'combo', name: 'Perfect Chain', type: 'attack', rarity: 'event', icon: 'chain',
     text: (u) => `Deal ${u ? 8 : 5}. +2 ${T.combo}.`,
     fx: (b, u) => { b.attack(u ? 8 : 5); b.combo += 2; },
   },
   ratiod: {
-    arch: 'exposed', name: "Ratio'd", type: 'attack', rarity: 'event', icon: 'crit',
+    arch: 'exposed', name: "Ratio'd", type: 'attack', rarity: 'event', icon: 'ratio',
     text: (u) => `Apply 2 ${T.exposed}, then deal ${u ? 10 : 7}.`,
     fx: (b, u) => { b.applyEnemy('vuln', 2); b.attack(u ? 10 : 7); },
   },
   teamUp: {
-    arch: 'combo', arch2: 'guard', name: 'Team-Up', type: 'attack', rarity: 'event', icon: 'twin',
+    arch: 'combo', arch2: 'guard', name: 'Team-Up', type: 'attack', rarity: 'event', icon: 'team',
     text: (u) => `Deal ${u ? 8 : 6}. ${T.block} ${u ? 8 : 6}.`,
     fx: (b, u) => { b.attack(u ? 8 : 6); b.gainBlock(u ? 8 : 6); },
   },
   powerBallad: {
-    name: 'Power Ballad', type: 'attack', rarity: 'event', icon: 'mic', exhaust: true,
+    name: 'Power Ballad', type: 'attack', rarity: 'event', icon: 'guitar', exhaust: true,
     text: (u) => `Deal ${u ? 20 : 14}. ${T.exhaust}.`,
     fx: (b, u) => b.attack(u ? 20 : 14),
   },
 
   // ---------- guardian gifts: only come with a guardian's charm (see `gives` in charms.js) ----------
   zoomie: {
-    arch: 'combo', name: 'Zoomie', type: 'attack', rarity: 'gift', icon: 'bounce',
+    arch: 'combo', name: 'Zoomie', type: 'attack', rarity: 'gift', icon: 'zoom',
     text: (u) => `Deal ${u ? 6 : 4}. +1 ${T.combo}. Reveal ${u ? 2 : 1}.`,
     fx: (b, u) => { b.attack(u ? 6 : 4); b.combo += 1; b.reveal(u ? 2 : 1); },
   },
   snuggle: {
-    arch: 'dreamy', name: 'Snuggle', type: 'skill', rarity: 'gift', icon: 'pillow',
+    arch: 'dreamy', name: 'Snuggle', type: 'skill', rarity: 'gift', icon: 'teddy',
     text: (u) => `${T.block} ${u ? 9 : 6}. Apply 2 ${T.sleepy}.`,
     fx: (b, u) => { b.gainBlock(u ? 9 : 6); b.applyEnemy('weak', 2); },
   },
   bark: {
-    arch: 'exposed', name: 'Bark', type: 'skill', rarity: 'gift', icon: 'megaphone',
+    arch: 'exposed', name: 'Bark', type: 'skill', rarity: 'gift', icon: 'paw',
     text: (u) => `Apply ${u ? 3 : 2} ${T.exposed}. Reveal ${u ? 2 : 1}.`,
     fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.reveal(u ? 2 : 1); },
   },
   sushiRoll: {
-    name: 'Sushi Roll', type: 'attack', rarity: 'gift', icon: 'rice',
+    name: 'Sushi Roll', type: 'attack', rarity: 'gift', icon: 'sushi',
     text: (u) => `Deal ${u ? 10 : 7}. +1 ${T.energy}.`,
     fx: (b, u) => { b.attack(u ? 10 : 7); b.gainEnergy(1); },
   },
 
   prank: {
-    arch: 'exposed', arch2: 'glitch', name: 'Prank', type: 'skill', rarity: 'gift', icon: 'bounce',
+    arch: 'exposed', arch2: 'glitch', name: 'Prank', type: 'skill', rarity: 'gift', icon: 'prank',
     text: (u) => `Apply ${u ? 3 : 2} ${T.exposed} and ${u ? 4 : 3} ${T.glitch}.`,
     fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); },
   },
   loveNote: {
-    arch: 'cozy', arch2: 'guard', name: 'Love Note', type: 'skill', rarity: 'gift', icon: 'paper',
+    arch: 'cozy', arch2: 'guard', name: 'Love Note', type: 'skill', rarity: 'gift', icon: 'loveNote',
     text: (u) => `Heal ${u ? 8 : 6}. ${T.block} ${u ? 8 : 6}. +1 ${T.energy}.`,
     fx: (b, u) => { b.heal(u ? 8 : 6); b.gainBlock(u ? 8 : 6); b.gainEnergy(1); },
   },
   heartSticker: {
-    arch: 'cozy', name: 'Heart Sticker', type: 'attack', rarity: 'gift', icon: 'hug',
+    arch: 'cozy', name: 'Heart Sticker', type: 'attack', rarity: 'gift', icon: 'sticker',
     text: (u) => `Deal ${u ? 9 : 6}. Heal ${u ? 4 : 3}.`,
     fx: (b, u) => { b.attack(u ? 9 : 6); b.heal(u ? 4 : 3); },
   },

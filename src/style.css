@@ -406,8 +406,10 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
 .slot .back svg path { stroke: var(--ink); stroke-width: 2.6px; paint-order: stroke fill; fill: var(--sun); }
 .slot .front { transform: rotateY(180deg); }
 .slot .front .card { padding: 0 3px 3px; box-shadow: var(--shadow-sm); }
-.slot .front .card-name { font-size: clamp(10.5px, 2.4vw, 14px); }
-.slot .front .card-text { font-size: clamp(8.5px, 1.9vw, 11px); }
+.slot .front .card-name { font-size: calc(clamp(10.5px, 2.4vw, 14px) * max(var(--fit, 1), 0.85)); }
+.slot .front .card-text { font-size: calc(clamp(8.5px, 1.9vw, 11px) * var(--fit, 1)); }
+/* --art and --fit are set per card by fitCards() in app.js: picture first, then text, until nothing is cut off */
+.slot .front .card-art { width: calc(52% * var(--art, 1)); }
 .slot .front .card-type { display: none; }
 .slot.s-up, .slot.s-revealed { transform: rotateY(180deg); }
 .slot.s-gone { transform: rotateY(180deg) scale(0.8); opacity: 0; pointer-events: none; }
@@ -593,12 +595,12 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 2px solid
   .status { font-size: 12px; padding: 2px 10px; }
   .bubble { font-size: 17px; }
   /* --cw is the card width in px, set by fitBoard() */
-  .slot .front .card-name { font-size: clamp(12px, calc(var(--cw, 100) * 0.12px), 24px); }
-  .slot .front .card-text { font-size: clamp(8.5px, calc(var(--cw, 100) * 0.095px), 18px); }
-  .slot .front .card-text.long { font-size: clamp(8px, calc(var(--cw, 100) * 0.085px), 16px); }
-  .slot .front .card-text.xlong { font-size: clamp(7.5px, calc(var(--cw, 100) * 0.078px), 15px); line-height: 1.25; }
-  .slot .front .card.text-long .card-art { width: 44%; }
-  .slot .front .card.text-xlong .card-art { width: 36%; }
+  .slot .front .card-name { font-size: calc(clamp(12px, calc(var(--cw, 100) * 0.12px), 24px) * max(var(--fit, 1), 0.85)); }
+  .slot .front .card-text { font-size: calc(clamp(8.5px, calc(var(--cw, 100) * 0.095px), 18px) * var(--fit, 1)); }
+  .slot .front .card-text.long { font-size: calc(clamp(8px, calc(var(--cw, 100) * 0.085px), 16px) * var(--fit, 1)); }
+  .slot .front .card-text.xlong { font-size: calc(clamp(7.5px, calc(var(--cw, 100) * 0.078px), 15px) * var(--fit, 1)); line-height: 1.25; }
+  .slot .front .card.text-long .card-art { width: calc(44% * var(--art, 1)); }
+  .slot .front .card.text-xlong .card-art { width: calc(36% * var(--art, 1)); }
 }
 
 /* ---------- Fast mode (Settings) ---------- */

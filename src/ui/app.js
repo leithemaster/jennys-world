@@ -824,7 +824,7 @@ function battleScreen(enemyId, kind) {
       if (!el) return;
       // the card in a slot can change after a scramble
       const key = s.card.id + (s.card.up ? '+' : '');
-      if (el.dataset.key !== key) { el.dataset.key = key; el.querySelector('.front').innerHTML = cardHTML(s.card); }
+      if (el.dataset.key !== key) { el.dataset.key = key; el.querySelector('.front').innerHTML = cardHTML(s.card); fitCards(el); }
       el.className = `slot s-${s.state}`;
       el.disabled = s.state === 'gone';
       el.setAttribute('aria-label', s.state === 'down' ? `Hidden card ${i + 1}` : `${cardName(s.card)}: ${cardText(s.card)}`);
@@ -992,7 +992,7 @@ function fitBoard() {
   const battleEl = app.querySelector('main.battle');
   const board = battleEl?.querySelector('[data-board]');
   if (!board) return;
-  if (!WIDE.matches) { board.style.width = ''; board.style.removeProperty('--cw'); return; }
+  if (!WIDE.matches) { board.style.width = ''; board.style.removeProperty('--cw'); fitCards(board); return; }
   const cs = getComputedStyle(battleEl), bs = getComputedStyle(board);
   const W = parseFloat(cs.gridTemplateColumns.split(' ')[1]);
   const top = battleEl.getBoundingClientRect().top;
@@ -1021,6 +1021,20 @@ function fitBoard() {
   board.style.setProperty('--cols', pick.c);
   board.style.setProperty('--cw', size);
   board.style.width = `${pick.c * size + gap * (pick.c - 1) + pad}px`;
+  fitCards(board);
+}
+
+// Shrink each board card a step at a time until nothing is cut off: the picture first
+// (down to half size), then the text. Long names wrap to two lines on small cards,
+// so counting letters alone isn't enough.
+function fitCards(root) {
+  const over = (c) => c.scrollHeight > c.clientHeight + 1;
+  root.querySelectorAll('.slot .front .card').forEach((c) => {
+    let art = 1, fit = 1;
+    c.style.removeProperty('--art'); c.style.removeProperty('--fit');
+    while (over(c) && art > 0.5) { art = Math.round((art - 0.1) * 10) / 10; c.style.setProperty('--art', art); }
+    while (over(c) && fit > 0.6) { fit = Math.round((fit - 0.05) * 100) / 100; c.style.setProperty('--fit', fit); }
+  });
 }
 window.addEventListener('resize', () => fitBoard());
 
