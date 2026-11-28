@@ -903,7 +903,7 @@ function battleScreen(enemyId, kind) {
     if (it.t === 'atk' || it.t === 'atkBlock' || it.t === 'atkStatus' || it.t === 'steal' || it.t === 'drain' || (it.t === 'ban' && it.n)) parts.push(`<span class="i-atk">${icon('blade')}${dmg}${it.times ? `×${it.times}` : ''}</span>`);
     if (it.t === 'block' || it.t === 'atkBlock') parts.push(`<span class="i-def">${icon('shield')}${it.b || it.n}</span>`);
     if (it.t === 'buff') parts.push(`<span class="i-buff">${icon('fire')}Power up</span>`);
-    if (it.t === 'heal') parts.push(`<span class="i-buff">${icon('rice')}Heal</span>`);
+    if (it.t === 'heal') parts.push(`<span class="i-buff">${uiIcon('heart')}Heal ${it.n}</span>`);
     if (it.t === 'debuff') parts.push(`<span class="i-debuff">${icon('swirl')}Hex</span>`);
     if (it.t === 'status' || it.t === 'atkStatus') parts.push(`<span class="i-debuff">${icon(CARDS[it.card].icon)}+${it.count} ${esc(CARDS[it.card].name)}</span>`);
     if (it.t === 'scramble') parts.push(`<span class="i-debuff">${icon('bounce')}Scramble</span>`);
