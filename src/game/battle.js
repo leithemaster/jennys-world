@@ -45,7 +45,10 @@ export class Battle {
     this.def = def;
     // climb levels 1 and 5: tougher elites and bosses
     const floorScale = !def.boss && ACTS[run.act]?.hpScale ? ACTS[run.act].hpScale : 1; // Floor 4 enemies are tougher
-    const hp = Math.round(randInt(def.hp[0], def.hp[1]) * floorScale * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
+    // Floor 4 gauntlet rematches carry their own (higher) HP and starting Fighting Spirit on the room.
+    this.room = run.pending && run.pending.row !== 'boss' ? run.map?.rows?.[run.pending.row]?.find((n) => n.col === run.pending.col) : null;
+    const baseHp = this.room?.hp && def.boss ? this.room.hp : randInt(def.hp[0], def.hp[1]);
+    const hp = Math.round(baseHp * floorScale * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
     this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false, selfCare: 0, galaxy: 0, mainChar: 0, plotArmor: 0, botnet: 0, sleepwalk: false, comfort: 0, eidetic: 0 };
@@ -90,6 +93,7 @@ export class Battle {
     if (this.has('goodLuckKiss')) this.player.strength += 2;
     if (this.has('loveLetter')) { this.enemy.vuln += 2; this.enemy.weak += 2; }
     if (this.has('trophy')) this.enemy.hp = Math.ceil(this.enemy.hp * 0.9);
+    if (this.room?.spirit && this.def.boss) this.enemy.strength += this.room.spirit;
     // one-fight buffs from events (e.g. the spicy ramen)
     if (climbOn(this.run, 10) && (this.def.elite || this.def.boss)) this.enemy.strength += CR.bigSpirit;
     const nf = this.run.nextFight;

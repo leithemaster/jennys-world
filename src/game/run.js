@@ -76,8 +76,11 @@ const ALLOWED = {
   rest: (r) => r >= 3 && r <= 6,
 };
 
-// Floor 4: two separate lanes (4 rooms each) that merge at a rest, then two boss rooms
-// (a Floor 2 and a Floor 3 boss you didn't fight this run), then the Net Café.
+// Floor 4: two separate lanes (4 rooms each) that merge at a rest, then three boss rooms
+// (a Floor 1, 2 and 3 boss you didn't fight this run, each scaled up), then the Net Café.
+// GAUNTLET: HP each rematch is set to (climbing toward the Net Café's 330) and the
+// Fighting Spirit it starts with, so older bosses still hit hard enough up here.
+export const GAUNTLET = [{ floor: 0, hp: 240, spirit: 4 }, { floor: 1, hp: 270, spirit: 3 }, { floor: 2, hp: 300, spirit: 2 }];
 export function generateFinalMap(act, run) {
   const used = Object.values(run?.bossOf || {});
   const pick = (floor) => { const list = ACTS[floor].bosses.filter((b) => !used.includes(b)); const pool = list.length ? list : ACTS[floor].bosses; return pool[Math.floor(Math.random() * pool.length)]; };
@@ -86,8 +89,7 @@ export function generateFinalMap(act, run) {
   const rows = [];
   for (let r = 0; r < 4; r++) rows.push([{ row: r, col: 1, type: laneA[r], next: [r < 3 ? 1 : 2] }, { row: r, col: 3, type: laneB[r], next: [r < 3 ? 3 : 2] }]);
   rows.push([{ row: 4, col: 2, type: 'rest', next: [2] }]);
-  rows.push([{ row: 5, col: 2, type: 'boss', enemy: pick(1), next: [2] }]);
-  rows.push([{ row: 6, col: 2, type: 'boss', enemy: pick(2), next: [2] }]);
+  GAUNTLET.forEach((g, i) => rows.push([{ row: 5 + i, col: 2, type: 'boss', enemy: pick(g.floor), hp: g.hp, spirit: g.spirit, next: [2] }]));
   return { act, rows, final: true };
 }
 
@@ -387,5 +389,5 @@ export function fillSnacksForFloor(run) {
   return got;
 }
 
-// rooms in a full climb: Floors 1-3 have 9 rows + a boss, Floor 4 has 7 rows + the Net Café
-export const TOTAL_FLOORS = (ROWS + 1) * 3 + 8;
+// rooms in a full climb: Floors 1-3 have 9 rows + a boss, Floor 4 has 8 rows + the Net Café
+export const TOTAL_FLOORS = (ROWS + 1) * 3 + 9;

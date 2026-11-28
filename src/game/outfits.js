@@ -52,7 +52,7 @@ export function syncOutfitUnlocks() {
     const u = o.unlock;
     if (!u) continue;
     if (u.runs && t.runs >= u.runs) unlock('outfits', id);
-    if (u.bossFloor !== undefined && t.best_floor >= Math.min((u.bossFloor + 1) * ROOMS_PER_FLOOR, 38)) unlock('outfits', id);
+    if (u.bossFloor !== undefined && t.best_floor >= Math.min((u.bossFloor + 1) * ROOMS_PER_FLOOR, 39)) unlock('outfits', id);
   }
 }
 
