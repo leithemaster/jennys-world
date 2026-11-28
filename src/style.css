@@ -1146,3 +1146,16 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 @media (max-width: 640px) { .mid { grid-template-columns: 1fr; } .hist { border-left: 0; padding-left: 0; } .hist-list { height: 34px; } }
 .node.back.t-shop circle { fill: var(--sun); } .node.back.t-fight circle { fill: var(--coral); } .node.back.t-elite circle { fill: var(--pink); }
 .node.back.done { color: var(--ink); }
+
+/* card peek beside event options */
+.btn.option.has-peek { position: relative; }
+.btn.option.has-peek::after { content: '👁'; position: absolute; top: 6px; right: 10px; font-size: 13px; opacity: .55; }
+.card-peek { position: fixed; z-index: 60; pointer-events: none; display: grid; gap: var(--s2); max-width: min(600px, 48vw);
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 16px; box-shadow: var(--shadow); padding: var(--s3); }
+.card-peek .peek-pair, .card-peek .peek-row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
+.card-peek .card { width: 130px; height: auto; aspect-ratio: 5 / 7; animation: none; }
+.card-peek .peek-row .card { width: 124px; }
+.card-peek .peek-note { margin: 0; font-weight: 800; font-size: 13px; color: var(--ink); }
+.card-peek .peek-more { font-weight: 800; color: var(--muted); }
+.deck-tools { display: flex; align-items: center; justify-content: center; gap: var(--s3); margin-bottom: var(--s3); }
+.deck-tools .deck-note { margin: 0; }

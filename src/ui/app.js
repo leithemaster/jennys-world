@@ -91,6 +91,59 @@ export function cardHTML(c, extra = '') {
   </div>`;
 }
 
+// ---------- card peek: hover an event option to see the cards it talks about ----------
+// Card names are found in the option's text; "Upgrade all your X cards" shows which
+// cards in your deck that would upgrade, already upgraded.
+const PEEK_NAMES = Object.entries(CARDS).filter(([, d]) => d.name && !['status'].includes(d.rarity))
+  .map(([id, d]) => [d.name, id]).sort((a, b) => b[0].length - a[0].length);
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function peekFor(text) {
+  const cards = [];
+  let rest = text;
+  for (const [name, id] of PEEK_NAMES) {
+    const re = new RegExp(`(^|[^A-Za-z])${reEsc(name)}(?![A-Za-z])`);
+    if (re.test(rest)) { cards.push(id); rest = rest.replace(re, '$1#'); }
+  }
+  const html = cards.map((id) => `<div class="peek-pair">${cardHTML({ id })}${canUpgrade({ id }) ? cardHTML({ id, up: true }, 'alt-view') : ''}</div>`);
+  const m = text.match(/Upgrade all your (\w+) cards/i);
+  if (m && run) {
+    const key = m[1].toLowerCase();
+    const arch = Object.keys(ARCHES).find((a) => ARCHES[a].name.toLowerCase() === key);
+    const hit = run.deck.filter((c) => canUpgrade(c) && (key === 'hybrid' ? !!CARDS[c.id].arch2 : arch && (CARDS[c.id].arch === arch || CARDS[c.id].arch2 === arch)));
+    if (hit.length) {
+      const seen = new Set();
+      const uniq = hit.filter((c) => !seen.has(c.id) && seen.add(c.id));
+      html.push(`<p class="peek-note">${hit.length} card${hit.length > 1 ? 's' : ''} in your deck would upgrade:</p><div class="peek-row">${uniq.slice(0, 8).map((c) => cardHTML({ ...c, up: true }, 'alt-view')).join('')}${uniq.length > 8 ? `<span class="peek-more">+${uniq.length - 8} more</span>` : ''}</div>`);
+    } else html.push('<p class="peek-note">None of your cards would upgrade right now.</p>');
+  }
+  return html.join('');
+}
+const peek = document.createElement('div');
+peek.className = 'card-peek';
+peek.hidden = true;
+document.body.appendChild(peek);
+function bindPeek(root) {
+  root.querySelectorAll('[data-peek]').forEach((el) => {
+    const html = peekFor(el.dataset.peek);
+    if (!html) return;
+    el.classList.add('has-peek');
+    const show = () => {
+      peek.innerHTML = html; peek.hidden = false;
+      const r = el.getBoundingClientRect(), pr = peek.getBoundingClientRect();
+      let x = r.right + 14;
+      if (x + pr.width > innerWidth - 8) x = Math.max(8, r.left - pr.width - 14);
+      const y = Math.max(8, Math.min(innerHeight - pr.height - 8, r.top + r.height / 2 - pr.height / 2));
+      peek.style.left = `${x}px`; peek.style.top = `${y}px`;
+    };
+    const hide = () => { peek.hidden = true; };
+    el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') show(); });
+    el.addEventListener('pointerleave', hide);
+    el.addEventListener('focus', show);
+    el.addEventListener('blur', hide);
+    el.addEventListener('click', hide);
+  });
+}
+
 function charmBadge(id, cls = '') {
   const c = CHARMS[id];
   return `<button class="charm ${cls}" data-tip="${esc(`${c.name}: ${c.desc}`)}" aria-label="${esc(`${c.name}: ${c.desc}`)}">${charmIcon(id)}</button>`;
@@ -251,7 +304,7 @@ function modal(html, { onClose, wide } = {}) {
 
 function showDeck(cards, title, note = '') {
   const sorted = [...cards].sort((a, b) => (CARDS[a.id].type + a.id).localeCompare(CARDS[b.id].type + b.id));
-  const hint = sorted.some(hasUpgradeView) ? '<p class="deck-note">Click a card to see its upgraded version.</p>' : '';
+  const hint = sorted.some(hasUpgradeView) ? `<div class="deck-tools"><button class="btn small" data-show-ups aria-pressed="false">Show upgrades</button><span class="deck-note">or click one card to flip it.</span></div>` : '';
   const m = modal(`<h2>${esc(title)}</h2>${note ? `<p class="deck-note">${note}</p>` : ''}${hint}<div class="card-grid">${sorted.map((c, i) => hasUpgradeView(c)
     ? `<button class="card-btn flip" data-flip="${i}" aria-label="${esc(cardName(c))}: show other version">${cardHTML(c)}</button>`
     : cardHTML(c)).join('') || '<p>Empty.</p>'}</div><button class="btn" data-close>Close</button>`, { wide: true });
@@ -259,7 +312,17 @@ function showDeck(cards, title, note = '') {
   m.el.querySelectorAll('[data-flip]').forEach((b) => {
     const c = sorted[Number(b.dataset.flip)];
     let other = false;
-    b.addEventListener('click', () => { other = !other; b.innerHTML = cardHTML({ ...c, up: other ? !c.up : c.up }, other ? 'alt-view' : ''); });
+    const draw = () => { b.innerHTML = cardHTML({ ...c, up: other ? !c.up : c.up }, other ? 'alt-view' : ''); };
+    b.addEventListener('click', () => { other = !other; draw(); });
+    b.setOther = (v) => { other = v && !c.up; draw(); };
+  });
+  // Show every card that isn't upgraded yet as its upgraded version (handy for planning).
+  const all = m.el.querySelector('[data-show-ups]');
+  all?.addEventListener('click', () => {
+    const on = all.getAttribute('aria-pressed') !== 'true';
+    all.setAttribute('aria-pressed', String(on));
+    all.textContent = on ? 'Show current' : 'Show upgrades';
+    m.el.querySelectorAll('[data-flip]').forEach((b) => b.setOther(on));
   });
 }
 
@@ -1328,9 +1391,10 @@ function eventScreen() {
     ${ev.card ? `<div class="event-card">${cardHTML({ id: ev.card })}</div>` : ''}
     ${ev.cards ? `<div class="event-cards">${ev.cards.map((id) => `<div class="event-card">${cardHTML({ id })}</div>`).join('')}</div>` : ''}
     ${ev.timer ? `<div class="countdown" style="--secs: ${ev.timer}s" aria-hidden="true"><i></i></div>` : ''}
-    <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
+    <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" data-peek="${esc(`${o.label} ${o.note || ''}`)}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
   </main>`;
   bindHeader(app);
+  bindPeek(app);
   // The snack offer shown when a snack has no room. Eating or tossing from the bar redraws it.
   let chosen = false, offerRedraw = null;
   const offerSnack = (k, paid) => new Promise((resolve) => {
