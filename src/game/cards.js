@@ -17,9 +17,10 @@ import { T } from './terms.js';
 
 // Cards that count toward a style's conditions (which cards can show up).
 // Starter cards count too, so Jenny's Zap opens the Exposed payoffs.
-export const SLEEPY_CARDS = ['yawn', 'trip', 'lightsOut', 'countingSheep', 'pillowFight', 'bedtimeStory', 'deepSleep', 'napTime', 'dreamJournal'];
-export const HEAL_CARDS = ['warmMilk', 'snack', 'hotCocoa', 'groupHug', 'feelBetter', 'secondHelping', 'sweetDreams', 'napTime'];
-export const EXPOSED_CARDS = ['zap', 'callOut', 'pileOn', 'snitch', 'roast', 'roastBattle', 'heckle', 'leak'];
+export const SLEEPY_CARDS = ['yawn', 'trip', 'lightsOut', 'countingSheep', 'pillowFight', 'bedtimeStory', 'deepSleep', 'napTime', 'dreamJournal', 'sandman', 'sleepMode'];
+export const HEAL_CARDS = ['warmMilk', 'snack', 'hotCocoa', 'groupHug', 'feelBetter', 'secondHelping', 'sweetDreams', 'napTime', 'spoonful', 'selfCare', 'comboMeal', 'photoAlbum'];
+export const EXPOSED_CARDS = ['zap', 'callOut', 'pileOn', 'snitch', 'roast', 'roastBattle', 'heckle', 'leak', 'screenshot', 'spillTea', 'wakeUpCall'];
+export const GLITCH_CARDS = ['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak', 'packetLoss', 'sleepMode', 'firewall'];
 
 export const CARDS = {
   // ---------- starter ----------
@@ -126,7 +127,7 @@ export const CARDS = {
     arch: 'glitch',
     name: 'Catalyst', type: 'skill', rarity: 'uncommon', icon: 'flask',
     text: (u) => `${u ? 'Triple' : 'Double'} the enemy's ${T.glitch}.`,
-    requires: (r, h) => h.deckHas(['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak']),
+    requires: (r, h) => h.deckHas(GLITCH_CARDS),
     needs: 'a Glitch card (Stinger, Virus Upload, Lag Spike, Malware, Data Leak)',
     fx: (b, u) => b.applyEnemy('poison', b.enemy.poison * (u ? 2 : 1)),
   },
@@ -206,7 +207,7 @@ export const CARDS = {
   corrupt: {
     arch: 'glitch', name: 'Corrupt', type: 'attack', rarity: 'uncommon', icon: 'skull',
     text: (u) => `Deal damage equal to the enemy's ${T.glitch}${u ? ' +6' : ''}.`,
-    requires: (r, h) => h.deckCount(['stinger', 'virusUpload', 'lagSpike', 'catalyst', 'malware', 'leak']) >= 1,
+    requires: (r, h) => h.deckHas([...GLITCH_CARDS, 'catalyst']),
     needs: 'a Glitch card (Stinger, Virus Upload, Lag Spike, Catalyst, Malware, Data Leak)',
     fx: (b, u) => b.attack(b.enemy.poison + (u ? 6 : 0), { raw: true }),
   },
@@ -383,6 +384,112 @@ export const CARDS = {
     fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.applyEnemy('poison', u ? 4 : 3); b.gainBlock(u ? 6 : 4); },
   },
 
+  // ---------- more style support (2 per style) ----------
+  packetLoss: {
+    arch: 'glitch', name: 'Packet Loss', type: 'skill', rarity: 'common', icon: 'packetLoss',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.glitch}. If the enemy already has ${T.glitch}, apply ${u ? 4 : 3} more.`,
+    fx: (b, u) => { const had = b.enemy.poison > 0; b.applyEnemy('poison', u ? 3 : 2); if (had) b.applyEnemy('poison', u ? 4 : 3); },
+  },
+  pingFlood: {
+    arch: 'glitch', name: 'Ping Flood', type: 'skill', rarity: 'uncommon', icon: 'ping',
+    text: (u) => `${u ? `Apply 3 ${T.glitch}. ` : ''}Deal damage equal to the enemy's ${T.glitch}.`,
+    requires: (r, h) => h.deckHas(GLITCH_CARDS),
+    needs: `a ${T.glitch} card`,
+    fx: (b, u) => { if (u) b.applyEnemy('poison', 3); if (b.enemy.poison > 0) b.attack(b.enemy.poison, { raw: true }); },
+  },
+  holdTheLine: {
+    arch: 'guard', name: 'Hold the Line', type: 'skill', rarity: 'common', icon: 'barricade',
+    text: (u) => `${T.block} ${u ? 5 : 4}, +${u ? 3 : 2} for each match this turn.`,
+    fx: (b, u) => b.gainBlock((u ? 5 : 4) + (u ? 3 : 2) * b.matchesThisTurn),
+  },
+  bodyguard: {
+    arch: 'guard', name: 'Bodyguard', type: 'skill', rarity: 'uncommon', icon: 'bodyguard',
+    text: (u) => `${T.block} ${u ? 9 : 6}. Gain ${u ? 3 : 2} ${T.spikes}.`,
+    fx: (b, u) => { b.gainBlock(u ? 9 : 6); b.applyPlayer('thorns', u ? 3 : 2); },
+  },
+  warmUp: {
+    arch: 'combo', name: 'Warm-Up', type: 'skill', rarity: 'common', icon: 'sneaker',
+    text: (u) => `+${u ? 3 : 2} ${T.combo}. ${T.block} 3.`,
+    fx: (b, u) => { b.combo += u ? 3 : 2; b.gainBlock(3); },
+  },
+  finisher: {
+    arch: 'combo', name: 'Finisher', type: 'attack', rarity: 'uncommon', icon: 'burst',
+    text: (u) => `Deal ${u ? 4 : 3} for each ${T.combo}, then your ${T.combo} goes back to 0.`,
+    fx: (b, u) => { b.attack((u ? 4 : 3) * b.combo); b.combo = 0; },
+  },
+  flashcards: {
+    arch: 'memory', name: 'Flashcards', type: 'attack', rarity: 'common', icon: 'flashcards',
+    text: (u) => `Deal ${u ? 7 : 5}. Reveal ${u ? 2 : 1}.`,
+    fx: (b, u) => { b.attack(u ? 7 : 5); b.reveal(u ? 2 : 1); },
+  },
+  totalRecall: {
+    arch: 'memory', name: 'Total Recall', type: 'skill', rarity: 'uncommon', icon: 'bulb',
+    text: (u) => `+1 ${T.energy} for every ${u ? 2 : 3} face-up cards on the board (max 3).`,
+    fx: (b, u) => { const n = Math.min(3, Math.floor(b.board.filter((s) => s.state === 'revealed').length / (u ? 2 : 3))); if (n) b.gainEnergy(n); },
+  },
+  warmBlanket: {
+    arch: 'dreamy', name: 'Warm Blanket', type: 'skill', rarity: 'common', icon: 'blanket',
+    text: (u) => `${T.block} ${u ? 8 : 6}, or ${u ? 15 : 12} if the enemy is ${T.asleep}.`,
+    fx: (b, u) => b.gainBlock(b.enemy.asleep ? (u ? 15 : 12) : (u ? 8 : 6)),
+  },
+  sandman: {
+    arch: 'dreamy', name: 'Sandman', type: 'skill', rarity: 'uncommon', icon: 'sandbag',
+    text: (u) => `Apply 1 ${T.sleepy} for each match this turn${u ? ', +1' : ''} (max ${u ? 5 : 4}).`,
+    fx: (b, u) => b.applyEnemy('weak', Math.min(u ? 5 : 4, b.matchesThisTurn + (u ? 1 : 0))),
+  },
+  spoonful: {
+    arch: 'cozy', name: 'Spoonful', type: 'attack', rarity: 'common', icon: 'spoon',
+    text: (u) => `Deal ${u ? 7 : 5}. Heal ${u ? 3 : 2}. ${T.cozy}.`,
+    fx: (b, u) => { b.attack(u ? 7 : 5); b.heal(u ? 3 : 2, { cozy: true }); },
+  },
+  selfCare: {
+    arch: 'cozy', name: 'Self Care', type: 'power', rarity: 'uncommon', icon: 'candle',
+    text: (u) => `${T.power}: heal ${u ? 3 : 2} at the start of each turn. ${T.cozy}.`,
+    fx: (b, u) => { b.powers.selfCare += u ? 3 : 2; },
+  },
+  screenshot: {
+    arch: 'exposed', name: 'Screenshot', type: 'skill', rarity: 'common', icon: 'screenshot',
+    text: (u) => `Apply ${u ? 3 : 2} ${T.exposed}. ${T.block} ${u ? 5 : 4}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', u ? 3 : 2); b.gainBlock(u ? 5 : 4); },
+  },
+  spillTea: {
+    arch: 'exposed', name: 'Spill the Tea', type: 'skill', rarity: 'uncommon', icon: 'spillTea',
+    text: (u) => `Apply ${T.exposed} equal to your ${T.combo} (max ${u ? 6 : 4}).`,
+    fx: (b, u) => b.applyEnemy('vuln', Math.min(u ? 6 : 4, b.combo)),
+  },
+
+  // ---------- more hybrids ----------
+  sleepMode: {
+    arch: 'glitch', arch2: 'dreamy', name: 'Sleep Mode', type: 'skill', rarity: 'common', icon: 'sleepMode',
+    text: (u) => `Apply ${u ? 2 : 1} ${T.sleepy} and ${u ? 4 : 3} ${T.glitch}.`,
+    fx: (b, u) => { b.applyEnemy('weak', u ? 2 : 1); b.applyEnemy('poison', u ? 4 : 3); },
+  },
+  comboMeal: {
+    arch: 'combo', arch2: 'cozy', name: 'Combo Meal', type: 'attack', rarity: 'common', icon: 'bento',
+    text: (u) => `Deal ${u ? 6 : 4}. Heal 1 for each ${T.combo} (max ${u ? 8 : 6}). ${T.cozy}.`,
+    fx: (b, u) => { b.attack(u ? 6 : 4); b.heal(Math.min(u ? 8 : 6, b.combo), { cozy: true }); },
+  },
+  firewall: {
+    arch: 'glitch', arch2: 'guard', name: 'Firewall', type: 'skill', rarity: 'common', icon: 'firewall',
+    text: (u) => `${T.block} ${u ? 8 : 6}. Apply ${u ? 3 : 2} ${T.glitch}.`,
+    fx: (b, u) => { b.gainBlock(u ? 8 : 6); b.applyEnemy('poison', u ? 3 : 2); },
+  },
+  wakeUpCall: {
+    arch: 'dreamy', arch2: 'exposed', name: 'Wake-Up Call', type: 'attack', rarity: 'uncommon', icon: 'alarm',
+    text: (u) => `If the enemy is ${T.asleep}, apply ${u ? 4 : 3} ${T.exposed} first. Deal ${u ? 11 : 8}.`,
+    fx: (b, u) => { if (b.enemy.asleep) b.applyEnemy('vuln', u ? 4 : 3); b.attack(u ? 11 : 8); },
+  },
+  photoAlbum: {
+    arch: 'memory', arch2: 'cozy', name: 'Photo Album', type: 'skill', rarity: 'common', icon: 'polaroid',
+    text: (u) => `Heal ${u ? 4 : 3}. Reveal ${u ? 3 : 2}. ${T.cozy}.`,
+    fx: (b, u) => { b.heal(u ? 4 : 3, { cozy: true }); b.reveal(u ? 3 : 2); },
+  },
+  speedReader: {
+    arch: 'memory', arch2: 'combo', name: 'Speed Reader', type: 'skill', rarity: 'uncommon', icon: 'speedBook',
+    text: (u) => `Reveal ${u ? 3 : 2}. +2 ${T.combo}.${u ? ` +1 ${T.energy}.` : ''}`,
+    fx: (b, u) => { b.reveal(u ? 3 : 2); b.combo += 2; if (u) b.gainEnergy(1); },
+  },
+
   // ---------- event only: never in card rewards or shops ----------
   sheepStampede: {
     arch: 'dreamy', name: 'Sheep Stampede', type: 'attack', rarity: 'event', icon: 'stampede',
@@ -433,39 +540,62 @@ export const CARDS = {
   // ---------- legendary: one per style, offered by the Legendary Pull event from Floor 2 ----------
   // You can only own one legendary card. See LEGENDARY in loot.js for the odds.
   hacked: {
-    arch: 'glitch', name: 'Hacked', type: 'power', rarity: 'legendary', icon: 'skull',
+    arch: 'glitch', name: 'Hacked', type: 'power', rarity: 'legendary', icon: 'lgHacked',
     text: (u) => `${T.power}: ${u ? `apply 5 ${T.glitch}, then ` : ''}double the enemy's ${T.glitch}. ${T.glitch} no longer goes down.`,
     fx: (b, u) => { if (u) b.applyEnemy('poison', 5); b.powers.hacked = true; b.applyEnemy('poison', b.enemy.poison); },
   },
   riotShield: {
-    arch: 'guard', name: 'Riot Shield', type: 'power', rarity: 'legendary', icon: 'shieldHit',
+    arch: 'guard', name: 'Riot Shield', type: 'power', rarity: 'legendary', icon: 'lgRiot',
     text: (u) => `${T.power}: ${T.block} no longer resets. Whenever you gain ${T.block}, deal half of it.${u ? ` ${T.block} 10.` : ''}`,
     fx: (b, u) => { b.powers.fortress = true; b.powers.riot = true; if (u) b.gainBlock(10); },
   },
   gameTime: {
-    arch: 'combo', name: 'Game Time', type: 'power', rarity: 'legendary', icon: 'comet',
+    arch: 'combo', name: 'Game Time', type: 'power', rarity: 'legendary', icon: 'lgGameTime',
     text: (u) => `${T.power}: misses no longer reset your ${T.combo}. Every match adds 1 more ${T.combo}.${u ? ` +3 ${T.combo}.` : ''}`,
     fx: (b, u) => { b.powers.gameTime = true; if (u) b.combo += 3; },
   },
   mindCastle: {
-    arch: 'memory', name: 'Mind Castle', type: 'power', rarity: 'legendary', icon: 'crystal',
+    arch: 'memory', name: 'Mind Castle', type: 'power', rarity: 'legendary', icon: 'lgMindCastle',
     text: (u) => `${T.power}: every 2nd pair you match gives +1 ${T.energy}.${u ? ' Reveal 4.' : ''}`,
     fx: (b, u) => { b.powers.mindCastle = true; b.powers.castleCount = 0; if (u) b.reveal(4); },
   },
   nightmare: {
-    arch: 'dreamy', name: 'Nightmare', type: 'attack', rarity: 'legendary', icon: 'bat',
+    arch: 'dreamy', name: 'Nightmare', type: 'attack', rarity: 'legendary', icon: 'lgNightmare',
     text: (u) => `Eat all the enemy's ${T.sleepy} (if ${T.asleep}: wake it, eat what put it to sleep). Per ${T.sleepy}: deal ${u ? 8 : 6}, heal ${u ? 4 : 3}.`,
     fx: (b, u) => b.nightmare(u ? 8 : 6, u ? 4 : 3),
   },
   healBurn: {
-    arch: 'cozy', name: 'Heal Burn', type: 'power', rarity: 'legendary', icon: 'fire',
+    arch: 'cozy', name: 'Heal Burn', type: 'power', rarity: 'legendary', icon: 'lgHealBurn',
     text: (u) => `${T.power}: whenever you heal, deal twice that much to the enemy. Heal ${u ? 18 : 12}.`,
     fx: (b, u) => { b.powers.healBurn = true; b.heal(u ? 18 : 12); },
   },
   cancelled: {
-    arch: 'exposed', name: 'Cancelled', type: 'power', rarity: 'legendary', icon: 'megaphone',
+    arch: 'exposed', name: 'Cancelled', type: 'power', rarity: 'legendary', icon: 'lgCancelled',
     text: (u) => `${T.power}: apply ${u ? 6 : 4} ${T.exposed}. ${T.exposed} never wears off, and ${T.exposed} enemies take double damage.`,
     fx: (b, u) => { b.powers.roast = true; b.powers.cancelled = true; b.applyEnemy('vuln', u ? 6 : 4); },
+  },
+
+  // Neutral legendaries: no style. Offered by the Lost and Found event; you can own one
+  // of these on top of your style legendary.
+  infiniteBattery: {
+    name: 'Infinite Battery', type: 'power', rarity: 'legendary', icon: 'infBattery', neutral: true,
+    text: (u) => `${T.power}: +2 ${T.energy} at the start of each turn.${u ? ` +2 now.` : ''}`,
+    fx: (b, u) => { b.powers.energy += 2; if (u) b.gainEnergy(2); },
+  },
+  plotArmor: {
+    name: 'Plot Armor', type: 'power', rarity: 'legendary', icon: 'plotArmor', neutral: true,
+    text: (u) => `${T.power}: enemies deal ${u ? 40 : 30}% less damage to you.`,
+    fx: (b, u) => { b.powers.plotArmor = Math.max(b.powers.plotArmor, u ? 0.4 : 0.3); },
+  },
+  galaxyBrain: {
+    name: 'Galaxy Brain', type: 'power', rarity: 'legendary', icon: 'galaxyBrain', neutral: true,
+    text: (u) => `${T.power}: reveal ${u ? 4 : 3} hidden cards now and at the start of each turn.`,
+    fx: (b, u) => { b.powers.galaxy += u ? 4 : 3; b.reveal(u ? 4 : 3, true, true); },
+  },
+  mainCharacter: {
+    name: 'Main Character', type: 'power', rarity: 'legendary', icon: 'mainChar', neutral: true,
+    text: (u) => `${T.power}: every pair you match also deals ${u ? 6 : 4} damage.`,
+    fx: (b, u) => { b.powers.mainChar += u ? 6 : 4; },
   },
 
   // ---------- guardian gifts: only come with a guardian's charm (see `gives` in charms.js) ----------
@@ -561,4 +691,5 @@ export function canUpgrade(c) {
   return !c.up && r !== 'status' && r !== 'curse';
 }
 
-export const LEGENDARY_OF = Object.fromEntries(Object.entries(CARDS).filter(([, d]) => d.rarity === 'legendary').map(([id, d]) => [d.arch, id]));
+export const NEUTRAL_LEGENDARIES = Object.keys(CARDS).filter((id) => CARDS[id].rarity === 'legendary' && CARDS[id].neutral);
+export const LEGENDARY_OF = Object.fromEntries(Object.entries(CARDS).filter(([, d]) => d.rarity === 'legendary' && d.arch).map(([id, d]) => [d.arch, id]));

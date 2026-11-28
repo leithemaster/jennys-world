@@ -16,7 +16,7 @@
 // pool 'special') only come from here.
 
 import { T } from './terms.js';
-import { CARDS, ARCHES, LEGENDARY_OF } from './cards.js';
+import { CARDS, ARCHES, LEGENDARY_OF, NEUTRAL_LEGENDARIES } from './cards.js';
 import { snackRoom, snackCount, SNACKS } from './snacks.js';
 
 // Non-starter cards in the deck tagged with this style (hybrids count for both).
@@ -407,4 +407,26 @@ export const LEGENDARY_EVENT = {
   },
 };
 
-export const ALL_EVENTS = [...EVENTS, ...SPECIAL_EVENTS, LEGENDARY_EVENT];
+// Offers 2 of the 4 neutral legendaries (no style needed). Pick one or leave.
+export const LOST_AND_FOUND = {
+  id: 'lostAndFound', special: true, gives: { cards: NEUTRAL_LEGENDARIES },
+  needs: 'Floor 2 on (rare)',
+  title: 'Lost and Found',
+  text: 'The lost-and-found box behind the counter is humming. Two things in it are glowing gold, and nobody has claimed them in years.',
+  options: [
+    { label: 'Take one', note: 'Pick 1 of 2 legendary cards with no style. You can own one of these.' },
+    { label: 'Leave it all', note: 'Not yours to take.' },
+  ],
+  setup: (r, api) => {
+    const pool = [...NEUTRAL_LEGENDARIES].sort(() => Math.random() - 0.5).slice(0, 2);
+    return {
+      cards: pool,
+      options: [
+        ...pool.map((id) => ({ label: `Take ${CARDS[id].name}`, note: 'Legendary. You can own one card from the lost and found.', go: () => `Finders keepers. You got ${api.addCard(id)}!` })),
+        { label: 'Leave it all', go: () => 'You close the box. Someone will come back for it.' },
+      ],
+    };
+  },
+};
+
+export const ALL_EVENTS = [...EVENTS, ...SPECIAL_EVENTS, LEGENDARY_EVENT, LOST_AND_FOUND];

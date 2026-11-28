@@ -99,7 +99,7 @@ export function catalogScreen(app, { onBack }) {
       <div class="grid">${D.outfits.map((o) => `<article class="tile look${o.found ? '' : ' locked'}"><div class="pair"><div class="art${o.found ? '' : ' unseen'}">${o.jenny}</div><div class="art${o.found ? '' : ' unseen'}">${o.toni}</div></div><h3>${o.found ? esc(o.name) : HIDDEN}</h3>${o.found ? `<p>${esc(o.desc)}</p>` : ''}<span class="tag ct-${o.found ? 'common' : 'rare'}">${o.found ? 'Unlocked' : esc(o.unlock)}</span></article>`).join('')}</div></section>`,
 
     cards: () => table(D.cards.map((r) => hide(r, ['type', 'rarity', 'art'])), [
-      { label: 'Art', cell: (r) => artBox(`cardart t-${r.type}`, r, r.art) },
+      { label: 'Art', cell: (r) => artBox(`cardart t-${r.type} r-${r.rarity}`, r, r.art) },
       { label: 'Name', key: 'name', cell: (r) => nameCell(r) },
       { label: 'Type', key: 'type', cell: (r) => `<span class="tag ct-${r.type}">${cap(r.type)}</span>` },
       { label: 'Rarity', key: 'rarity', sortVal: (r) => RAR_ORDER[r.rarity], cell: (r) => `<span class="tag ct-${r.rarity}">${cap(r.rarity)}</span>` },

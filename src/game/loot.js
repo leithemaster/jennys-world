@@ -16,7 +16,7 @@
 
 import { CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
-import { EVENTS, SPECIAL_EVENTS, LEGENDARY_EVENT, SPECIAL_NEED } from './events.js';
+import { EVENTS, SPECIAL_EVENTS, LEGENDARY_EVENT, LOST_AND_FOUND, SPECIAL_NEED } from './events.js';
 import { ACTS } from './enemies.js';
 import { SNACKS, SNACK_DROP } from './snacks.js';
 import { climbOn, CLIMB_RULES as CR } from './climb.js';
@@ -179,7 +179,7 @@ export function legendaryChance(run) {
 }
 export function drawLegendaryEvent(run) {
   if (run.act < LEGENDARY.fromAct || run.legendaryOffered) return null;
-  if (run.deck.some((c) => CARDS[c.id].rarity === 'legendary')) return null;
+  if (run.deck.some((c) => CARDS[c.id].rarity === 'legendary' && !CARDS[c.id].neutral)) return null;
   run.legendaryFloors ||= [];
   if (run.legendaryFloors.includes(run.act)) return null;
   const p = legendaryChance(run);
@@ -191,8 +191,22 @@ export function drawLegendaryEvent(run) {
   return LEGENDARY_EVENT;
 }
 
+// Lost and Found: the same odds as a full-style Legendary Pull (~10.5% on the
+// first "?" room of Floors 2 and 3, so about 1 run in 5), no style needed.
+// Never offered if you already own a neutral legendary.
+export function drawLostAndFound(run) {
+  if (run.act < LEGENDARY.fromAct || run.neutralOffered) return null;
+  if (run.deck.some((c) => CARDS[c.id].neutral)) return null;
+  run.neutralFloors ||= [];
+  if (run.neutralFloors.includes(run.act)) return null;
+  run.neutralFloors.push(run.act);
+  if (Math.random() >= LEGENDARY.maxPerFloor) return null;
+  run.neutralOffered = true;
+  return LOST_AND_FOUND;
+}
+
 export function drawEvent(run) {
-  const lg = drawLegendaryEvent(run);
+  const lg = drawLegendaryEvent(run) || drawLostAndFound(run);
   if (lg) return lg;
   const sp = drawSpecialEvent(run);
   if (sp) return sp;

@@ -1317,11 +1317,13 @@ function eventScreen() {
   };
   if (base.setup) ev = { ...base, ...base.setup(run, api) };
   if (ev.card) noteCardSeen(ev.card);
+  (ev.cards || []).forEach(noteCardSeen);
   app.innerHTML = `${header()}<main class="room event${ev.special ? ' special' : ''}">
     <div class="room-icon${ev.art ? ' guardian-host' : ''}">${ev.art ? guardianChibi(ev.art) : ev.special && ev.boon ? charmIcon(ev.boon) : roomIcon('event')}</div>
     ${ev.special ? `<span class="special-tag">Special event${ev.style ? ` · ${esc(ARCHES[ev.style].name)}` : ''}</span>` : ''}
     <h1>${esc(ev.title)}</h1><p class="room-text">${esc(ev.text)}</p>
     ${ev.card ? `<div class="event-card">${cardHTML({ id: ev.card })}</div>` : ''}
+    ${ev.cards ? `<div class="event-cards">${ev.cards.map((id) => `<div class="event-card">${cardHTML({ id })}</div>`).join('')}</div>` : ''}
     ${ev.timer ? `<div class="countdown" style="--secs: ${ev.timer}s" aria-hidden="true"><i></i></div>` : ''}
     <div class="stack narrow">${ev.options.map((o, i) => `<button class="btn option" data-opt="${i}" ${o.can && !o.can(run) ? 'disabled' : ''}>${esc(o.label)}${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('')}</div>
   </main>`;

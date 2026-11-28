@@ -47,7 +47,7 @@ export class Battle {
     const hp = Math.round(randInt(def.hp[0], def.hp[1]) * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
-    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false };
+    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false, selfCare: 0, galaxy: 0, mainChar: 0, plotArmor: 0 };
     this.healedThisFight = 0;
     this.stolen = 0; // coins an enemy stole this fight (you get them back if you win)
     this.matchesThisFight = 0;
@@ -117,6 +117,11 @@ export class Battle {
     shuffle(slots);
     this.board = slots.map((s, i) => ({ i, card: s.card, state: 'down', seen: false }));
     this.first = null;
+    // Legendary cards always start with one half face up (on top of the free reveals).
+    for (const c of hand) if (CARDS[c.id].rarity === 'legendary') {
+      const s = shuffle(this.board.filter((x) => x.card === c))[0];
+      if (s) { s.state = 'revealed'; s.revealed = true; s.seen = true; }
+    }
     this.emit('board');
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
@@ -210,6 +215,7 @@ export class Battle {
     this.playing = def;
     def.fx(this, !!card.up);
     this.playing = null;
+    if (this.powers.mainChar && !this.over) this.attack(this.powers.mainChar, { raw: true });
     if (castle && ++this.powers.castleCount % 2 === 0) { this.gainEnergy(1); this.log(`Mind Castle: +1 ${T.energy}.`); }
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.matchesThisFight += 1;
@@ -265,13 +271,12 @@ export class Battle {
     const take = (s) => { picks.push(s); hidden.splice(hidden.indexOf(s), 1); shown.add(this.keyOf(s.card)); };
     const fresh = (s) => !shown.has(this.keyOf(s.card));
     const def = (s) => CARDS[s.card.id] || {};
-    const best = (test) => hidden.find((s) => test(def(s)) && fresh(s)) || hidden.find((s) => test(def(s)));
     if (mix) {
       const plain = (c) => c.type !== 'status';
       const defend = (c) => c.type !== 'attack' && plain(c) && /Block|Heal/i.test(String((typeof c.text === 'function' ? c.text(false) : c.text) || ''));
       for (const test of [(c) => c.type === 'attack', (c) => (hidden.some((s) => defend(def(s))) ? defend(c) : c.type !== 'attack' && plain(c))]) {
         if (picks.length >= n) break;
-        const s = best(test);
+        const s = hidden.find((x) => test(def(x)) && fresh(x)); // seeded picks never double up a pair
         if (s) take(s);
       }
     }
@@ -333,6 +338,7 @@ export class Battle {
     if (to === this.enemy && to.asleep > 0 && this.has('napBuddy')) d *= 1.3;
     if (from === this.enemy && from.vuln > 0 && this.has('growl')) d *= 0.75;
     if (from === this.enemy && climbOn(this.run, 3)) d *= CR.enemyDamage;
+    if (from === this.enemy && this.powers.plotArmor) d *= 1 - this.powers.plotArmor;
     return Math.max(0, Math.floor(d));
   }
 
@@ -423,6 +429,8 @@ export class Battle {
     if (this.has('remembers')) this.reveal(1, true);
     if (this.has('hanaSigh')) this.heal(2);
     if (this.powers.armor) this.gainBlock(this.powers.armor);
+    if (this.powers.selfCare) this.heal(this.powers.selfCare, { cozy: true });
+    if (this.powers.galaxy) this.reveal(this.powers.galaxy, true, true);
     if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
     if (this.powers.bedtime) this.applyEnemy('weak', this.powers.bedtime);
     // Glitch (poison) ticks on the player at the start of their turn
