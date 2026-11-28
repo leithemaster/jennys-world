@@ -90,6 +90,24 @@ export const ENEMIES = {
     moves: [{ w: 3, t: 'ban', n: 12 }, { w: 2, t: 'atk', n: 14, times: 2 }, { w: 3, t: 'debuff', weak: 2, vuln: 2 }, { w: 1, t: 'atk', n: 36 }, { w: 1, t: 'buff', n: 5 }], combo: { buff: 'attack', debuff: 'ban' } },
   hivemind: { name: 'The Hive Mind', hp: [215, 215], art: 'hive', color: '#4f8a55', ai: 'bag', boss: true,
     moves: [{ w: 2, t: 'atk', n: 3, times: 6 }, { w: 2, t: 'status', card: 'spam', count: 3 }, { w: 2, t: 'buff', n: 3 }, { w: 2, t: 'drain', n: 14 }, { w: 1, t: 'scramble' }, { w: 1, t: 'atk', n: 3, times: 8 }], combo: { buff: 'attack', status: 'attack' } },
+  // ----- Floor 4 (the Top Floor: VIP lounge, arcade, staff-only rooms). HP is x1.2 on this floor. -----
+  neon: { name: 'Flickering Neon', hp: [58, 62], art: 'neon', color: '#ff5db0', ai: 'random',
+    moves: [{ t: 'atk', n: 7, times: 2 }, { t: 'scramble' }, { t: 'debuff', weak: 2 }, { t: 'atk', n: 17 }] },
+  canFiend: { name: 'Energy Can Fiend', hp: [60, 64], art: 'can', color: '#3fb6a8', ai: 'cycle',
+    moves: [{ t: 'buff', n: 4 }, { t: 'atk', n: 9, times: 2 }, { t: 'drain', n: 12 }] },
+  kraken: { name: 'Cable Kraken', hp: [62, 66], art: 'kraken', color: '#6b5bb8', ai: 'random',
+    moves: [{ t: 'atk', n: 4, times: 4 }, { t: 'debuff', vuln: 2 }, { t: 'atkBlock', n: 12, b: 12 }] },
+  lastCall: { name: 'Last-Call Ghost', hp: [56, 60], art: 'ghost', color: '#cfd6ff', ai: 'random',
+    moves: [{ t: 'steal', n: 12, coins: 12 }, { t: 'atk', n: 16 }, { t: 'status', card: 'lag', count: 2 }] },
+  // elites
+  vipHost: { name: 'VIP Lounge Host', hp: [98, 102], art: 'host', color: '#25233a', ai: 'cycle', elite: true,
+    moves: [{ t: 'block', n: 20 }, { t: 'buff', n: 5 }, { t: 'atk', n: 12, times: 2 }, { t: 'ban', n: 14 }] },
+  arcade: { name: 'Haunted Arcade Cabinet', hp: [96, 100], art: 'arcade', color: '#d2493f', ai: 'cycle', elite: true,
+    moves: [{ t: 'scramble' }, { t: 'atk', n: 6, times: 4 }, { t: 'status', card: 'spam', count: 3 }, { t: 'atk', n: 26 }] },
+  securityEye: { name: 'Security Eye', hp: [92, 96], art: 'camera', color: '#e8e2f2', ai: 'random', elite: true,
+    moves: [{ t: 'debuff', weak: 3, vuln: 3 }, { t: 'atk', n: 20 }, { t: 'atkStatus', n: 12, card: 'bug', count: 2 }, { t: 'block', n: 18 }] },
+  janitor: { name: 'Closing-Time Janitor', hp: [100, 104], art: 'janitor', color: '#ffd34d', ai: 'cycle', elite: true,
+    moves: [{ t: 'atk', n: 14, times: 2 }, { t: 'heal', n: 15 }, { t: 'atkBlock', n: 15, b: 15 }, { t: 'buff', n: 4 }] },
   // ----- Floor 4: the final boss is the building itself -----
   netCafe: { name: 'The Net Café', hp: [330, 330], art: 'netcafe', color: '#5a3a7a', ai: 'bag', boss: true, final: true,
     moves: [{ w: 2, t: 'atk', n: 11, times: 3 }, { w: 2, t: 'status', card: 'spam', count: 3 }, { w: 2, t: 'scramble' }, { w: 1, t: 'atk', n: 42 }, { w: 2, t: 'atkBlock', n: 14, b: 22 }, { w: 1, t: 'ban', n: 16 }, { w: 1, t: 'debuff', weak: 2, vuln: 2 }, { w: 1, t: 'buff', n: 6 }],
@@ -103,6 +121,6 @@ export const ACTS = [
   { name: 'Floor 2 · Server Room', normals: ['moth', 'hook', 'buffer', 'crab'], elites: ['ransom', 'popstorm', 'ddos', 'bitrot', 'sysadmin'], bosses: ['hydra', 'dataMiner', 'serverAdmins'] },
   { name: 'Floor 3 · The Rooftop', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll', 'botnet', 'streamer', 'quantum'], bosses: ['bluescreen', 'moderator', 'hivemind'] },
   // Floor 4: two lanes that merge at a rest, then a boss gauntlet (one Floor 2 and one Floor 3
-  // boss you didn't fight) and the building itself. Its fights reuse Floor 3 enemies, tougher.
-  { name: 'Floor 4 · The Top Floor', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll', 'botnet', 'streamer', 'quantum'], bosses: ['netCafe'], hpScale: 1.2, final: true },
+  // boss you didn't fight) and the building itself. Its own enemies get x1.2 HP.
+  { name: 'Floor 4 · The Top Floor', normals: ['neon', 'canFiend', 'kraken', 'lastCall'], elites: ['vipHost', 'arcade', 'securityEye', 'janitor'], bosses: ['netCafe'], hpScale: 1.2, final: true },
 ];

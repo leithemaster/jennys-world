@@ -547,6 +547,92 @@ const ART = {
     <rect x="24" y="62" width="58" height="4" rx="2" fill="#fff" opacity=".85"/><rect x="24" y="70" width="38" height="4" rx="2" fill="#fff" opacity=".85"/>
     <rect x="80" y="26" width="20" height="20" rx="2" fill="#fff"/><rect x="84" y="30" width="5" height="5" fill="${c}"/><rect x="91" y="37" width="5" height="5" fill="${c}"/>`,
 
+  // ----- Floor 4 -----
+  // Flickering Neon: a heart-shaped neon tube on a black board.
+  neon: (c) => `${shadow(60, 113, 40)}
+    <path d="M40 14 L46 2 M80 14 L74 2" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    <rect x="18" y="12" width="84" height="92" rx="14" ${o('#2a1626')}/>
+    <path d="M60 92 C30 72 26 56 30 44 C34 30 52 28 60 42 C68 28 86 30 90 44 C94 56 90 72 60 92 Z" fill="${lighten(c, 0.6)}" stroke="${c}" stroke-width="14" stroke-linejoin="round" stroke-opacity=".3"/>
+    <path d="M60 92 C30 72 26 56 30 44 C34 30 52 28 60 42 C68 28 86 30 90 44 C94 56 90 72 60 92 Z" fill="none" stroke="${INK}" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M60 92 C30 72 26 56 30 44 C34 30 52 28 60 42 C68 28 86 30 90 44 C94 56 90 72 60 92 Z" fill="none" stroke="${c}" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M36 46 C37 40 41 37 46 37" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    ${face(60, 56, { eyes: 'angry', mouth: 'fang', gap: 11, size: 0.85 })}
+    <path d="M96 20 L104 16 M98 30 L106 30" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>`,
+
+  // Energy Can Fiend: a flexing energy drink can.
+  can: (c) => `${shadow(60, 113, 38)}
+    <circle cx="20" cy="60" r="9" ${o(c)}/><circle cx="100" cy="60" r="9" ${o(c)}/>
+    <path d="M26 64 L34 70 M94 64 L86 70" stroke="${INK}" stroke-width="3"/>
+    <rect x="32" y="18" width="56" height="90" rx="10" ${o(c)}/>
+    <ellipse cx="60" cy="20" rx="26" ry="6" ${o('#d9d4e0', 3)}/>
+    <path d="M56 18 h10 a3 3 0 0 1 0 6 h-10 z" fill="none" stroke="${INK}" stroke-width="2.4"/>
+    <path d="M36 36 C38 30 42 28 46 28" fill="none" stroke="${lighten(c, 0.45)}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M64 74 L54 92 H62 L58 104 L72 84 H63 L68 74 Z" ${o('#ffd34d', 2.4)}/>
+    ${face(60, 50, { eyes: 'angry', mouth: 'grin', gap: 12, size: 0.9 })}`,
+
+  // Cable Kraken: a blob with tangled cable tentacles ending in plugs.
+  kraken: (c) => `${shadow(60, 113, 46)}
+    ${[['M34 70 C20 80 10 96 16 108', 10, 106], ['M48 80 C42 94 40 104 46 112', 44, 110], ['M72 80 C78 94 80 104 74 112', 76, 110], ['M86 70 C100 80 110 96 104 108', 104, 106]].map(([d, x, y]) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/><rect x="${x - 6}" y="${y - 4}" width="12" height="9" rx="2" ${o('#d9d4e0', 2.4)}/>`).join('')}
+    <path d="M18 64 C16 32 36 12 60 12 C84 12 104 32 102 64 C100 80 82 86 60 86 C38 86 20 80 18 64 Z" ${o(c)}/>
+    ${shine(80, 28, 8, 4, 30)}
+    ${face(60, 50, { eyes: 'sly', mouth: 'fang', gap: 15 })}`,
+
+  // Last-Call Ghost: a sleepy ghost clutching a coin it took.
+  ghost: (c) => `${shadow(60, 113, 34)}
+    <path d="M24 104 V52 C24 28 40 12 60 12 C80 12 96 28 96 52 V104 L86 96 L76 104 L66 96 L56 104 L46 96 L36 104 Z" ${o(c)}/>
+    ${shine(40, 28, 7, 3.6, -30)}
+    ${face(60, 50, { eyes: 'sly', mouth: 'grin', gap: 13 })}
+    <circle cx="86" cy="74" r="10" ${o('#ffc53d', 3)}/><path d="M86 68 V80" stroke="${INK}" stroke-width="2.4"/>
+    <path d="M92 64 C96 66 98 70 98 74" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>`,
+
+  // VIP Lounge Host: tuxedo, top hat, monocle, very exclusive.
+  host: (c) => `${shadow(60, 113, 40)}
+    <path d="M22 108 C22 76 36 62 60 62 C84 62 98 76 98 108 Z" ${o(c)}/>
+    <path d="M50 62 L60 90 L70 62 Z" fill="#fff" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M60 68 L50 63 V73 Z M60 68 L70 63 V73 Z" ${o('#c2417a', 2.2)}/>
+    <circle cx="60" cy="80" r="1.8" fill="${INK}"/><circle cx="60" cy="88" r="1.8" fill="${INK}"/>
+    <circle cx="60" cy="42" r="26" ${o('#f6d6c0')}/>
+    <rect x="38" y="20" width="44" height="6" rx="3" ${o(c, 3)}/><rect x="44" y="0" width="32" height="22" rx="3" ${o(c, 3)}/>
+    <path d="M44 16 H76" stroke="#c2417a" stroke-width="3"/>
+    ${face(60, 44, { eyes: 'sly', mouth: 'smile', gap: 11, size: 0.9 })}
+    <circle cx="71" cy="44" r="7" fill="none" stroke="#e8b23a" stroke-width="2.6"/><path d="M78 46 C82 52 82 58 78 62" fill="none" stroke="#e8b23a" stroke-width="1.6"/>`,
+
+  // Haunted Arcade Cabinet: the screen is its face.
+  arcade: (c) => `${shadow(60, 114, 42)}
+    <path d="M24 108 V20 C24 14 28 10 34 10 H86 C92 10 96 14 96 20 V108 Z" ${o(c)}/>
+    <rect x="30" y="14" width="60" height="14" rx="3" ${o('#2a1626', 2.6)}/>
+    <text x="60" y="25.5" text-anchor="middle" font-size="10" font-weight="900" font-family="sans-serif" fill="#ffd34d" letter-spacing="1.5">GAME</text>
+    <rect x="32" y="32" width="56" height="40" rx="5" ${o('#1d3b52', 3)}/>
+    ${face(60, 48, { eyes: 'angry', mouth: 'grin', gap: 12, size: 0.8, blush: false }).replace(/fill="#1a1420"/g, 'fill="#7de0d3"')}
+    <path d="M28 76 H92 L96 86 H24 Z" ${o(darken(c, 0.2), 2.8)}/>
+    <path d="M44 80 V72" stroke="${INK}" stroke-width="3" stroke-linecap="round"/><circle cx="44" cy="70" r="4" ${o('#e0485f', 2.2)}/>
+    <circle cx="66" cy="81" r="3" ${o('#ffd34d', 2)}/><circle cx="76" cy="81" r="3" ${o('#6ec3ff', 2)}/>
+    <rect x="48" y="92" width="24" height="10" rx="2" ${o('#2a1626', 2.4)}/><path d="M56 97 H64" stroke="#ffd34d" stroke-width="2"/>`,
+
+  // Security Eye: a dome camera on a bracket, one big lens.
+  camera: (c) => `${shadow(60, 114, 34)}
+    <rect x="52" y="4" width="16" height="20" rx="3" ${o('#9aa5a0', 3)}/>
+    <path d="M14 34 C14 22 30 18 60 18 C90 18 106 22 106 34 Z" ${o('#9aa5a0', 3)}/>
+    <path d="M14 34 H106 C106 74 86 100 60 100 C34 100 14 74 14 34 Z" ${o(c)}/>
+    ${shine(30, 46, 7, 3.6, -30)}
+    <circle cx="60" cy="62" r="24" ${o('#2a1626', 3)}/>
+    <circle cx="60" cy="62" r="14" fill="#3f7cc0"/><circle cx="60" cy="62" r="7" fill="${INK}"/>
+    <circle cx="54" cy="56" r="4" fill="#fff"/>
+    <path d="M30 44 L46 50 M90 44 L74 50" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="92" cy="40" r="4" fill="#e0485f" stroke="${INK}" stroke-width="2"/>`,
+
+  // Closing-Time Janitor: a mop bucket with a mop for hair.
+  janitor: (c) => `${shadow(60, 114, 42)}
+    <path d="M86 6 L74 54" stroke="${INK}" stroke-width="8" stroke-linecap="round"/><path d="M86 6 L74 54" stroke="#c98b5e" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="M30 46 C24 30 34 20 44 26 C46 14 60 12 64 22 C70 12 86 16 84 30 C94 28 98 40 90 48 Z" ${o('#e8e2f2')}/>
+    <path d="M38 34 L36 46 M50 30 L48 46 M62 30 L62 46 M74 32 L76 46" stroke="${INK}" stroke-width="1.8" opacity=".45"/>
+    <path d="M22 46 H98 L90 108 H30 Z" ${o(c)}/>
+    <path d="M22 46 H98" stroke="${INK}" stroke-width="4"/>
+    <path d="M24 50 C34 48 44 54 56 50" fill="none" stroke="#6ec3ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M14 58 C8 58 8 72 16 72 M106 58 C112 58 112 72 104 72" fill="none" stroke="${INK}" stroke-width="3.4"/>
+    ${face(60, 72, { eyes: 'angry', mouth: 'frown', gap: 13 })}
+    <rect x="44" y="94" width="32" height="8" rx="2" fill="#fff" stroke="${INK}" stroke-width="2"/><path d="M50 98 H70" stroke="${INK}" stroke-width="1.6"/>`,
+
   // ----- bosses -----
   // The Net Café: the whole building, awake. Glowing window eyes, a neon sign, the door for a mouth.
   netcafe: (c) => `${shadow(60, 115, 52)}

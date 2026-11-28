@@ -44,7 +44,7 @@ export class Battle {
     const def = ENEMIES[enemyId];
     this.def = def;
     // climb levels 1 and 5: tougher elites and bosses
-    const floorScale = !def.boss && ACTS[run.act]?.hpScale ? ACTS[run.act].hpScale : 1; // Floor 4 reuses Floor 3 enemies, tougher
+    const floorScale = !def.boss && ACTS[run.act]?.hpScale ? ACTS[run.act].hpScale : 1; // Floor 4 enemies are tougher
     const hp = Math.round(randInt(def.hp[0], def.hp[1]) * floorScale * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
