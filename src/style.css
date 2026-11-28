@@ -234,6 +234,7 @@ b { font-weight: 800; }
 .slider { display: grid; gap: var(--s2); font-weight: 800; }
 .slider span { display: flex; justify-content: space-between; }
 .slider input { width: 100%; accent-color: var(--pink); height: 28px; }
+.slider select { width: 100%; font: inherit; font-weight: 700; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink); cursor: pointer; }
 .small-note { margin: 0; font-size: 12px; color: var(--muted); }
 .toggle { display: flex; gap: var(--s2); align-items: center; background: var(--paper-2); border: 2.5px solid var(--ink); border-radius: 14px; padding: 8px 12px; cursor: pointer; }
 .toggle input { width: 22px; height: 22px; accent-color: var(--pink); flex: none; }

@@ -124,7 +124,7 @@ export class Battle {
     const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + (this.flags.noFreeReveal ? 0 : perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0));
     this.flags.noFreeReveal = false; // Sleep in: only the first board
     if (saved + charmReveal > 0) {
-      this.reveal(saved + charmReveal, true, true);
+      this.reveal(saved + charmReveal, true, true, true);
       if (saved) this.log(`${saved} saved reveal${saved > 1 ? 's' : ''} used on the new board.`);
     }
     if (this.has('luckyCat') || this.has('peekMirror')) this.flash(1400);
@@ -252,13 +252,37 @@ export class Battle {
     }
   }
 
+  // Which cards a reveal uncovers, picked at random but spread out: a card whose
+  // twin is already showing is only picked once every other card has one face up.
+  // A new board's reveal (mix) starts with one attack card and one defensive card.
+  pickReveals(n, mix) {
+    const hidden = shuffle(this.board.filter((s) => s.state === 'down'));
+    const shown = new Set(this.board.filter((s) => s.state === 'revealed' || s.state === 'up').map((s) => this.keyOf(s.card)));
+    const picks = [];
+    const take = (s) => { picks.push(s); hidden.splice(hidden.indexOf(s), 1); shown.add(this.keyOf(s.card)); };
+    const fresh = (s) => !shown.has(this.keyOf(s.card));
+    const def = (s) => CARDS[s.card.id] || {};
+    const best = (test) => hidden.find((s) => test(def(s)) && fresh(s)) || hidden.find((s) => test(def(s)));
+    if (mix) {
+      const plain = (c) => c.type !== 'status';
+      const defend = (c) => c.type !== 'attack' && plain(c) && /Block|Heal/i.test(String((typeof c.text === 'function' ? c.text(false) : c.text) || ''));
+      for (const test of [(c) => c.type === 'attack', (c) => (hidden.some((s) => defend(def(s))) ? defend(c) : c.type !== 'attack' && plain(c))]) {
+        if (picks.length >= n) break;
+        const s = best(test);
+        if (s) take(s);
+      }
+    }
+    while (picks.length < n && hidden.length) take(hidden.find(fresh) || hidden[0]);
+    return picks;
+  }
+
   // Reveal n hidden cards. Any reveals that don't fit on this board (because
   // it's nearly cleared) are saved and used on the next board.
-  reveal(n, quiet, noCarry) {
+  reveal(n, quiet, noCarry, mix) {
     if (this.has('palaceKey') && this.playingStyle('memory') && !this.flags.palace) { this.flags.palace = true; n += 1; }
-    const hidden = shuffle(this.board.filter((s) => s.state === 'down'));
-    const used = Math.min(n, hidden.length);
-    hidden.slice(0, used).forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
+    const picks = this.pickReveals(n, mix);
+    const used = picks.length;
+    picks.forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
     const left = n - used;
     if (left > 0 && !noCarry) {
       this.pendingReveal = Math.min(16, (this.pendingReveal || 0) + left);

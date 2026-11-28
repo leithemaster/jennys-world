@@ -9,7 +9,7 @@ import {
 import { SNACKS, snackBar, snackRoom, addSnack, removeSnack, eatOnMap } from '../game/snacks.js';
 import { drawCard, drawCharm, drawEvent, deckStyle, drawStyleCard, drawSnack, rollSnackDrop, bossFor } from '../game/loot.js';
 import { ALL_EVENTS } from '../game/events.js';
-import { sfx, settings, saveSettings, music, musicSlowMo } from '../audio.js';
+import { sfx, settings, saveSettings, music, musicSlowMo, TRACKS, setTrack } from '../audio.js';
 import { BOSS_THEMES, bossStage } from './bossThemes.js';
 import { icon, jennySVG, heroSVG, enemySVG, roomIcon, snackIcon } from './art.js';
 import { CHARACTERS, passiveText } from '../game/characters.js';
@@ -184,12 +184,14 @@ function soundSettings() {
       <button class="btn ghost" data-mute-sfx>${settings.sfxOn ? 'Mute effects' : 'Unmute effects'}</button>
     </div>
     <label class="toggle"><input type="checkbox" data-fast ${settings.fast ? 'checked' : ''}><span><b>Fast mode</b><small>Quicker card flips, enemy turns and animations.</small></span></label>
-    <p class="small-note">Music: “Her Shiba Are Her Knights”</p>
+    <label class="slider"><span>Background music</span>
+      <select data-track aria-label="Background music">${Object.entries(TRACKS).map(([id, t]) => `<option value="${id}" ${settings.track === id ? 'selected' : ''}>${esc(t.name)}${t.by ? ` (${esc(t.by)})` : ''}</option>`).join('')}</select></label>
     <button class="btn" data-close>Done</button>`);
   const el = m.el;
   el.querySelector('[data-music]').addEventListener('input', (e) => { settings.music = e.target.value / 100; settings.musicOn = true; el.querySelector('[data-mv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-music]').textContent = 'Mute music'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('input', (e) => { settings.sfx = e.target.value / 100; settings.sfxOn = true; el.querySelector('[data-sv]').textContent = `${e.target.value}%`; el.querySelector('[data-mute-sfx]').textContent = 'Mute effects'; saveSettings(); });
   el.querySelector('[data-sfx]').addEventListener('change', () => sfx('match', 2));
+  el.querySelector('[data-track]').addEventListener('change', (e) => setTrack(e.target.value));
   el.querySelector('[data-fast]').addEventListener('change', (e) => { settings.fast = e.target.checked; saveSettings(); applyPace(); });
   el.querySelector('[data-mute-music]').addEventListener('click', (e) => { settings.musicOn = !settings.musicOn; e.target.textContent = settings.musicOn ? 'Mute music' : 'Unmute music'; saveSettings(); });
   el.querySelector('[data-mute-sfx]').addEventListener('click', (e) => { settings.sfxOn = !settings.sfxOn; e.target.textContent = settings.sfxOn ? 'Mute effects' : 'Unmute effects'; saveSettings(); sfx('click'); });

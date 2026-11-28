@@ -3,7 +3,7 @@
 // Defaults: music 25%, effects 40%. Settings persist in localStorage.
 
 const KEY = 'sm.audio';
-const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false };
+const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false, track: 'love' };
 export const settings = { ...DEFAULTS, ...safeLoad() };
 
 function safeLoad() {
@@ -15,7 +15,14 @@ export function saveSettings() {
 }
 
 // ---------- music ----------
-export const music = new Audio(`${import.meta.env.BASE_URL}audio/her-shiba-are-her-knights.mp3`);
+// Background tracks. Players pick one in Settings; the first is the default.
+export const TRACKS = {
+  love: { name: 'Love in Japan', by: 'Nebulite', file: 'love-in-japan.mp3' },
+  shiba: { name: 'Her Shiba Are Her Knights', file: 'her-shiba-are-her-knights.mp3' },
+};
+if (!TRACKS[settings.track]) settings.track = DEFAULTS.track;
+const trackUrl = (id) => `${import.meta.env.BASE_URL}audio/${TRACKS[id].file}`;
+export const music = new Audio(trackUrl(settings.track));
 music.loop = true;
 music.preload = 'auto';
 let started = false;
@@ -26,6 +33,15 @@ function applyMusicVolume() {
     if (settings.musicOn && settings.music > 0 && music.paused && !document.hidden) music.play().catch(() => {});
     if ((!settings.musicOn || settings.music === 0) && !music.paused) music.pause();
   }
+}
+
+// Switch the background track (keeps volume and mute as they are).
+export function setTrack(id) {
+  if (!TRACKS[id] || id === settings.track) return;
+  settings.track = id;
+  music.src = trackUrl(id);
+  saveSettings();
+  if (started && settings.musicOn && settings.music > 0 && !document.hidden) music.play().catch(() => {});
 }
 
 // Browsers only allow audio after the first tap/click/key.
