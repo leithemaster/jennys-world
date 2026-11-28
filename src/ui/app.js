@@ -16,7 +16,8 @@ import { CHARACTERS, passiveText } from '../game/characters.js';
 import { catalogScreen } from './catalog.js';
 import { blobBackdrop, guardianChibi, managerChibi } from './chibi.js';
 import { GUARDIANS, guardianFor, guardiansOn, lastGuardian } from '../game/guardians.js';
-import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd } from '../game/outfits.js';
+import { OUTFITS, outfitOpen, wornOutfit, wearOutfit, syncOutfitUnlocks, outfitsForBoss, outfitsForRunEnd, CARD_BACKS, backOpen, wornBack, useBack } from '../game/outfits.js';
+import { backStyle, backEmblem } from './cardBacks.js';
 import { charmIcon, uiIcon } from './charmIcons.js';
 import { GAME, T } from '../game/terms.js';
 import {
@@ -51,6 +52,7 @@ function syncUnlocks() {
   if (new URLSearchParams(location.search).has('unlockall')) {
     Object.keys(CHARACTERS).forEach((id) => unlock('characters', id));
     Object.keys(OUTFITS).forEach((id) => unlock('outfits', id));
+    Object.keys(CARD_BACKS).forEach((id) => unlock('cardbacks', id));
     Object.keys(CARDS).filter((id) => !isFound('cards', id)).forEach(noteCardSeen);
     Object.keys(CHARMS).filter((id) => !isFound('charms', id)).forEach(noteCharmSeen);
     Object.keys(ENEMIES).filter((id) => !isFound('enemies', id)).forEach(noteEnemyMet);
@@ -515,7 +517,12 @@ export function title() {
 }
 
 // ---------- couple outfits ----------
+const backFace = (id) => `<span class="face back cb" style="${backStyle(id)}">${backEmblem(id)}</span>`;
 const outfitNote = (name) => {
+  if (name.startsWith('back:')) {
+    const b = name.slice(5);
+    return `<div class="unlock-note"><span class="back-thumb">${backFace(b)}</span><p><b>New card back: ${esc(CARD_BACKS[b].name)}!</b> Pick it from Outfits on the title screen.</p></div>`;
+  }
   const id = Object.keys(OUTFITS).find((k) => OUTFITS[k].name === name);
   return `<div class="unlock-note"><span class="hero-art">${jennySVG({ outfit: id, crop: true })}</span><span class="hero-art">${heroSVG('toni', { outfit: id, crop: true })}</span><p><b>New outfits: ${esc(name)}!</b> Put them on from Outfits on the title screen.</p></div>`;
 };
@@ -531,7 +538,7 @@ function outfitScreen() {
   const toniOpen = heroOpen('toni');
   const body = () => `<h2>Couple outfits</h2>
     <p class="small-note">Every set has a matching look for Jenny and Toni.${toniOpen ? '' : ' Toni joins after the Floor 1 boss.'}</p>
-    <div class="outfit-list">${Object.entries(OUTFITS).map(([id, o]) => {
+    <div class="outfit-list"><div class="outfit-sets">${Object.entries(OUTFITS).map(([id, o]) => {
       const open = outfitOpen(id);
       const jOn = wornOutfit('jenny') === id, tOn = wornOutfit('toni') === id;
       return `<div class="outfit${open ? '' : ' locked'}">
@@ -544,9 +551,29 @@ function outfitScreen() {
         </div>` : `<em class="lock-tag">Locked</em>`}</div>
       </div>`;
     }).join('')}</div>
+    <h2 class="outfit-head">Card backs</h2>
+    <p class="small-note">The face-down side of the cards on the board.</p>
+    <div class="back-list">${Object.entries(CARD_BACKS).map(([id, b]) => {
+      const open = backOpen(id), on = wornBack() === id;
+      return `<button class="back-pick${on ? ' on' : ''}${open ? '' : ' locked'}" data-back="${id}" ${open ? '' : 'disabled'} aria-pressed="${on}">
+        <span class="back-thumb">${backFace(id)}</span>
+        <b>${esc(b.name)}</b><small>${esc(open ? b.desc : b.unlock.text)}</small>${on ? '<em class="tag">Using</em>' : open ? '' : '<em class="lock-tag">Locked</em>'}
+      </button>`;
+    }).join('')}</div></div>
     <button class="btn" data-close>Done</button>`;
   const m = modal(body(), { wide: true });
-  const bind = () => m.el.querySelectorAll('[data-wear]').forEach((b) => b.addEventListener('click', () => {
+  const redraw = () => {
+    const box = m.el.querySelector('.outfit-list');
+    const scroll = box.scrollTop;
+    box.outerHTML = new DOMParser().parseFromString(`<div>${body()}</div>`, 'text/html').querySelector('.outfit-list').outerHTML;
+    m.el.querySelector('.outfit-list').scrollTop = scroll;
+    bind();
+  };
+  const bind = () => {
+    m.el.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { useBack(b.dataset.back); sfx('click'); redraw(); }));
+    bindWear();
+  };
+  const bindWear = () => m.el.querySelectorAll('[data-wear]').forEach((b) => b.addEventListener('click', () => {
     const who = b.dataset.wear, id = b.dataset.set;
     if (who !== 'toni') wearOutfit('jenny', id);
     if (who !== 'jenny') wearOutfit('toni', id);
@@ -924,7 +951,7 @@ function battleScreen(enemyId, kind) {
     const hadFocus = boardEl.contains(document.activeElement);
     boardEl.style.setProperty('--cols', gridCols(b.board.length));
     boardEl.innerHTML = b.board.map((s, i) => `<button class="slot" data-i="${i}">
-        <span class="face back">${icon('star')}</span>
+        ${backFace(wornBack())}
         <span class="face front">${cardHTML(s.card)}</span>
       </button>`).join('');
     boardEl.querySelectorAll('.slot').forEach((el) => el.addEventListener('click', () => battle.flip(Number(el.dataset.i))));
