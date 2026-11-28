@@ -391,11 +391,9 @@ export const CARDS = {
     fx: (b, u) => { const had = b.enemy.poison > 0; b.applyEnemy('poison', u ? 3 : 2); if (had) b.applyEnemy('poison', u ? 4 : 3); },
   },
   pingFlood: {
-    arch: 'glitch', name: 'Ping Flood', type: 'skill', rarity: 'uncommon', icon: 'ping',
-    text: (u) => `${u ? `Apply 3 ${T.glitch}. ` : ''}Deal damage equal to the enemy's ${T.glitch}.`,
-    requires: (r, h) => h.deckHas(GLITCH_CARDS),
-    needs: `a ${T.glitch} card`,
-    fx: (b, u) => { if (u) b.applyEnemy('poison', 3); if (b.enemy.poison > 0) b.attack(b.enemy.poison, { raw: true }); },
+    arch: 'glitch', name: 'Ping Flood', type: 'attack', rarity: 'uncommon', icon: 'ping',
+    text: (u) => `Deal 2, ${u ? 4 : 3} times. Each hit applies 1 ${T.glitch}.`,
+    fx: (b, u) => { for (let i = 0; i < (u ? 4 : 3); i++) { b.attack(2); if (b.enemy.hp > 0) b.applyEnemy('poison', 1); } },
   },
   holdTheLine: {
     arch: 'guard', name: 'Hold the Line', type: 'skill', rarity: 'common', icon: 'barricade',
