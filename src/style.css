@@ -717,6 +717,8 @@ html.fast .bubble, html.fast .modal { animation-duration: 140ms; }
 /* Event-only cards and charms: never in rewards or shops. */
 .r-event { box-shadow: inset 0 0 0 3px #a98bf0; }
 .r-event .card-type::after { content: ' ✦'; color: #7a5ab3; }
+.r-legendary { box-shadow: inset 0 0 0 3px #f2b705, 0 0 12px 2px rgba(242, 183, 5, .55); }
+.r-legendary .card-type::after { content: ' ♛ Legendary'; color: #c98a00; }
 .cat .tag.ct-event { background: #a98bf0; color: #fff; }
 
 

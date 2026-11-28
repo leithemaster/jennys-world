@@ -18,7 +18,7 @@ export const MAX_ATTACK_RUN = 2;
 const DAMAGING = ['atk', 'atkBlock', 'atkStatus', 'steal', 'drain'];
 export const moveDamage = (m) => (DAMAGING.includes(m.t) || (m.t === 'ban' && m.n) ? m.n * (m.times || 1) : 0);
 export const moveIs = (m, kind) => (kind === 'attack' ? moveDamage(m) > 0 : m.t === kind);
-export const RULES = { freeReveal: [3, 3, 4], boardPairs: [8, 9, 10], sleepAt: 3, sleepGrow: 3, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs / freeReveal: per floor (1, 2, 3); boardPairs = deck cards per board, each shown as a pair
+export const RULES = { freeReveal: [3, 3, 4], boardPairs: [8, 9, 10], sleepAt: 3, sleepCap: 12, sleepTurns: 2, bossSleepTurns: 1 }; // boardPairs / freeReveal: per floor (1, 2, 3); boardPairs = deck cards per board, each shown as a pair
 export const perFloor = (v, act = 0) => (Array.isArray(v) ? v[Math.min(act, v.length - 1)] : v);
 // Animation pacing. The UI sets scale < 1 for Fast mode; the simulator leaves it at 1.
 export const PACE = { scale: 1 };
@@ -177,7 +177,8 @@ export class Battle {
 
   miss() {
     this.emit('sfx', 'miss');
-    if (this.flags.comboLock) { this.log(`Miss! Choco Sticks keep your ${T.combo}.`); }
+    if (this.powers.gameTime) { this.log(`Miss! Game Time keeps your ${T.combo}.`); }
+    else if (this.flags.comboLock) { this.log(`Miss! Choco Sticks keep your ${T.combo}.`); }
     else if (this.flags.keepCombo) { this.flags.keepCombo = false; this.log(`Miss! Momentum keeps your ${T.combo}.`); }
     else if (this.has('kittenBell') && !this.bellUsed) { this.bellUsed = true; this.log(`Miss! Kitten Bell keeps your ${T.combo}.`); }
     else if (this.has('tennisBall') && !this.flags.tennisBall) { this.flags.tennisBall = true; this.log(`Miss! Tennis Ball keeps your ${T.combo}.`); }
@@ -194,7 +195,7 @@ export class Battle {
     a.state = 'gone'; b.state = 'gone';
     const card = a.card;
     const def = CARDS[card.id];
-    this.combo += this.has('keyboard') ? 2 : 1;
+    this.combo += (this.has('keyboard') ? 2 : 1) + (this.powers.gameTime ? 1 : 0);
     this.matchesThisTurn += 1;
     this.emit('sfx', 'match', this.combo);
     if (def.exhaust || def.type === 'power') { card._exhaust = true; if (b.card !== a.card) b.card._exhaust = true; }
@@ -205,9 +206,11 @@ export class Battle {
     if (this.matchesThisTurn === 1 && this.has('spikedCollar')) this.gainBlock(3);
     if (this.has('encore') && (def.arch === 'combo' || def.arch2 === 'combo') && !this.flags.encore) { this.flags.encore = true; this.combo += 1; }
     if (this.has('crossover') && def.arch2 && !this.crossoverUsed) { this.crossoverUsed = true; this.gainEnergy(2); this.log(`Crossover! +2 ${T.energy}.`); }
+    const castle = this.powers.mindCastle;
     this.playing = def;
     def.fx(this, !!card.up);
     this.playing = null;
+    if (castle && ++this.powers.castleCount % 2 === 0) { this.gainEnergy(1); this.log(`Mind Castle: +1 ${T.energy}.`); }
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.matchesThisFight += 1;
     if (this.has('matchingCharms') && this.matchesThisFight % 4 === 0) { this.gainEnergy(1); this.heal(3); this.log(`Matching Phone Charms! +1 ${T.energy}.`); }
@@ -309,11 +312,24 @@ export class Battle {
     return true;
   }
 
+  // Nightmare: eat the enemy's Sleepy (or, if it's asleep, the Sleepy that put it
+  // to sleep, waking it up). Deal and heal for each stack eaten.
+  nightmare(dmg, heal) {
+    const e = this.enemy;
+    const stacks = e.asleep ? e.dream || 0 : e.weak;
+    if (e.asleep) { e.asleep = 0; this.log(`${e.name} wakes from a nightmare!`); }
+    e.weak = 0;
+    if (!stacks) { this.log(`No ${T.sleepy} to eat.`); return; }
+    this.log(`Nightmare eats ${stacks} ${T.sleepy}.`);
+    this.attack(dmg * stacks);
+    this.heal(heal * stacks);
+  }
+
   // ---------- combat helpers (used by card effects) ----------
   calcDamage(base, from, to) {
     let d = base + from.strength;
     if (from.weak > 0) d *= 0.75;
-    if (to.vuln > 0) d *= to === this.enemy && this.has('trending') ? 1.75 : 1.5;
+    if (to.vuln > 0) d *= to === this.enemy && this.powers.cancelled ? 2 : to === this.enemy && this.has('trending') ? 1.75 : 1.5;
     if (to === this.enemy && to.asleep > 0 && this.has('napBuddy')) d *= 1.3;
     if (from === this.enemy && from.vuln > 0 && this.has('growl')) d *= 0.75;
     if (from === this.enemy && climbOn(this.run, 3)) d *= CR.enemyDamage;
@@ -343,6 +359,7 @@ export class Battle {
     if (this.has('guardDog') && this.playing) b += 2;
     this.player.block += b;
     this.emit('float', 'player', `+${b}`, 'block');
+    if (this.powers.riot && b >= 2) this.attack(Math.floor(b / 2), { raw: true });
   }
   gainEnergy(n, quiet) {
     this.energy = Math.max(0, this.energy + n);
@@ -361,6 +378,7 @@ export class Battle {
     const extra = n - healed;
     if (opts.cozy && extra > 0) { this.attack(extra, { raw: true }); this.log(`Cozy: ${extra} extra healing hits ${this.enemy.name}.`); }
     if (this.powers.sweetDreams && healed > 0) this.attack(healed, { raw: true });
+    if (this.powers.healBurn) this.attack(n * 2, { raw: true });
     if (this.has('bellyRubs') && n > 0) this.gainBlock(2);
   }
   selfDamage(n) {
@@ -378,11 +396,12 @@ export class Battle {
     e[k] += n;
     this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k);
     // Sleepy builds up to Asleep: the enemy skips its next turns. Each time it
-    // wakes up, it takes 1 more Sleepy to put it back to sleep.
+    // wakes up, it takes twice as much Sleepy to put it back to sleep (3, 6, 12, 12...).
     if (k === 'weak' && !e.asleep && e.weak >= e.sleepAt) {
       e.weak = 0;
       e.asleep = (this.def.boss ? RULES.bossSleepTurns : RULES.sleepTurns) + this.powers.deepSleep;
-      e.sleepAt += RULES.sleepGrow;
+      e.dream = e.sleepAt; // what Nightmare eats while it sleeps
+      e.sleepAt = Math.min(RULES.sleepCap, e.sleepAt * 2); // 3, 6, 12, then stays at 12
       this.emit('float', 'enemy', T.asleep, 'weak');
       this.emit('sfx', 'clear');
       this.log(`${e.name} falls ${T.asleep.toLowerCase()} for ${e.asleep} turn${e.asleep > 1 ? 's' : ''}!`);
@@ -429,7 +448,7 @@ export class Battle {
     if (e.poison > 0) {
       e.hp = Math.max(0, e.hp - e.poison);
       this.emit('hit', 'enemy', e.poison, 0, 'poison');
-      if (!this.has('hexRibbon')) e.poison -= 1;
+      if (!this.has('hexRibbon') && !this.powers.hacked) e.poison -= 1;
       if (this.checkEnd()) { this.busy = false; return; }
     }
     if (e.asleep > 0) {
@@ -600,7 +619,7 @@ export class Battle {
 
 export const STATUS_NAMES = { weak: T.sleepy, vuln: T.exposed, poison: T.glitch, strength: T.spirit, thorns: T.spikes, asleep: T.asleep };
 export const STATUS_HELP = {
-  weak: `${T.sleepy}: deals 25% less damage. An enemy with ${RULES.sleepAt} ${T.sleepy} falls ${T.asleep} (each time it wakes up, it takes ${RULES.sleepGrow} more).`,
+  weak: `${T.sleepy}: deals 25% less damage. An enemy with ${RULES.sleepAt} ${T.sleepy} falls ${T.asleep} (each time it wakes up it takes double, up to ${RULES.sleepCap}).`,
   asleep: `${T.asleep}: skips its turns until it wakes up. Can't get more ${T.sleepy} while asleep. ${T.glitch} still ticks.`,
   vuln: `${T.exposed}: takes 50% more damage.`,
   poison: `${T.glitch}: loses that much ${T.hp} each turn, then ${T.glitch} goes down by 1.`,

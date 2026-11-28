@@ -6,7 +6,8 @@
 // Wording rule: this game has no "draw a card". Anything that would draw
 // a card reveals cards instead.
 // type: attack | skill | power | status
-// rarity: starter | common | uncommon | rare | event | status
+// rarity: starter | common | uncommon | rare | event | legendary | status
+//   legendary: one per style, only from the Legendary Pull event; you can own just one
 //   event: only given by events (see `gives` in events.js), never in rewards or shops
 //   gift: only come with a guardian's charm (see `gives` in charms.js)
 // fx(b, up) runs the effect inside a Battle (b); `up` is true when upgraded.
@@ -429,6 +430,44 @@ export const CARDS = {
     fx: (b, u) => b.attack(u ? 20 : 14),
   },
 
+  // ---------- legendary: one per style, offered by the Legendary Pull event from Floor 2 ----------
+  // You can only own one legendary card. See LEGENDARY in loot.js for the odds.
+  hacked: {
+    arch: 'glitch', name: 'Hacked', type: 'power', rarity: 'legendary', icon: 'skull',
+    text: (u) => `${T.power}: ${u ? `apply 5 ${T.glitch}, then ` : ''}double the enemy's ${T.glitch}. ${T.glitch} no longer goes down.`,
+    fx: (b, u) => { if (u) b.applyEnemy('poison', 5); b.powers.hacked = true; b.applyEnemy('poison', b.enemy.poison); },
+  },
+  riotShield: {
+    arch: 'guard', name: 'Riot Shield', type: 'power', rarity: 'legendary', icon: 'shieldHit',
+    text: (u) => `${T.power}: ${T.block} no longer resets. Whenever you gain ${T.block}, deal half of it.${u ? ` ${T.block} 10.` : ''}`,
+    fx: (b, u) => { b.powers.fortress = true; b.powers.riot = true; if (u) b.gainBlock(10); },
+  },
+  gameTime: {
+    arch: 'combo', name: 'Game Time', type: 'power', rarity: 'legendary', icon: 'comet',
+    text: (u) => `${T.power}: misses no longer reset your ${T.combo}. Every match adds 1 more ${T.combo}.${u ? ` +3 ${T.combo}.` : ''}`,
+    fx: (b, u) => { b.powers.gameTime = true; if (u) b.combo += 3; },
+  },
+  mindCastle: {
+    arch: 'memory', name: 'Mind Castle', type: 'power', rarity: 'legendary', icon: 'crystal',
+    text: (u) => `${T.power}: every 2nd pair you match gives +1 ${T.energy}.${u ? ' Reveal 4.' : ''}`,
+    fx: (b, u) => { b.powers.mindCastle = true; b.powers.castleCount = 0; if (u) b.reveal(4); },
+  },
+  nightmare: {
+    arch: 'dreamy', name: 'Nightmare', type: 'attack', rarity: 'legendary', icon: 'bat',
+    text: (u) => `Eat all the enemy's ${T.sleepy} (if ${T.asleep}: wake it, eat what put it to sleep). Per ${T.sleepy}: deal ${u ? 8 : 6}, heal ${u ? 4 : 3}.`,
+    fx: (b, u) => b.nightmare(u ? 8 : 6, u ? 4 : 3),
+  },
+  healBurn: {
+    arch: 'cozy', name: 'Heal Burn', type: 'power', rarity: 'legendary', icon: 'fire',
+    text: (u) => `${T.power}: whenever you heal, deal twice that much to the enemy. Heal ${u ? 18 : 12}.`,
+    fx: (b, u) => { b.powers.healBurn = true; b.heal(u ? 18 : 12); },
+  },
+  cancelled: {
+    arch: 'exposed', name: 'Cancelled', type: 'power', rarity: 'legendary', icon: 'megaphone',
+    text: (u) => `${T.power}: apply ${u ? 6 : 4} ${T.exposed}. ${T.exposed} never wears off, and ${T.exposed} enemies take double damage.`,
+    fx: (b, u) => { b.powers.roast = true; b.powers.cancelled = true; b.applyEnemy('vuln', u ? 6 : 4); },
+  },
+
   // ---------- guardian gifts: only come with a guardian's charm (see `gives` in charms.js) ----------
   zoomie: {
     arch: 'combo', name: 'Zoomie', type: 'attack', rarity: 'gift', icon: 'zoom',
@@ -521,3 +560,5 @@ export function canUpgrade(c) {
   const r = CARDS[c.id].rarity;
   return !c.up && r !== 'status' && r !== 'curse';
 }
+
+export const LEGENDARY_OF = Object.fromEntries(Object.entries(CARDS).filter(([, d]) => d.rarity === 'legendary').map(([id, d]) => [d.arch, id]));

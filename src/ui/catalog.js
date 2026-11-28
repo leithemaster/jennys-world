@@ -13,7 +13,7 @@ import { outfitOpen } from '../game/outfits.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
 const POOL = { haru: "Haru's Gift", guardian: 'Guardian gift', drop: 'Drop', shop: 'Shop only', boss: 'Boss reward', event: 'Event only', special: 'Special event' };
-const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, event: 4, gift: 5, status: 6, curse: 7 };
+const RAR_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, legendary: 4, event: 5, gift: 6, status: 7, curse: 8 };
 const KIND_ORDER = { Normal: 0, Elite: 1, Boss: 2 };
 const HIDDEN = '???';
 
@@ -128,7 +128,7 @@ export function catalogScreen(app, { onBack }) {
       { label: 'Effect', cell: (r) => (r.found ? esc(r.desc) : '') },
       { label: 'Eat it in', key: 'when', cell: (r) => (r.found ? `<span class="small">${esc(r.when)}</span>` : '') },
       { label: 'Where from', cell: (r) => (r.found ? `<span class="small">${esc(r.from || 'Drops and shops')}</span>` : '') },
-    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare'], ['event', 'Event only'], ['gift', 'Guardian gift']], 'rarity',
+    ], [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare'], ['legendary', 'Legendary'], ['event', 'Event only'], ['gift', 'Guardian gift']], 'rarity',
     `One use each, and eating one doesn’t end your turn. You start with ${D.snackRules.slots} slots.`),
 
     enemies: () => table(D.enemies.map((r) => hide(r, ['kind', 'floor', 'art'])), [
@@ -163,9 +163,9 @@ export function catalogScreen(app, { onBack }) {
 
     styles: () => {
       const cardFound = Object.fromEntries(D.cards.map((c) => [c.name, c.found]));
-      const nm = (n) => (cardFound[n.replace(' (hybrid)', '').replace(' (event)', '')] === false ? HIDDEN : n);
+      const nm = (n) => (cardFound[n.replace(' (hybrid)', '').replace(' (event)', '').replace(' (legendary)', '')] === false ? HIDDEN : n);
       return `<section class="sheet"><p class="note">Lean into a style and you’ll be offered more of it.</p>
-      <ul class="opts"><li><b>Sleepy → Asleep:</b> at ${D.rules.sleepAt} Sleepy an enemy skips ${D.rules.sleepTurns} turns (bosses ${D.rules.bossSleepTurns}). Each time it wakes, it takes ${D.rules.sleepGrow} more.</li><li><b>Cozy:</b> on a Cozy card, healing past your max HP hits the enemy.</li></ul>
+      <ul class="opts"><li><b>Sleepy → Asleep:</b> at ${D.rules.sleepAt} Sleepy an enemy skips ${D.rules.sleepTurns} turns (bosses ${D.rules.bossSleepTurns}). Each time it wakes it takes double, up to ${D.rules.sleepCap}.</li><li><b>Cozy:</b> on a Cozy card, healing past your max HP hits the enemy.</li></ul>
       <div class="grid">${D.styles.map((s) => `<article class="tile" style="border-top:10px solid ${s.color}"><h3>${esc(s.name)}</h3><p>${esc(s.desc)}</p>
         <p class="small"><b>Cards:</b> ${esc(s.cards.map(nm).join(', '))}</p><p class="small"><b>Charms:</b> ${esc(s.charms.join(', ') || '—')}</p></article>`).join('')}</div></section>
       <section class="sheet"><h3>Statuses</h3>

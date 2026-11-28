@@ -1307,7 +1307,7 @@ function eventScreen() {
     randomCard: (rar) => drawCard(run, rar || 'common'),
     styleCard: (arch, rar) => drawStyleCard(run, arch, rar || 'uncommon') || drawCard(run, rar || 'uncommon'),
     upgradeAll: (pred) => { const ups = run.deck.filter((c) => canUpgrade(c) && pred(CARDS[c.id])); ups.forEach((c) => (c.up = true)); return ups.length; },
-    pickCopy: async () => { const i = await pickFromDeck('Copy a card', (c) => CARDS[c.id].rarity !== 'curse' && CARDS[c.id].rarity !== 'status'); if (i === null) return 'No card copied.'; const c = run.deck[i]; takeCard({ id: c.id, ...(c.up ? { up: true } : {}) }); return `${cardName(c)} copied!`; },
+    pickCopy: async () => { const i = await pickFromDeck('Copy a card', (c) => !['curse', 'status', 'legendary'].includes(CARDS[c.id].rarity)); if (i === null) return 'No card copied.'; const c = run.deck[i]; takeCard({ id: c.id, ...(c.up ? { up: true } : {}) }); return `${cardName(c)} copied!`; },
     // No room: offer Take / Swap one out / Leave it (paid snacks refund when left).
     addSnack: async (id, paid = 0) => { const k = id || drawSnack(run); noteSnackSeen(k); return takeSnack(k) ? SNACKS[k].name : offerSnack(k, paid); },
     pickSnack: async (t) => { const i = await pickSnackSlot(t); if (i === null) return null; return SNACKS[removeSnack(run, i)].name; },
@@ -1373,7 +1373,7 @@ function eventScreen() {
 }
 
 // Doodle (Jenny's rest choice): any card with a style.
-const doodleable = (c) => !!CARDS[c.id].arch && !['status', 'curse', 'gift', 'event'].includes(CARDS[c.id].rarity);
+const doodleable = (c) => !!CARDS[c.id].arch && !['status', 'curse', 'gift', 'event', 'legendary'].includes(CARDS[c.id].rarity);
 
 function restScreen() {
   const heal = run.charms.includes('footRub') ? run.maxHp : Math.round(run.maxHp * ((climbOn(run, 2) ? CLIMB_RULES.napHeal : 0.3) + (run.charms.includes('neckPillow') ? 0.15 : 0) + (run.charms.includes('pillowPet') ? 0.15 : 0)));

@@ -98,7 +98,7 @@ export function buildCatalog() {
 
   const styles = Object.entries(ARCHES).map(([id, a]) => ({
     id, name: a.name, color: a.color, desc: a.desc,
-    cards: Object.values(CARDS).filter((c) => c.arch === id || c.arch2 === id).map((c) => c.name + (c.arch2 ? ' (hybrid)' : '') + (c.rarity === 'event' ? ' (event)' : '')),
+    cards: Object.values(CARDS).filter((c) => c.arch === id || c.arch2 === id).map((c) => c.name + (c.arch2 ? ' (hybrid)' : '') + (c.rarity === 'event' ? ' (event)' : '') + (c.rarity === 'legendary' ? ' (legendary)' : '')),
     charms: Object.values(CHARMS).filter((c) => c.style === id).map((c) => c.name),
   }));
 
@@ -126,7 +126,7 @@ export function buildCatalog() {
   const acts = ACTS.map((a) => ({ name: a.name, normals: a.normals.map((n) => ENEMIES[n].name), elites: a.elites.map((n) => ENEMIES[n].name), bosses: a.bosses.map((n) => ENEMIES[n].name) }));
 
   const rules = {
-    sleepAt: RULES.sleepAt, sleepTurns: RULES.sleepTurns, bossSleepTurns: RULES.bossSleepTurns, sleepGrow: RULES.sleepGrow,
+    sleepAt: RULES.sleepAt, sleepTurns: RULES.sleepTurns, bossSleepTurns: RULES.bossSleepTurns, sleepCap: RULES.sleepCap,
     stickerEvery: CHARACTERS.jenny.passive.n, specialNeed: SPECIAL_NEED,
   };
 

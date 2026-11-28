@@ -16,7 +16,7 @@
 
 import { CARDS } from './cards.js';
 import { CHARMS } from './charms.js';
-import { EVENTS, SPECIAL_EVENTS } from './events.js';
+import { EVENTS, SPECIAL_EVENTS, LEGENDARY_EVENT, SPECIAL_NEED } from './events.js';
 import { ACTS } from './enemies.js';
 import { SNACKS, SNACK_DROP } from './snacks.js';
 import { climbOn, CLIMB_RULES as CR } from './climb.js';
@@ -102,7 +102,7 @@ export function deckStyle(run) {
 
 export function drawStyleCard(run, arch, rarity, exclude = []) {
   const ok = (id) => !exclude.includes(id) && cardAllowed(run, id);
-  const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && !['event', 'gift'].includes(CARDS[id].rarity) && (!r || CARDS[id].rarity === r));
+  const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && !['event', 'gift', 'legendary'].includes(CARDS[id].rarity) && (!r || CARDS[id].rarity === r));
   return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || drawFrom(run, `card:${arch}:any`, () => ids(), ok);
 }
 
@@ -167,7 +167,33 @@ export function drawSpecialEvent(run) {
   return SPECIAL_EVENTS.find((e) => e.id === id);
 }
 
+// Legendary Pull: from Floor 2 on, the first "?" room of each floor where your
+// deck has a main style (3+ cards) rolls once. More style cards = better odds,
+// capped so it comes up in at most about 1 run in 5 (two floors at ~10.5%).
+// Never offered if you already own a legendary card.
+export const LEGENDARY = { fromAct: 1, perCard: 0.015, maxPerFloor: 0.105 };
+export function legendaryChance(run) {
+  const style = deckStyle(run);
+  if (!style || style.count < SPECIAL_NEED) return 0;
+  return Math.min(LEGENDARY.maxPerFloor, LEGENDARY.perCard * style.count);
+}
+export function drawLegendaryEvent(run) {
+  if (run.act < LEGENDARY.fromAct || run.legendaryOffered) return null;
+  if (run.deck.some((c) => CARDS[c.id].rarity === 'legendary')) return null;
+  run.legendaryFloors ||= [];
+  if (run.legendaryFloors.includes(run.act)) return null;
+  const p = legendaryChance(run);
+  if (!p) return null; // no main style yet: this floor's roll waits
+  run.legendaryFloors.push(run.act);
+  if (Math.random() >= p) return null;
+  run.legendaryOffered = true;
+  run.legendaryStyle = deckStyle(run).arch;
+  return LEGENDARY_EVENT;
+}
+
 export function drawEvent(run) {
+  const lg = drawLegendaryEvent(run);
+  if (lg) return lg;
   const sp = drawSpecialEvent(run);
   if (sp) return sp;
   const ok = (id) => { const ev = EVENTS.find((e) => e.id === id); return !ev.requires || ev.requires(run); };

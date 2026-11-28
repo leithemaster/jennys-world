@@ -16,7 +16,7 @@
 // pool 'special') only come from here.
 
 import { T } from './terms.js';
-import { CARDS, ARCHES } from './cards.js';
+import { CARDS, ARCHES, LEGENDARY_OF } from './cards.js';
 import { snackRoom, snackCount, SNACKS } from './snacks.js';
 
 // Non-starter cards in the deck tagged with this style (hybrids count for both).
@@ -383,4 +383,28 @@ export const SPECIAL_EVENTS = [
   },
 ];
 
-export const ALL_EVENTS = [...EVENTS, ...SPECIAL_EVENTS];
+// ---------- legendary ----------
+// Offers the legendary card of your main style (run.legendaryStyle, set by
+// drawLegendaryEvent in loot.js). Rare: see LEGENDARY in loot.js for the odds.
+export const LEGENDARY_EVENT = {
+  id: 'legendaryPull', special: true, gives: { cards: Object.values(LEGENDARY_OF) },
+  needs: `${SPECIAL_NEED}+ cards of one style, Floor 2 on (rare)`,
+  title: 'Legendary Pull',
+  text: 'The capsule machine by the restrooms has one gold capsule left. The label just says LEGENDARY.',
+  options: [
+    { label: 'Open the gold capsule', note: 'Gain the legendary card for your main style. You can only own one.' },
+    { label: 'Leave it', note: 'Someone else will get lucky.' },
+  ],
+  setup: (r, api) => {
+    const id = LEGENDARY_OF[r.legendaryStyle];
+    return {
+      style: r.legendaryStyle, card: id,
+      options: [
+        { label: `Open it: take ${CARDS[id].name}`, note: 'Legendary. You can only own one legendary card.', go: () => `It's real. You got ${api.addCard(id)}!` },
+        { label: 'Leave it', go: () => 'You let the capsule be. Someone else will get lucky.' },
+      ],
+    };
+  },
+};
+
+export const ALL_EVENTS = [...EVENTS, ...SPECIAL_EVENTS, LEGENDARY_EVENT];
