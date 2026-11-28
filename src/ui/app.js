@@ -97,12 +97,13 @@ function charmBadge(id, cls = '') {
 }
 
 function header() {
-  const roomNo = run.pos ? (run.pos.row === 'boss' ? 10 : run.pos.row + 1) : 0;
+  const floorRooms = run.map ? run.map.rows.length + 1 : 10;
+  const roomNo = run.pos ? (run.pos.row === 'boss' ? floorRooms : run.pos.row + 1) : 0;
   return `<header class="bar">
     <div class="bar-left">
       <span class="pill hp" aria-label="Health">${uiIcon('heart')}<b>${run.hp}</b>/${run.maxHp}</span>
       <span class="pill coins" aria-label="Coins">${uiIcon('coin')}<b>${run.coins}</b></span>
-      <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/10</small></span>
+      <span class="pill floor">${esc(ACTS[run.act].name)} <small>room ${roomNo}/${floorRooms}</small></span>
       ${run.climb ? `<span class="pill climb" data-tip="${esc(climbTip(run.climb))}" aria-label="Level ${run.climb}">${uiIcon('flag')}<b>${run.climb}</b></span>` : ''}
     </div>
     <div class="bar-snacks" aria-label="Snack bar">${snackBar(run).map((id, i) => (id ? `<button class="snack" data-snack="${i}" data-tip="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}" aria-label="${esc(`${SNACKS[id].name}: ${SNACKS[id].desc}`)}">${snackIcon(id)}</button>` : '<span class="snack empty" title="Empty snack slot"></span>')).join('')}</div>
@@ -698,7 +699,7 @@ function mapScreen() {
   const boss = ENEMIES[bossFor(run)];
   const upstairs = run.act < ACTS.length - 1 ? guardianFor(run, run.act + 1) : null; // picked once, like the boss
   app.innerHTML = `${header()}<main class="map-screen">
-    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p>${upstairs ? `<p class="map-guardian" data-tip="${esc(`${GUARDIANS[upstairs].name} is waiting at the top of ${ACTS[run.act + 1].name} with a gift.`)}"><span class="mini-guardian">${guardianChibi(GUARDIANS[upstairs].art)}</span>Waiting upstairs: <b>${esc(GUARDIANS[upstairs].name)}</b></p>` : ''}<p class="map-note">Every path has at least two ${T.rest}s. Shops aren't on every path.</p></div>
+    <div class="map-head"><h2>${esc(ACTS[run.act].name)}</h2><p>Boss: <b>${esc(boss.name)}</b> · pick a glowing room</p>${upstairs ? `<p class="map-guardian" data-tip="${esc(`${GUARDIANS[upstairs].name} is waiting at the top of ${ACTS[run.act + 1].name} with a gift.`)}"><span class="mini-guardian">${guardianChibi(GUARDIANS[upstairs].art)}</span>Waiting upstairs: <b>${esc(GUARDIANS[upstairs].name)}</b></p>` : ''}<p class="map-note">${run.map.final ? `Two paths meet at a ${T.rest}. Then two bosses you skipped, and the Net Café itself.` : `Every path has at least two ${T.rest}s. Shops aren't on every path.`}</p></div>
     <div class="map-scroll">${svg}</div>
     <div class="map-pick" data-pick aria-live="polite"></div>
     <ul class="legend">${['fight', 'elite', 'event', 'shop', 'rest', 'treasure'].map((t) => `<li class="t-${t}">${roomIcon(t)}<span>${T.rooms[t][0]}</span></li>`).join('')}</ul>
@@ -750,7 +751,7 @@ function enterRoom(pos) {
   const room = roomAt(run, pos.row, pos.col);
   run.pending = pos;
   const type = room.type;
-  if (type === 'fight' || type === 'elite' || type === 'boss') battleScreen(enemyFor(run, type), type);
+  if (type === 'fight' || type === 'elite' || type === 'boss') battleScreen(room.enemy || enemyFor(run, type), type);
   else if (type === 'event') eventScreen();
   else if (type === 'rest') restScreen();
   else if (type === 'shop') shopScreen();
@@ -1138,7 +1139,9 @@ function battleWon(kind, enemyId) {
   noteEnemyDefeated(enemyId);
   // The final boss gives no rewards for now (nothing to spend them on yet):
   // straight to the win screen. Bring this back with the hidden level.
-  if (kind === 'boss' && run.act >= ACTS.length - 1) { actCleared(); return; }
+  // Floor 4's two gauntlet bosses sit in normal rows: rare card + coins, then on up the tower.
+  const gauntlet = kind === 'boss' && run.pending?.row !== 'boss';
+  if (kind === 'boss' && !gauntlet && run.act >= ACTS.length - 1) { actCleared(); return; }
   const healed = afterFightHealing(run);
   const coins = gainCoins(run, (kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9)) + (run.charms.includes('loyaltyApp') ? 15 : 0) + (run.charms.includes('fortuneCookie') ? 10 : 0));
   const choices = cardChoices(run, kind);
@@ -1148,7 +1151,7 @@ function battleWon(kind, enemyId) {
   if (snack) noteSnackSeen(snack);
   let snackState = snack ? (takeSnack(snack) ? 'taken' : 'full') : null;
   const bossCharms = [];
-  if (kind === 'boss') for (let i = 0; i < 3; i++) { const k = drawCharm(run, 'boss', bossCharms); if (k) bossCharms.push(k); }
+  if (kind === 'boss' && !gauntlet) for (let i = 0; i < 3; i++) { const k = drawCharm(run, 'boss', bossCharms); if (k) bossCharms.push(k); }
   choices.forEach((c) => noteCardSeen(c.id));
   bossCharms.forEach(noteCharmSeen);
   setTimeout(() => sfx('coin'), 250);
@@ -1182,7 +1185,7 @@ function battleWon(kind, enemyId) {
     app.querySelector('[data-leave-snack]')?.addEventListener('click', () => { snackState = null; render(); });
     app.querySelector('[data-go]')?.addEventListener('click', () => {
       barChanged = null;
-      if (kind === 'boss') { actCleared(); return; }
+      if (kind === 'boss' && !gauntlet) { actCleared(); return; }
       run.revisit = skipped && choices.length ? { type: 'cards', choices } : null; // skipped cards can be looked at again from the map
       completeRoom();
     });
@@ -1200,7 +1203,7 @@ function actCleared() {
   const heal = Math.round((run.maxHp - run.hp) * 0.75);
   run.hp += heal;
   run.act += 1;
-  run.map = generateMap(run.act, run.climb);
+  run.map = generateMap(run.act, run.climb, run);
   run.pos = null; run.path = [];
   const fridge = fillSnacksForFloor(run);
   fridge.forEach(noteSnackTaken);
@@ -1223,7 +1226,7 @@ function runStory(won) {
   const top = topCard(run);
   const topC = top && { id: top.id, ...(run.deck.some((c) => c.id === top.id && c.up) ? { up: true } : {}) };
   const pairs = Object.values(run.plays || {}).reduce((a, b) => a + b, 0);
-  const beaten = [0, 1, 2].filter((f) => f < run.act || (won && f === run.act)).map((f) => ENEMIES[run.bossOf?.[f]]?.name).filter(Boolean);
+  const beaten = ACTS.map((_, i) => i).filter((f) => f < run.act || (won && f === run.act)).map((f) => ENEMIES[run.bossOf?.[f]]?.name).filter(Boolean);
   const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
   const lines = [
     `${esc(hero().name)} climbed with <b>${run.deck.length} cards</b>${pairs ? ` and matched <b>${pairs} ${pairs === 1 ? 'pair' : 'pairs'}</b>` : ''}.`,

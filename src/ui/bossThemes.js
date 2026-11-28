@@ -60,6 +60,13 @@ export const BOSS_THEMES = {
     sting: { notes: [-12, -11, -12, -11, -7, [-12, -5]], type: 'sawtooth', step: 0.08 },
     voice: { notes: [-12, -11], type: 'sawtooth' },
   },
+  // ----- Floor 4 -----
+  netCafe: {
+    tag: 'Closing time', bg: ['#6b3f8f', '#140a22'],
+    fx: { kind: 'glyph', glyphs: ['★', 'Wi-Fi', '24/7', '♪'], color: '#ff8fd0', dir: 'drift' },
+    sting: { notes: [-12, -5, 0, 3, 7, [0, 3, 7, 12], null, [-12, -5, 0]], type: 'square', step: 0.14, noise: true },
+    voice: { notes: [-12, -5], type: 'square' },
+  },
   bluescreen: {
     tag: 'A problem has occurred', bg: ['#2a6fd1', '#0a1c44'],
     fx: { kind: 'glyph', glyphs: [':(', '0x0', '?'], color: '#e8f1ff', dir: 'down' },

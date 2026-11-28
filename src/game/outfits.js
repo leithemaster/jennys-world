@@ -8,6 +8,7 @@
 //   bossFloor: n   beat that floor's boss (0 = Floor 1)
 //   december       free to wear all December; beating the Floor 1 boss in
 //                  December keeps it for good
+//   month: m       the same for another month (0 = January)
 
 import { getProgress, isUnlocked, unlock, setCosmetic } from './progress.js';
 
@@ -17,16 +18,22 @@ export const OUTFITS = {
   lilac: { name: 'Lilac Twins', desc: 'The same lilac cat-ear hoodie, one each.', unlock: { runs: 5, text: 'Finish 5 runs.' } },
   cafe: { name: 'Café Shift', desc: 'Matching striped shirts, aprons and bandanas for the late shift.', unlock: { bossFloor: 1, text: 'Beat the Floor 2 boss.' } },
   xmas: { name: 'Christmas Knits', desc: 'Matching Christmas sweaters, a Santa hat and reindeer antlers.', unlock: { december: true, text: 'Free all December. Beat the Floor 1 boss in December to keep it.' } },
+  park: { name: 'Park Stroll', desc: "A straw sun hat and mint sundress for Jenny, a bucket hat and striped tee for Toni.", unlock: { runs: 3, text: 'Finish 3 runs.' } },
+  rainy: { name: 'Rainy Day', desc: 'Raincoats: a yellow frog hood for Jenny, a blue bear hood for Toni.', unlock: { runs: 10, text: 'Finish 10 runs.' } },
+  night: { name: 'Night Out', desc: 'A wine-red dress, pearls and a velvet bow for Jenny, a suit and bow tie for Toni.', unlock: { bossFloor: 2, text: 'Beat the Floor 3 boss.' } },
+  newyear: { name: 'New Year Hanbok', desc: 'Seollal hanbok: a pink jeogori and jobawi cap for Jenny, a blue jeogori and vest for Toni.', unlock: { month: 0, text: 'Free all January. Beat the Floor 1 boss in January to keep it.' } },
+  puppy: { name: 'Puppy Knights', desc: "Shiba armor: Jenny's helm and crest are Haru's black and tan, Toni's are Issei's red with a blue plume.", unlock: { bossFloor: 3, text: 'Beat the Net Café on Floor 4.' } },
 };
 export const DEFAULT_OUTFIT = 'date';
 export const ROOMS_PER_FLOOR = 10; // 9 rows of rooms + the boss
 
 const isDecember = (d = new Date()) => d.getMonth() === 11;
+const inMonth = (u, d = new Date()) => (u.december && d.getMonth() === 11) || (u.month !== undefined && d.getMonth() === u.month);
 
 export function outfitOpen(id) {
   const u = OUTFITS[id]?.unlock;
   if (!OUTFITS[id]) return false;
-  return !u || isUnlocked('outfits', id) || (!!u.december && isDecember());
+  return !u || isUnlocked('outfits', id) || inMonth(u);
 }
 
 export function wornOutfit(character) {
@@ -45,7 +52,7 @@ export function syncOutfitUnlocks() {
     const u = o.unlock;
     if (!u) continue;
     if (u.runs && t.runs >= u.runs) unlock('outfits', id);
-    if (u.bossFloor !== undefined && t.best_floor >= (u.bossFloor + 1) * ROOMS_PER_FLOOR) unlock('outfits', id);
+    if (u.bossFloor !== undefined && t.best_floor >= Math.min((u.bossFloor + 1) * ROOMS_PER_FLOOR, 38)) unlock('outfits', id);
   }
 }
 
@@ -55,7 +62,7 @@ export function outfitsForBoss(floor, date = new Date()) {
   for (const [id, o] of Object.entries(OUTFITS)) {
     const u = o.unlock;
     if (!u) continue;
-    const hit = u.bossFloor === floor || (u.december && floor === 0 && isDecember(date));
+    const hit = u.bossFloor === floor || (floor === 0 && inMonth(u, date));
     if (hit && unlock('outfits', id)) got.push(o.name);
   }
   return got;

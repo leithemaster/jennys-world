@@ -90,6 +90,10 @@ export const ENEMIES = {
     moves: [{ w: 3, t: 'ban', n: 12 }, { w: 2, t: 'atk', n: 14, times: 2 }, { w: 3, t: 'debuff', weak: 2, vuln: 2 }, { w: 1, t: 'atk', n: 36 }, { w: 1, t: 'buff', n: 5 }], combo: { buff: 'attack', debuff: 'ban' } },
   hivemind: { name: 'The Hive Mind', hp: [215, 215], art: 'hive', color: '#4f8a55', ai: 'bag', boss: true,
     moves: [{ w: 2, t: 'atk', n: 3, times: 6 }, { w: 2, t: 'status', card: 'spam', count: 3 }, { w: 2, t: 'buff', n: 3 }, { w: 2, t: 'drain', n: 14 }, { w: 1, t: 'scramble' }, { w: 1, t: 'atk', n: 3, times: 8 }], combo: { buff: 'attack', status: 'attack' } },
+  // ----- Floor 4: the final boss is the building itself -----
+  netCafe: { name: 'The Net Café', hp: [330, 330], art: 'netcafe', color: '#5a3a7a', ai: 'bag', boss: true, final: true,
+    moves: [{ w: 2, t: 'atk', n: 11, times: 3 }, { w: 2, t: 'status', card: 'spam', count: 3 }, { w: 2, t: 'scramble' }, { w: 1, t: 'atk', n: 42 }, { w: 2, t: 'atkBlock', n: 14, b: 22 }, { w: 1, t: 'ban', n: 16 }, { w: 1, t: 'debuff', weak: 2, vuln: 2 }, { w: 1, t: 'buff', n: 6 }],
+    combo: { buff: 'attack', scramble: 'attack', debuff: 'attack' } },
   bluescreen: { name: 'The Blue Screen', hp: [210, 210], art: 'screen', color: '#3f7cc0', ai: 'bag', boss: true,
     moves: [{ w: 2, t: 'scramble' }, { w: 2, t: 'atk', n: 10, times: 3 }, { w: 2, t: 'status', card: 'lag', count: 3 }, { w: 1, t: 'atk', n: 32 }, { w: 2, t: 'block', n: 25 }, { w: 1, t: 'buff', n: 5 }], combo: { buff: 'attack', scramble: 'attack' } },
 };
@@ -98,4 +102,7 @@ export const ACTS = [
   { name: 'Floor 1 · Lobby', normals: ['slime', 'gremlin', 'popup', 'spambot', 'cookie'], elites: ['captcha', 'adswarm', 'bouncer', 'printer', 'clout'], bosses: ['firewall', 'ramenThief', 'regular'] },
   { name: 'Floor 2 · Server Room', normals: ['moth', 'hook', 'buffer', 'crab'], elites: ['ransom', 'popstorm', 'ddos', 'bitrot', 'sysadmin'], bosses: ['hydra', 'dataMiner', 'serverAdmins'] },
   { name: 'Floor 3 · The Rooftop', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll', 'botnet', 'streamer', 'quantum'], bosses: ['bluescreen', 'moderator', 'hivemind'] },
+  // Floor 4: two lanes that merge at a rest, then a boss gauntlet (one Floor 2 and one Floor 3
+  // boss you didn't fight) and the building itself. Its fights reuse Floor 3 enemies, tougher.
+  { name: 'Floor 4 · The Top Floor', normals: ['mimic', 'fiend', 'nullptr'], elites: ['miner', 'troll', 'botnet', 'streamer', 'quantum'], bosses: ['netCafe'], hpScale: 1.2, final: true },
 ];

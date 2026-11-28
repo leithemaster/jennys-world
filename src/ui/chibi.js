@@ -24,6 +24,9 @@ const CREAM = '#fff4e6';
 const XMAS_RED = '#c8323c';
 const XMAS_GREEN = '#2f7a4a';
 const CAFE = { shirt: CREAM, stripe: '#9ec9ff', apron: '#6b4a35', logo: '#f49ab6', hat: '#4f8a6e' };
+const SILVER = '#c9ced8', SILVER_LIGHT = '#eef1f6';
+const HARU = { fur: '#2b2329', tan: '#c98a4a', collar: '#c8323c' };
+const ISSEI = { fur: '#c9672c', cream: '#f8ecd8', bandana: '#5fa8e8' };
 
 export const JENNY_OUTFITS = {
   // Date Night: her yellow knit from the photo, plus an artist's beret.
@@ -33,6 +36,16 @@ export const JENNY_OUTFITS = {
   lilac: { eyes: 'wink', tips: '#ffc3e0', hood: { ears: 'cat', color: '#7a5fb0', light: '#9d84cc', earIn: '#f49ab6', pin: '#f49ab6' }, top: { kind: 'hoodie', color: '#7a5fb0', stripe: '#f06a95', pin: '#f49ab6' } },
   cafe: { eyes: 'closed', hat: 'bandana', hatColor: CAFE.hat, top: { kind: 'apron', ...CAFE } },
   xmas: { eyes: 'open', hat: 'santa', top: { kind: 'xmas', color: XMAS_RED, band: CREAM, accent: XMAS_GREEN } },
+  // Park Stroll: straw sun hat and a mint sundress.
+  park: { eyes: 'open', hat: 'sunhat', hatColor: '#f0d58a', top: { kind: 'dress', color: '#9fe0c8', collar: '#fff', dot: '#fff', belt: '#f49ab6' } },
+  // Night Out: a velvet bow and a deep wine dress with sparkles and pearls.
+  night: { eyes: 'wink', hat: 'bow', hatColor: '#1f1d24', top: { kind: 'gown', color: '#6d1f3d', sparkle: '#ffe9a8', pearl: '#fff' } },
+  // New Year: a pink hanbok jeogori, red chima and a jobawi winter cap.
+  newyear: { eyes: 'closed', hat: 'jobawi', hatColor: '#6b2140', top: { kind: 'hanbok', jacket: '#f7a8c4', skirt: '#d8344f', ribbon: '#8e1f3c', collar: '#fff', sleeve: '#ffd34d' } },
+  // Rainy Day: a yellow raincoat with a frog hood.
+  rainy: { eyes: 'open', hood: { ears: 'frog', color: '#ffd34d', light: '#fff09a', earIn: '#7ed957' }, top: { kind: 'raincoat', color: '#ffd34d', toggle: '#c98a4a' } },
+  // Puppy Knights: Haru's armor. A silver helm with his black-and-tan ears and red plume.
+  puppy: { eyes: 'open', hood: { ears: 'shiba', color: SILVER, light: SILVER_LIGHT, earOut: HARU.fur, earIn: HARU.tan }, hat: 'plume', hatColor: HARU.collar, top: { kind: 'armor', color: SILVER, emblem: HARU.fur, sash: HARU.collar } },
 };
 export const TONI_OUTFITS = {
   date: { top: { kind: 'jacket' } },
@@ -40,6 +53,12 @@ export const TONI_OUTFITS = {
   lilac: { hood: { ears: 'cat', color: '#7a5fb0', light: '#9d84cc', earIn: '#f49ab6' }, top: { kind: 'hoodie', color: '#7a5fb0', stripe: '#f06a95' } },
   cafe: { hat: 'bandana', hatColor: CAFE.hat, top: { kind: 'apron', ...CAFE } },
   xmas: { hat: 'antlers', top: { kind: 'xmas', color: XMAS_RED, band: CREAM, accent: XMAS_GREEN } },
+  park: { hat: 'bucket', hatColor: '#f0d58a', top: { kind: 'tee', color: '#fff', stripe: '#6ec3ff', pocket: '#9fe0c8' } },
+  night: { top: { kind: 'suit', color: '#25233a', shirt: '#fff', tie: '#6d1f3d' } },
+  newyear: { top: { kind: 'hanbok', jacket: '#7fb6e6', vest: '#2f4a7a', ribbon: '#d8344f', collar: '#fff', pants: '#e8e2f2' } },
+  rainy: { hood: { ears: 'round', color: '#3f7cc0', light: '#7fb6e6', earIn: '#ffd34d' }, top: { kind: 'raincoat', color: '#3f7cc0', toggle: '#ffd34d' } },
+  // Issei's armor: silver helm with his red shiba ears, a blue bandana cape.
+  puppy: { hood: { ears: 'shiba', color: SILVER, light: SILVER_LIGHT, earOut: ISSEI.fur, earIn: ISSEI.cream }, hat: 'plume', hatColor: ISSEI.bandana, top: { kind: 'armor', color: SILVER, emblem: ISSEI.fur, sash: ISSEI.bandana } },
 };
 
 function jennyEyes(kind) {
@@ -56,7 +75,14 @@ function jennyEyes(kind) {
 
 // Animal-ear hood around the face (shared by both, so couple hoodies match).
 function hoodBack(h) {
-  const ears = h.ears === 'shiba'
+  const ears = h.ears === 'frog'
+    ? `<circle cx="50" cy="20" r="12" ${o(h.color)}/><circle cx="110" cy="20" r="12" ${o(h.color)}/>
+       <circle cx="50" cy="19" r="7" fill="#fff" stroke="${INK}" stroke-width="2.4"/><circle cx="110" cy="19" r="7" fill="#fff" stroke="${INK}" stroke-width="2.4"/>
+       <circle cx="51" cy="20" r="3.4" fill="${INK}"/><circle cx="109" cy="20" r="3.4" fill="${INK}"/>`
+    : h.ears === 'round'
+    ? `<circle cx="42" cy="22" r="13" ${o(h.color)}/><circle cx="118" cy="22" r="13" ${o(h.color)}/>
+       <circle cx="43" cy="23" r="6.5" fill="${h.earIn}"/><circle cx="117" cy="23" r="6.5" fill="${h.earIn}"/>`
+    : h.ears === 'shiba'
     ? `<path d="M36 38 C30 24 32 10 40 7 C49 9 58 17 62 24 Z" ${o(h.earOut)}/>
        <path d="M124 38 C130 24 128 10 120 7 C111 9 102 17 98 24 Z" ${o(h.earOut)}/>
        <path d="M41 28 C39 20 40 14 43 13 C48 15 52 19 54 23 Z" fill="${h.earIn}"/>
@@ -73,6 +99,26 @@ function hoodBack(h) {
 
 // Hats and headbands, drawn last.
 function headwear(kind, color) {
+  if (kind === 'sunhat') return `<ellipse cx="80" cy="45" rx="52" ry="11" ${o(color)}/>
+    <path d="M55 44 C55 22 105 22 105 44 Z" ${o(color)}/>
+    <path d="M55.6 38.5 C66 41 94 41 104.4 38.5" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M55.6 38.5 C66 41 94 41 104.4 38.5" fill="none" stroke="#7ed1b0" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="98" cy="37" r="4.6" ${o('#fff', 2.2)}/><circle cx="98" cy="37" r="1.8" fill="#ffd34d"/>
+    <path d="M40 47 C52 52 70 54 80 54" fill="none" stroke="#c9a24a" stroke-width="1.6" opacity=".7"/>`;
+  if (kind === 'bucket') return `<path d="M52 46 C50 24 110 24 108 46 Z" ${o(color)}/>
+    <path d="M38 50 C48 41 112 41 122 50 C112 56 48 56 38 50 Z" ${o(color)}/>
+    <path d="M53 40 H107" stroke="#6ec3ff" stroke-width="3.4"/>${shine(70, 31, 7, 3)}`;
+  if (kind === 'bow') return `<path d="M104 34 C96 20 84 22 86 32 C88 40 98 38 104 34 Z" ${o(color, 2.8)}/>
+    <path d="M104 34 C112 20 124 22 122 32 C120 40 110 38 104 34 Z" ${o(color, 2.8)}/>
+    <circle cx="104" cy="34" r="4.6" ${o('#ffe9a8', 2.4)}/>
+    <path d="M91 27 C93 25 96 25 98 27 M110 27 C112 25 115 25 117 27" fill="none" stroke="#fff" stroke-width="1.8" opacity=".5"/>`;
+  if (kind === 'jobawi') return `<path d="M45 52 C48 32 64 25 80 25 C96 25 112 32 115 52 C103 45 92 43 80 43 C68 43 57 45 45 52 Z" ${o(color)}/>
+    <path d="M47 46 C58 39 102 39 113 46" fill="none" stroke="#e8b23a" stroke-width="2.6"/>
+    <path d="M68 30 C72 28 88 28 92 30" fill="none" stroke="#e8b23a" stroke-width="2.2"/>
+    <circle cx="80" cy="34" r="4" ${o('#d8344f', 2.2)}/>
+    <path d="M114 48 C120 54 122 62 120 70" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M114 48 C120 54 122 62 120 70" fill="none" stroke="#d8344f" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M116 70 L124 70 L122 80 L118 80 Z" ${o('#d8344f', 2)}/>`;
+  if (kind === 'plume') return `<path d="M80 20 C74 6 84 -4 96 2 C90 4 88 10 86 14 C92 10 98 12 100 16 C92 16 86 20 84 24 Z" ${o(color, 2.8)}/>
+    <rect x="76" y="18" width="8" height="7" rx="2" ${o('#e8b23a', 2.2)}/>`;
   if (kind === 'beret') return `<ellipse cx="70" cy="36" rx="30" ry="11" transform="rotate(-14 70 36)" ${o(color)}/>
     <path d="M66 25 l1 -6" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>
     <path d="M50 36 C58 28 72 24 84 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`;
@@ -128,9 +174,35 @@ function jennyTop(t, p) {
     ${[66, 74, 82, 90].map((x) => `<circle cx="${x + 2}" cy="126" r="1.6" fill="${t.band}"/>`).join('')}
     <path d="M56.6 129 H103.4 L104 133 H56 Z" fill="${t.band}"/>
     <rect x="70" y="96" width="20" height="8" rx="3.5" ${o(t.band, 2.6)}/>`;
+  if (t.kind === 'dress') return `${body(t.color)}
+    ${[[66, 114], [76, 122], [90, 112], [84, 128], [70, 129], [95, 125]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.9" fill="${t.dot}"/>`).join('')}
+    <path d="M59.5 116 H100.5 L101 119 H59 Z" fill="${t.belt}" stroke="${INK}" stroke-width="1.6"/>
+    <path d="M80 117.5 L74 113 V122 Z M80 117.5 L86 113 V122 Z" fill="${t.belt}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M68 101 C70 107 76 108 80 104 C84 108 90 107 92 101 Z" ${o(t.collar, 2.4)}/>`;
+  if (t.kind === 'gown') return `${body(t.color)}
+    <path d="M80 120 L84 133" stroke="${INK}" stroke-width="1.6" opacity=".4"/>
+    ${[[68, 112], [90, 118], [74, 126], [96, 128], [64, 122]].map(([x, y]) => `<path d="M${x} ${y - 2.6} L${x + 0.9} ${y - 0.9} L${x + 2.6} ${y} L${x + 0.9} ${y + 0.9} L${x} ${y + 2.6} L${x - 0.9} ${y + 0.9} L${x - 2.6} ${y} L${x - 0.9} ${y - 0.9} Z" fill="${t.sparkle}"/>`).join('')}
+    ${[68, 72, 76, 80, 84, 88, 92].map((x, i) => `<circle cx="${x}" cy="${101 + Math.sin((i / 6) * Math.PI) * 5}" r="1.9" fill="${t.pearl}" stroke="${INK}" stroke-width="1"/>`).join('')}`;
+  if (t.kind === 'hanbok') return `<path d="M58 112 H102 L107 137 H53 Z" ${o(t.skirt)}/>
+    <path d="M66 116 L63 136 M80 116 V136 M94 116 L97 136" stroke="${INK}" stroke-width="1.4" opacity=".35"/>
+    <path d="M62 101 H98 L99.5 114 H60.5 Z" ${o(t.jacket)}/>
+    <path d="M70 101 L80 109 L90 101" fill="none" stroke="${t.collar}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M80 109 C76 112 72 116 73 124 M80 109 C83 113 86 116 87 122" fill="none" stroke="${INK}" stroke-width="5.4" stroke-linecap="round"/>
+    <path d="M80 109 C76 112 72 116 73 124 M80 109 C83 113 86 116 87 122" fill="none" stroke="${t.ribbon}" stroke-width="3" stroke-linecap="round"/>`;
+  if (t.kind === 'raincoat') return `${body(t.color)}
+    <path d="M80 102 V133" stroke="${INK}" stroke-width="2"/>
+    ${[108, 117, 126].map((y) => `<rect x="76" y="${y}" width="8" height="3" rx="1.5" fill="${t.toggle}" stroke="${INK}" stroke-width="1.2"/>`).join('')}
+    <path d="M63 121 H72 M88 121 H97" stroke="${INK}" stroke-width="1.8" opacity=".6"/>`;
+  if (t.kind === 'armor') return `${body(t.color)}
+    <path d="M64 104 C70 102 90 102 96 104 L98 118 C92 122 68 122 62 118 Z" ${o(SILVER_LIGHT, 2.4)}/>
+    ${paw(80, 112, t.emblem)}
+    <path d="M62 101 L98 128" stroke="${INK}" stroke-width="6"/><path d="M62 101 L98 128" stroke="${t.sash}" stroke-width="3.6"/>
+    <path d="M57.5 127 H102.5 L103.6 133 H56.4 Z" fill="${t.sash}" stroke="${INK}" stroke-width="1.8"/>`;
   return body('#888');
 }
-const sleeveColor = (t) => (t.kind === 'apron' ? t.shirt : t.kind === 'jacket' ? TONI.jacketDark : t.color);
+// A little paw print (armor emblem).
+const paw = (x, y, c) => `<ellipse cx="${x}" cy="${y + 2}" rx="4.4" ry="3.6" fill="${c}"/>${[[-4.6, -3], [-1.6, -5.4], [1.6, -5.4], [4.6, -3]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${y + dy}" r="1.6" fill="${c}"/>`).join('')}`;
+const sleeveColor = (t) => t.sleeve || (t.kind === 'apron' ? t.shirt : t.kind === 'jacket' ? TONI.jacketDark : t.kind === 'tee' ? t.color : t.kind === 'suit' ? t.color : t.kind === 'hanbok' ? t.jacket : t.color);
 
 // opts.crop: head-and-shoulders framing for small portraits
 export function jennyChibi(outfit = 'date', opts = {}) {
@@ -158,7 +230,7 @@ export function jennyChibi(outfit = 'date', opts = {}) {
     <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
     <path d="M42 72 C42 52 58 40 80 40 C102 40 118 52 118 72 L108 72 L104 60 L98 70 L84 70 L80 58 L74 70 L60 70 L57 62 L53 72 Z" ${o(p.hair)}/>
     <path d="M60 48 C66 44 74 43 80 43" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>
-    ${f.hood ? `<path d="M116 26 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z" fill="${f.hood.pin}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>` : `<path d="M98 33 C108 36 116 42 120 52" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>`}
+    ${f.hood ? (!f.hood.pin ? '' : `<path d="M116 26 a8 8 0 1 0 7 12 a6.2 6.2 0 1 1 -7 -12z" fill="${f.hood.pin}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`) : `<path d="M98 33 C108 36 116 42 120 52" fill="none" stroke="${p.hairShine}" stroke-width="3" stroke-linecap="round"/>`}
     ${jennyEyes(f.eyes)}
     <ellipse cx="55" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
     <ellipse cx="105" cy="90" rx="6" ry="3.6" fill="${p.blush}"/>
@@ -195,6 +267,29 @@ function toniTop(t) {
     ${[66, 74, 82, 90].map((x) => `<circle cx="${x + 2}" cy="119" r="1.6" fill="${t.band}"/>`).join('')}
     <path d="M60.2 121.5 H99.8 L100 124 H60 Z" fill="${t.band}"/>
     <rect x="70" y="96" width="20" height="8" rx="3.5" ${o(t.band, 2.6)}/>`;
+  if (t.kind === 'tee') return `${body(t.color)}
+    ${stripes([106, 111, 116, 121], 61, 99, 101, 1 / 23, t.stripe)}
+    <rect x="86" y="104" width="8" height="7" rx="1.5" fill="${t.pocket}" stroke="${INK}" stroke-width="1.6"/>
+    <path d="M72 101 Q80 106 88 101" fill="none" stroke="${INK}" stroke-width="2"/>`;
+  if (t.kind === 'suit') return `${body(t.color)}
+    <path d="M71 101 L80 116 L89 101 Z" fill="${t.shirt}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M70 101 L77 113 L72 112 Z M90 101 L83 113 L88 112 Z" fill="${t.color}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M80 105 L74 101.5 V108.5 Z M80 105 L86 101.5 V108.5 Z" fill="${t.tie}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/><circle cx="80" cy="105" r="1.8" fill="${t.tie}" stroke="${INK}" stroke-width="1.2"/>
+    <circle cx="80" cy="119" r="1.4" fill="${t.shirt}"/>`;
+  if (t.kind === 'hanbok') return `${body(t.jacket)}
+    <path d="M64 103 H96 L97 124 H63 Z" ${o(t.vest, 2.6)}/>
+    <path d="M72 101 L80 108 L88 101" fill="none" stroke="${t.collar}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M80 108 V124" stroke="${INK}" stroke-width="1.6" opacity=".5"/>
+    <circle cx="76" cy="114" r="1.8" fill="#e8b23a" stroke="${INK}" stroke-width="1"/><circle cx="76" cy="120" r="1.8" fill="#e8b23a" stroke="${INK}" stroke-width="1"/>
+    <path d="M82 110 C86 112 88 116 87 120" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M82 110 C86 112 88 116 87 120" fill="none" stroke="${t.ribbon}" stroke-width="2.6" stroke-linecap="round"/>`;
+  if (t.kind === 'raincoat') return `${body(t.color)}
+    <path d="M80 102 V124" stroke="${INK}" stroke-width="2"/>
+    ${[107, 114, 121].map((y) => `<rect x="76" y="${y - 1}" width="8" height="3" rx="1.5" fill="${t.toggle}" stroke="${INK}" stroke-width="1.2"/>`).join('')}`;
+  if (t.kind === 'armor') return `${body(t.color)}
+    <path d="M64 103 C70 101 90 101 96 103 L97 116 C91 120 69 120 63 116 Z" ${o(SILVER_LIGHT, 2.4)}/>
+    ${paw(80, 110, t.emblem)}
+    <path d="M60.4 119 H99.6 L100 124 H60 Z" fill="${t.sash}" stroke="${INK}" stroke-width="1.8"/>
+    <path d="M66 98 L80 106 L94 98 L95 103 L80 111 L65 103 Z" ${o(t.sash, 2.4)}/>`;
   return body('#888');
 }
 
@@ -212,7 +307,7 @@ export function toniChibi(outfit = 'date', opts = {}) {
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${opts.crop ? '' : shadow(80, 150, 32)}
     ${f.hood ? '' : zzz}
-    <path d="M63 116 H97 L96 141 H82.5 L80 127 L77.5 141 H64 Z" ${o(p.pants)}/>
+    <path d="M63 116 H97 L96 141 H82.5 L80 127 L77.5 141 H64 Z" ${o(f.top.pants || p.pants)}/>
     <path d="M61 139 h17 a3 3 0 0 1 3 3 v2 h-20 z" ${o(p.shoe)}/>
     <path d="M82 139 h14 a3 3 0 0 1 3 3 v2 h-17 z" ${o(p.shoe)}/>
     ${toniTop(f.top)}
@@ -224,7 +319,7 @@ export function toniChibi(outfit = 'date', opts = {}) {
     <ellipse cx="118" cy="80" rx="5.5" ry="7.5" ${o(p.skin, 2.8)}/>
     <circle cx="40.5" cy="87" r="1.8" fill="${p.zip}" stroke="${INK}" stroke-width="1"/>`}
     <path d="M42 74 C42 54 58 42 80 42 C102 42 118 54 118 74 C118 94 102 104 80 104 C58 104 42 94 42 74 Z" ${o(p.skin)}/>
-    ${f.hood ? fringe : fullHair}
+    ${f.hood || f.hat === 'bucket' ? fringe : fullHair}
     ${eye(64)}${eye(96)}
     ${lens(64)}${lens(96)}
     <path d="M75 78 Q80 75.5 85 78" fill="none" stroke="${p.frame}" stroke-width="3" stroke-linecap="round"/>
@@ -453,6 +548,26 @@ const ART = {
     <rect x="80" y="26" width="20" height="20" rx="2" fill="#fff"/><rect x="84" y="30" width="5" height="5" fill="${c}"/><rect x="91" y="37" width="5" height="5" fill="${c}"/>`,
 
   // ----- bosses -----
+  // The Net Café: the whole building, awake. Glowing window eyes, a neon sign, the door for a mouth.
+  netcafe: (c) => `${shadow(60, 115, 52)}
+    <rect x="44" y="2" width="5" height="14" ${o('#9aa5a0', 2.4)}/><circle cx="46.5" cy="2" r="3" ${o('#ff5d8f', 2)}/>
+    <path d="M14 22 L60 8 L106 22 Z" ${o(darken(c, 0.25))}/>
+    <rect x="12" y="20" width="96" height="92" rx="6" ${o(c)}/>
+    <path d="M18 28 C20 25 24 23 28 23" fill="none" stroke="${lighten(c, 0.35)}" stroke-width="4" stroke-linecap="round"/>
+    <rect x="22" y="27" width="76" height="17" rx="4" ${o('#2a1626', 2.8)}/>
+    <text x="60" y="40.5" text-anchor="middle" font-size="11.5" font-weight="900" font-family="sans-serif" fill="#ff8fd0" stroke="#ff5db0" stroke-width=".6" letter-spacing="1">NET CAFÉ</text>
+    <rect x="22" y="52" width="26" height="22" rx="3" ${o('#fff3b0', 3)}/><rect x="72" y="52" width="26" height="22" rx="3" ${o('#fff3b0', 3)}/>
+    <path d="M22 50 L48 56 M98 50 L72 56" stroke="${INK}" stroke-width="4.2" stroke-linecap="round"/>
+    <ellipse cx="37" cy="65" rx="5.5" ry="6.5" fill="${INK}"/><ellipse cx="83" cy="65" rx="5.5" ry="6.5" fill="${INK}"/>
+    <circle cx="35" cy="62.5" r="2" fill="#fff"/><circle cx="81" cy="62.5" r="2" fill="#fff"/>
+    <path d="M35 52 V74 M22 63 H48 M85 52 V74 M72 63 H98" stroke="${INK}" stroke-width="1.4" opacity=".35"/>
+    <path d="M42 112 V88 C42 80 50 78 60 78 C70 78 78 80 78 88 V112 Z" ${o('#3a1830', 3)}/>
+    <path d="M47 86 L51 92 L55 86 L59 92 L63 86 L67 92 L71 86 L74 90" fill="#fff" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="104" rx="9" ry="5" fill="#ff5d8f" opacity=".85"/>
+    <rect x="16" y="82" width="20" height="16" rx="2" ${o('#6ec3ff', 2.6)}/><rect x="84" y="82" width="20" height="16" rx="2" ${o('#6ec3ff', 2.6)}/>
+    <path d="M20 94 L26 86 M88 94 L94 86" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    <ellipse cx="20" cy="76" rx="5" ry="3" fill="#f27a8f"/><ellipse cx="100" cy="76" rx="5" ry="3" fill="#f27a8f"/>`,
+
   // The Ramen Thief: beanie, bandit mask, a stolen bowl of ramen.
   ramen: (c) => `${shadow(60, 113, 42)}
     <path d="M20 108 C16 82 30 58 60 58 C90 58 104 82 100 108 Z" ${o(c)}/>

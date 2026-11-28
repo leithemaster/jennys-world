@@ -1,3 +1,4 @@
+import { ACTS } from './enemies.js';
 // Run state: deck, HP, coins, charms, map position. Saved whenever you're on
 // the map, so a run can be continued later.
 import { CARDS } from './cards.js';
@@ -75,7 +76,23 @@ const ALLOWED = {
   rest: (r) => r >= 3 && r <= 6,
 };
 
-export function generateMap(act, climb = 0) {
+// Floor 4: two separate lanes (4 rooms each) that merge at a rest, then two boss rooms
+// (a Floor 2 and a Floor 3 boss you didn't fight this run), then the Net Café.
+export function generateFinalMap(act, run) {
+  const used = Object.values(run?.bossOf || {});
+  const pick = (floor) => { const list = ACTS[floor].bosses.filter((b) => !used.includes(b)); const pool = list.length ? list : ACTS[floor].bosses; return pool[Math.floor(Math.random() * pool.length)]; };
+  const laneA = ['fight', ...shuffle(['event', 'elite', 'shop'])];
+  const laneB = ['fight', ...shuffle(['event', 'elite', 'treasure'])];
+  const rows = [];
+  for (let r = 0; r < 4; r++) rows.push([{ row: r, col: 1, type: laneA[r], next: [r < 3 ? 1 : 2] }, { row: r, col: 3, type: laneB[r], next: [r < 3 ? 3 : 2] }]);
+  rows.push([{ row: 4, col: 2, type: 'rest', next: [2] }]);
+  rows.push([{ row: 5, col: 2, type: 'boss', enemy: pick(1), next: [2] }]);
+  rows.push([{ row: 6, col: 2, type: 'boss', enemy: pick(2), next: [2] }]);
+  return { act, rows, final: true };
+}
+
+export function generateMap(act, climb = 0, run = null) {
+  if (ACTS[act]?.final) return generateFinalMap(act, run);
   const er = eliteRules(climb);
   const mix = { ...MIX, elite: er.share, fight: MIX.fight - (er.share - MIX.elite) };
   const rows = [];
@@ -370,4 +387,5 @@ export function fillSnacksForFloor(run) {
   return got;
 }
 
-export const TOTAL_FLOORS = (ROWS + 1) * 3;
+// rooms in a full climb: Floors 1-3 have 9 rows + a boss, Floor 4 has 7 rows + the Net Café
+export const TOTAL_FLOORS = (ROWS + 1) * 3 + 8;
