@@ -17,10 +17,10 @@ import { T } from './terms.js';
 
 // Cards that count toward a style's conditions (which cards can show up).
 // Starter cards count too, so Jenny's Zap opens the Exposed payoffs.
-export const SLEEPY_CARDS = ['yawn', 'trip', 'lightsOut', 'countingSheep', 'pillowFight', 'bedtimeStory', 'deepSleep', 'napTime', 'dreamJournal', 'sandman', 'sleepMode'];
-export const HEAL_CARDS = ['warmMilk', 'snack', 'hotCocoa', 'groupHug', 'feelBetter', 'secondHelping', 'sweetDreams', 'napTime', 'spoonful', 'selfCare', 'comboMeal', 'photoAlbum'];
-export const EXPOSED_CARDS = ['zap', 'callOut', 'pileOn', 'snitch', 'roast', 'roastBattle', 'heckle', 'leak', 'screenshot', 'spillTea', 'wakeUpCall'];
-export const GLITCH_CARDS = ['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak', 'packetLoss', 'sleepMode', 'firewall'];
+export const SLEEPY_CARDS = ['yawn', 'trip', 'lightsOut', 'countingSheep', 'pillowFight', 'bedtimeStory', 'deepSleep', 'napTime', 'dreamJournal', 'sandman', 'sleepMode', 'sandstorm', 'sleepwalk', 'feverDream'];
+export const HEAL_CARDS = ['warmMilk', 'snack', 'hotCocoa', 'groupHug', 'feelBetter', 'secondHelping', 'sweetDreams', 'napTime', 'spoonful', 'selfCare', 'comboMeal', 'photoAlbum', 'hotPot', 'comfortZone', 'toughLove'];
+export const EXPOSED_CARDS = ['zap', 'callOut', 'pileOn', 'snitch', 'roast', 'roastBattle', 'heckle', 'leak', 'screenshot', 'spillTea', 'wakeUpCall', 'leakedDMs', 'toughLove'];
+export const GLITCH_CARDS = ['stinger', 'virusUpload', 'lagSpike', 'malware', 'leak', 'packetLoss', 'sleepMode', 'firewall', 'botnet', 'feverDream'];
 
 export const CARDS = {
   // ---------- starter ----------
@@ -488,6 +488,74 @@ export const CARDS = {
     arch: 'memory', arch2: 'combo', name: 'Speed Reader', type: 'skill', rarity: 'uncommon', icon: 'speedBook',
     text: (u) => `Reveal ${u ? 3 : 2}. +2 ${T.combo}.${u ? ` +1 ${T.energy}.` : ''}`,
     fx: (b, u) => { b.reveal(u ? 3 : 2); b.combo += 2; if (u) b.gainEnergy(1); },
+  },
+
+  // ---------- more rares (so every style has 3+, and boss rewards have room to lean in) ----------
+  systemCrash: {
+    arch: 'glitch', name: 'System Crash', type: 'attack', rarity: 'rare', icon: 'crash',
+    text: (u) => `Deal ${u ? 'three times' : 'twice'} the enemy's ${T.glitch}.`,
+    requires: (r, h) => h.deckHas(GLITCH_CARDS), needs: `a ${T.glitch} card`,
+    fx: (b, u) => b.attack(b.enemy.poison * (u ? 3 : 2), { raw: true }),
+  },
+  botnet: {
+    arch: 'glitch', name: 'Botnet', type: 'power', rarity: 'rare', icon: 'botnet',
+    text: (u) => `${T.power}: every pair you match applies ${u ? 2 : 1} ${T.glitch}.`,
+    fx: (b, u) => { b.powers.botnet += u ? 2 : 1; },
+  },
+  sleepwalk: {
+    arch: 'dreamy', name: 'Sleepwalk', type: 'power', rarity: 'rare', icon: 'sleepwalk',
+    text: (u) => `${T.power}: whenever an enemy falls ${T.asleep}, +2 ${T.energy}.${u ? ` Apply 2 ${T.sleepy}.` : ''}`,
+    fx: (b, u) => { b.powers.sleepwalk = true; if (u) b.applyEnemy('weak', 2); },
+  },
+  sandstorm: {
+    arch: 'dreamy', name: 'Sandstorm', type: 'skill', rarity: 'rare', icon: 'sandstorm', exhaust: true,
+    text: (u) => `Apply ${u ? 7 : 5} ${T.sleepy}. ${T.exhaust}.`,
+    fx: (b, u) => b.applyEnemy('weak', u ? 7 : 5),
+  },
+  hotPot: {
+    arch: 'cozy', name: 'Hot Pot', type: 'attack', rarity: 'rare', icon: 'hotPot',
+    text: (u) => `Deal ${u ? 14 : 10}. Heal ${u ? 12 : 8}. ${T.cozy}.`,
+    fx: (b, u) => { b.attack(u ? 14 : 10); b.heal(u ? 12 : 8, { cozy: true }); },
+  },
+  comfortZone: {
+    arch: 'cozy', name: 'Comfort Zone', type: 'power', rarity: 'rare', icon: 'comfort',
+    text: (u) => `${T.power}: whenever you heal, gain that much ${T.block} (max ${u ? 10 : 6} each time).`,
+    fx: (b, u) => { b.powers.comfort = Math.max(b.powers.comfort, u ? 10 : 6); },
+  },
+  leakedDMs: {
+    arch: 'exposed', name: 'Leaked DMs', type: 'skill', rarity: 'rare', icon: 'dms',
+    text: (u) => `Double the enemy's ${T.exposed}${u ? `, then apply 2 more` : ''}. ${T.block} 6.`,
+    fx: (b, u) => { b.applyEnemy('vuln', b.enemy.vuln); if (u) b.applyEnemy('vuln', 2); b.gainBlock(6); },
+  },
+  hotTake: {
+    arch: 'exposed', name: 'Hot Take', type: 'attack', rarity: 'rare', icon: 'hotTake',
+    text: (u) => `Deal ${u ? 8 : 6} three times.`,
+    fx: (b, u) => { for (let i = 0; i < 3; i++) b.attack(u ? 8 : 6); },
+  },
+  framePerfect: {
+    arch: 'combo', name: 'Frame Perfect', type: 'skill', rarity: 'rare', icon: 'frame',
+    text: (u) => `Double your ${T.combo}.${u ? ` +1 ${T.energy}.` : ''}`,
+    fx: (b, u) => { b.combo *= 2; if (u) b.gainEnergy(1); },
+  },
+  panicRoom: {
+    arch: 'guard', name: 'Panic Room', type: 'skill', rarity: 'rare', icon: 'panic', exhaust: true,
+    text: (u) => `${T.block} ${u ? 28 : 20}. ${T.exhaust}.`,
+    fx: (b, u) => b.gainBlock(u ? 28 : 20),
+  },
+  eidetic: {
+    arch: 'memory', name: 'Eidetic Memory', type: 'power', rarity: 'rare', icon: 'eidetic',
+    text: (u) => `${T.power}: whenever you reveal cards, gain ${u ? 2 : 1} ${T.block} per card.`,
+    fx: (b, u) => { b.powers.eidetic += u ? 2 : 1; },
+  },
+  feverDream: {
+    arch: 'glitch', arch2: 'dreamy', name: 'Fever Dream', type: 'skill', rarity: 'rare', icon: 'fever', exhaust: true,
+    text: (u) => `Apply ${u ? 4 : 3} ${T.sleepy} and ${u ? 8 : 6} ${T.glitch}. ${T.exhaust}.`,
+    fx: (b, u) => { b.applyEnemy('weak', u ? 4 : 3); b.applyEnemy('poison', u ? 8 : 6); },
+  },
+  toughLove: {
+    arch: 'cozy', arch2: 'exposed', name: 'Tough Love', type: 'attack', rarity: 'rare', icon: 'toughLove',
+    text: (u) => `Apply 2 ${T.exposed}. Deal ${u ? 13 : 10}. Heal ${u ? 6 : 4}. ${T.cozy}.`,
+    fx: (b, u) => { b.applyEnemy('vuln', 2); b.attack(u ? 13 : 10); b.heal(u ? 6 : 4, { cozy: true }); },
   },
 
   // ---------- event only: never in card rewards or shops ----------

@@ -115,7 +115,7 @@ export function buildCatalog() {
   }));
 
   const snacks = Object.entries(SNACKS).map(([id, s]) => ({
-    id, name: s.name, rarity: s.rarity, style: s.style ? ARCHES[s.style].name : '', desc: s.desc,
+    id, name: s.name, rarity: s.rarity, style: s.style ? ARCHES[s.style].name + (s.style2 ? ` / ${ARCHES[s.style2].name}` : '') : '', desc: s.desc,
     when: s.anytime ? 'Fights or map' : 'Fights', from: fromText('snacks', id), art: snackIcon(id),
   }));
   const snackRules = { slots: SNACK_SLOTS, start: SNACK_DROP.start, step: SNACK_DROP.step, elite: SNACK_DROP.elite, coupon: SNACK_DROP.coupon,

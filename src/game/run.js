@@ -202,7 +202,7 @@ export function roomAt(run, row, col) {
 export const enemyFor = (run, type) => drawEnemy(run, type);
 
 // ---------- rewards ----------
-export const cardChoices = (run, kind) => cardReward(run, kind);
+export const cardChoices = (run, kind) => cardReward(run, kind, run.charms.includes('luckyDice') ? 4 : 3);
 export const randomCharm = (run, pool = 'drop') => drawCharm(run, pool);
 
 export function gainCharm(run, id) {
@@ -221,6 +221,7 @@ export function gainCharm(run, id) {
     for (let i = 0; i < 3 && ups.length; i++) ups.splice(Math.floor(Math.random() * ups.length), 1)[0].up = true;
   }
   if (id === 'greenTea') { run.maxHp += 10; run.hp += 10; }
+  if (id === 'comfySlippers') { run.maxHp += 6; run.hp += 6; }
   if (id === 'treatPouch') { addSnackSlots(run, 1); addSnack(run, drawSnack(run)); }
   for (const card of CHARMS[id]?.gives || []) run.deck.push({ id: card });
   if (id === 'lunchbox') addSnackSlots(run, 2);
@@ -252,6 +253,8 @@ export function afterFightHealing(run) {
   if (run.charms.includes('warmLap')) h += 6;
   if (run.charms.includes('cuddlePlush')) h += 10;
   if (run.charms.includes('greenTea')) h += 15;
+  if (run.charms.includes('comfySlippers')) h += 3;
+  if (run.charms.includes('fortuneCookie')) h += 3;
   const before = run.hp;
   run.hp = Math.min(run.maxHp, run.hp + h);
   return run.hp - before;

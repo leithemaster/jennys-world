@@ -1140,7 +1140,7 @@ function battleWon(kind, enemyId) {
   // straight to the win screen. Bring this back with the hidden level.
   if (kind === 'boss' && run.act >= ACTS.length - 1) { actCleared(); return; }
   const healed = afterFightHealing(run);
-  const coins = gainCoins(run, kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9));
+  const coins = gainCoins(run, (kind === 'boss' ? 90 : kind === 'elite' ? 30 + Math.floor(Math.random() * 10) : 12 + Math.floor(Math.random() * 9)) + (run.charms.includes('loyaltyApp') ? 15 : 0) + (run.charms.includes('fortuneCookie') ? 10 : 0));
   const choices = cardChoices(run, kind);
   const charm = kind === 'elite' ? randomCharm(run, 'drop') : null;
   if (charm) takeCharm(charm);

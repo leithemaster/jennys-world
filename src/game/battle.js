@@ -47,7 +47,7 @@ export class Battle {
     const hp = Math.round(randInt(def.hp[0], def.hp[1]) * (def.elite && climbOn(run, 1) ? CR.eliteHp : 1) * (def.boss && climbOn(run, 5) ? CR.bossHp : 1));
     this.enemy = { id: enemyId, name: def.name, hp, maxHp: hp, block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, asleep: 0, sleepAt: RULES.sleepAt, step: 0, last: [] };
     this.player = { block: 0, strength: 0, weak: 0, vuln: 0, poison: 0, thorns: 0 };
-    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false, selfCare: 0, galaxy: 0, mainChar: 0, plotArmor: 0 };
+    this.powers = { energy: 0, fortress: false, freeMiss: false, malware: 0, armor: 0, groove: false, spotlight: 0, bedtime: 0, deepSleep: 0, sweetDreams: false, roast: false, selfCare: 0, galaxy: 0, mainChar: 0, plotArmor: 0, botnet: 0, sleepwalk: false, comfort: 0, eidetic: 0 };
     this.healedThisFight = 0;
     this.stolen = 0; // coins an enemy stole this fight (you get them back if you win)
     this.matchesThisFight = 0;
@@ -88,6 +88,7 @@ export class Battle {
     if (this.has('hisHoodie')) this.player.block += 5;
     if (this.has('goodLuckKiss')) this.player.strength += 2;
     if (this.has('loveLetter')) { this.enemy.vuln += 2; this.enemy.weak += 2; }
+    if (this.has('trophy')) this.enemy.hp = Math.ceil(this.enemy.hp * 0.9);
     // one-fight buffs from events (e.g. the spicy ramen)
     if (climbOn(this.run, 10) && (this.def.elite || this.def.boss)) this.enemy.strength += CR.bigSpirit;
     const nf = this.run.nextFight;
@@ -112,6 +113,7 @@ export class Battle {
       hand.push(this.draw.pop());
     }
     this.boardCards = hand;
+    this.craneReady = this.has('origamiCrane');
     const slots = [];
     for (const c of hand) { slots.push({ card: c }); slots.push({ card: c }); }
     shuffle(slots);
@@ -126,7 +128,7 @@ export class Battle {
     // Every new board: saved-up reveals carry over, and "new board" charms trigger.
     const saved = this.pendingReveal || 0;
     this.pendingReveal = 0;
-    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + (this.flags.noFreeReveal ? 0 : perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0));
+    const charmReveal = (this.has('moonPin') ? 2 : 0) + (this.has('bandana') ? 1 : 0) + (this.has('peekMirror') ? 2 : 0) + (this.has('deskLamp') ? 1 : 0) + (this.flags.noFreeReveal ? 0 : perFloor(RULES.freeReveal, this.run.act) - (climbOn(this.run, 7) ? CR.revealLoss : 0));
     this.flags.noFreeReveal = false; // Sleep in: only the first board
     if (saved + charmReveal > 0) {
       this.reveal(saved + charmReveal, true, true, true);
@@ -152,8 +154,9 @@ export class Battle {
     const s = this.board[i];
     if (!s || s.state === 'up' || s.state === 'gone') return;
     if (!this.first) {
-      if (this.energy <= 0) { this.log(`Out of ${T.energy}. End your turn.`); return; }
-      this.energy -= 1;
+      const free = this.has('rgbMouse') && !this.flags.freeFlip;
+      if (this.energy <= 0 && !free) { this.log(`Out of ${T.energy}. End your turn.`); return; }
+      if (free) this.flags.freeFlip = true; else this.energy -= 1;
       s.state = 'up'; s.seen = true;
       this.emit('sfx', 'flip');
       this.first = s;
@@ -200,7 +203,10 @@ export class Battle {
     a.state = 'gone'; b.state = 'gone';
     const card = a.card;
     const def = CARDS[card.id];
-    this.combo += (this.has('keyboard') ? 2 : 1) + (this.powers.gameTime ? 1 : 0);
+    this.combo += (this.has('keyboard') ? 2 : 1) + (this.powers.gameTime ? 1 : 0) + (this.has('moodRing') && def.arch2 ? 1 : 0);
+    if (this.has('metronome') && this.combo >= 5 && !this.flags.metronome) { this.flags.metronome = true; this.gainEnergy(1); this.log(`Metronome: +1 ${T.energy}.`); }
+    if (this.has('bookmark') && (a.revealed || b.revealed)) this.gainBlock(2);
+    if (this.craneReady) { this.craneReady = false; this.heal(4); }
     this.matchesThisTurn += 1;
     this.emit('sfx', 'match', this.combo);
     if (def.exhaust || def.type === 'power') { card._exhaust = true; if (b.card !== a.card) b.card._exhaust = true; }
@@ -214,11 +220,14 @@ export class Battle {
     const castle = this.powers.mindCastle;
     this.playing = def;
     def.fx(this, !!card.up);
+    if (this.has('mirrorBall') && (this.matchesThisFight + 1) % 3 === 0 && !this.over) { this.log(`Mirror Ball: ${def.name} plays twice!`); def.fx(this, !!card.up); }
     this.playing = null;
     if (this.powers.mainChar && !this.over) this.attack(this.powers.mainChar, { raw: true });
     if (castle && ++this.powers.castleCount % 2 === 0) { this.gainEnergy(1); this.log(`Mind Castle: +1 ${T.energy}.`); }
     if (this.powers.spotlight && (a.revealed || b.revealed)) this.attack(this.powers.spotlight, { raw: true });
     this.matchesThisFight += 1;
+    if (this.has('fidgetSpinner') && this.matchesThisFight % 5 === 0 && !this.over) this.attack(8, { raw: true });
+    if (this.powers.botnet && !this.over) this.applyEnemy('poison', this.powers.botnet);
     if (this.has('matchingCharms') && this.matchesThisFight % 4 === 0) { this.gainEnergy(1); this.heal(3); this.log(`Matching Phone Charms! +1 ${T.energy}.`); }
     const pas = this.character.passive;
     if (pas.id === 'stickerBook' && this.matchesThisFight % pas.n === 0) {
@@ -232,7 +241,7 @@ export class Battle {
     this.busy = false;
     if (this.checkEnd()) return;
     if (this.board.every((s) => s.state === 'gone')) {
-      this.gainEnergy(1, true);
+      this.gainEnergy(this.has('tapioca') ? 2 : 1, true);
       if (this.has('strap')) this.gainBlock(6);
       if (this.has('lipTint')) this.heal(3);
       if (this.has('snackBag')) this.heal(2);
@@ -291,6 +300,7 @@ export class Battle {
     const picks = this.pickReveals(n, mix);
     const used = picks.length;
     picks.forEach((s) => { s.state = 'revealed'; s.revealed = true; s.seen = true; });
+    if (this.powers.eidetic && picks.length) this.gainBlock(this.powers.eidetic * picks.length);
     const left = n - used;
     if (left > 0 && !noCarry) {
       this.pendingReveal = Math.min(16, (this.pendingReveal || 0) + left);
@@ -363,6 +373,7 @@ export class Battle {
     let b = n;
     if (this.has('bouncerStance') && this.playingStyle('guard')) b += 2;
     if (this.has('guardDog') && this.playing) b += 2;
+    if (this.has('handWarmer') && b > 0) b += 1;
     this.player.block += b;
     this.emit('float', 'player', `+${b}`, 'block');
     if (this.powers.riot && b >= 2) this.attack(Math.floor(b / 2), { raw: true });
@@ -376,6 +387,7 @@ export class Battle {
     if (n <= 0) return;
     if (this.character.passive.id === 'comfy') n += this.character.passive.n;
     if (this.has('grandmaSoup')) opts = { ...opts, cozy: true };
+    if (this.has('honeyJar')) n += 1;
     const before = this.run.hp;
     this.run.hp = Math.min(this.run.maxHp, this.run.hp + n);
     const healed = this.run.hp - before;
@@ -386,6 +398,7 @@ export class Battle {
     if (this.powers.sweetDreams && healed > 0) this.attack(healed, { raw: true });
     if (this.powers.healBurn) this.attack(n * 2, { raw: true });
     if (this.has('bellyRubs') && n > 0) this.gainBlock(2);
+    if (this.powers.comfort && healed > 0) this.gainBlock(Math.min(this.powers.comfort, healed));
   }
   selfDamage(n) {
     this.run.hp = Math.max(0, this.run.hp - n);
@@ -401,6 +414,7 @@ export class Battle {
     if (k === 'weak' && e.asleep) { this.emit('float', 'enemy', 'Zzz', 'weak'); return; }
     e[k] += n;
     this.emit('float', 'enemy', `+${n} ${STATUS_NAMES[k]}`, k);
+    if (k === 'vuln' && this.has('paparazzi')) this.attack(2, { raw: true, quiet: true });
     // Sleepy builds up to Asleep: the enemy skips its next turns. Each time it
     // wakes up, it takes twice as much Sleepy to put it back to sleep (3, 6, 12, 12...).
     if (k === 'weak' && !e.asleep && e.weak >= e.sleepAt) {
@@ -411,6 +425,8 @@ export class Battle {
       this.emit('float', 'enemy', T.asleep, 'weak');
       this.emit('sfx', 'clear');
       this.log(`${e.name} falls ${T.asleep.toLowerCase()} for ${e.asleep} turn${e.asleep > 1 ? 's' : ''}!`);
+      if (this.has('dreamCatcher')) this.heal(5);
+      if (this.powers.sleepwalk) { this.gainEnergy(2); this.log(`Sleepwalk: +2 ${T.energy}.`); }
     }
   }
   applyPlayer(k, n) { if (n > 0) { this.player[k] += n; this.emit('float', 'player', `+${n} ${STATUS_NAMES[k]}`, k); } }
@@ -418,9 +434,12 @@ export class Battle {
   // ---------- turns ----------
   startTurn() {
     this.turn += 1;
-    if (!this.powers.fortress) this.player.block = this.turn === 1 ? this.player.block : this.has('bambooMat') ? Math.floor(this.player.block / 2) : 0;
-    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('bandana') ? 1 : 0) + (this.turn <= 2 && this.has('batWings') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0);
-    this.combo = (this.has('stickers') ? 1 : 0) + (this.has('rainbowRoll') ? 2 : 0);
+    if (!this.powers.fortress && this.turn !== 1) {
+      const b0 = this.player.block;
+      this.player.block = Math.max(this.has('bambooMat') ? Math.floor(b0 / 2) : 0, this.has('lavaLamp') ? Math.min(10, b0) : 0);
+    }
+    this.energy = 3 + this.powers.energy + (this.has('chair') ? 1 : 0) + (this.turn === 1 && this.has('americano') ? 1 : 0) + (this.turn === 1 && this.has('bandana') ? 1 : 0) + (this.turn <= 2 && this.has('batWings') ? 1 : 0) + (this.turn === 1 && this.has('luckyChopsticks') && (this.def.elite || this.def.boss) ? 1 : 0) + (this.turn % 3 === 0 && this.has('tamago') ? 1 : 0) + (this.turn === 1 && this.has('spareController') ? 1 : 0);
+    this.combo = (this.has('stickers') ? 1 : 0) + (this.has('rainbowRoll') ? 2 : 0) + (this.turn === 1 && this.has('spareController') ? 3 : 0);
     this.matchesThisTurn = 0;
     this.flags = {};
     this.turnEnergy = this.energy;
@@ -429,6 +448,8 @@ export class Battle {
     if (this.has('remembers')) this.reveal(1, true);
     if (this.has('hanaSigh')) this.heal(2);
     if (this.powers.armor) this.gainBlock(this.powers.armor);
+    if (this.has('doorstop')) this.gainBlock(3);
+    if (this.has('usbWorm')) this.applyEnemy('poison', 1);
     if (this.powers.selfCare) this.heal(this.powers.selfCare, { cozy: true });
     if (this.powers.galaxy) this.reveal(this.powers.galaxy, true, true);
     if (this.powers.malware) this.applyEnemy('poison', this.powers.malware);
@@ -471,7 +492,8 @@ export class Battle {
     const it = this.intent;
     this.emit('enemyAct', it);
     const hitPlayer = (n) => {
-      const dmg = this.calcDamage(n, e, this.player);
+      let dmg = this.calcDamage(n, e, this.player);
+      if (dmg > 0 && this.has('umbrella') && !this.umbrellaUsed) { this.umbrellaUsed = true; dmg = 0; this.log('Clear Umbrella blocks the hit!'); }
       const absorbed = Math.min(this.player.block, dmg);
       this.player.block -= absorbed;
       this.run.hp = Math.max(0, this.run.hp - (dmg - absorbed));

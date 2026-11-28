@@ -3,7 +3,7 @@
 // snacks marked `anytime` can also be eaten on the map.
 //
 // rarity: common | uncommon | rare (drop and shop odds) | event (only from events, see `gives` in events.js)
-// style: the card style it helps (styled snacks drop more for that style)
+// style / style2: the card style(s) it helps (styled snacks drop more for that style; style2 = hybrid)
 // fx(b): effect inside a Battle; fxRun(run): effect outside a fight (anytime snacks only)
 // icon: a card icon name from src/ui/art.js; color: the badge color
 
@@ -25,12 +25,12 @@ export const SNACKS = {
     fx: (b) => { const e = b.enemy; if (!e.asleep) b.applyEnemy('weak', Math.max(1, e.sleepAt - e.weak)); } },
   // ----- Cozy -----
   bananaMilk: { name: 'Banana Milk', icon: 'milk', color: '#ffd34d', rarity: 'common', style: 'cozy', anytime: true,
-    desc: 'Heal 10. Can be eaten on the map.', fx: (b) => b.heal(10), fxRun: (run) => healRun(run, 10) },
+    desc: 'Heal 6. Can be eaten on the map.', fx: (b) => b.heal(6), fxRun: (run) => healRun(run, 6) },
   hotteok: { name: 'Hotteok', icon: 'bowl', color: '#d9822b', rarity: 'uncommon', style: 'cozy',
     desc: `Heal 12. ${T.cozy}.`, fx: (b) => b.heal(12, { cozy: true }) },
   // ----- Glitch -----
   popRocks: { name: 'Pop Rocks', icon: 'bubbles', color: '#4f8a55', rarity: 'common', style: 'glitch',
-    desc: `Apply 5 ${T.glitch}.`, fx: (b) => b.applyEnemy('poison', 5) },
+    desc: `Apply 4 ${T.glitch}.`, fx: (b) => b.applyEnemy('poison', 4) },
   mysteryJelly: { name: 'Mystery Jelly', icon: 'drop', color: '#4f8a55', rarity: 'uncommon', style: 'glitch',
     desc: `Apply 2 ${T.glitch}, then double the enemy's ${T.glitch}.`,
     fx: (b) => { b.applyEnemy('poison', 2); b.applyEnemy('poison', b.enemy.poison); } },
@@ -41,7 +41,7 @@ export const SNACKS = {
     desc: `Gain 3 ${T.block} at the start of each of your turns this fight.`, fx: (b) => { b.powers.armor += 3; b.gainBlock(3); } },
   // ----- Memory -----
   blueberry: { name: 'Blueberry Yogurt', icon: 'eye', color: '#7a5ab3', rarity: 'common', style: 'memory',
-    desc: 'Reveal 6 hidden cards.', fx: (b) => b.reveal(6) },
+    desc: 'Reveal 5 hidden cards.', fx: (b) => b.reveal(5) },
   walnutCookies: { name: 'Walnut Cookies', icon: 'star', color: '#7a5ab3', rarity: 'uncommon', style: 'memory',
     desc: 'Reveal every card on this board.', fx: (b) => b.reveal(99, false, true) },
   // ----- Combo -----
@@ -54,11 +54,45 @@ export const SNACKS = {
     desc: `Apply 3 ${T.exposed}.`, fx: (b) => b.applyEnemy('vuln', 3) },
   fireNoodles: { name: 'Fire Noodles', icon: 'fire', color: '#c2417a', rarity: 'uncommon', style: 'exposed',
     desc: `Apply 2 ${T.exposed}, then deal 8.`, fx: (b) => { b.applyEnemy('vuln', 2); b.attack(8); } },
+  // ----- more style snacks -----
+  lavenderMacaron: { name: 'Lavender Macaron', icon: 'moon', color: '#5b6fc9', rarity: 'uncommon', style: 'dreamy',
+    desc: `Apply 3 ${T.sleepy}. ${T.block} 5.`, fx: (b) => { b.applyEnemy('weak', 3); b.gainBlock(5); } },
+  samgyetang: { name: 'Samgyetang', icon: 'bowl', color: '#d9822b', rarity: 'rare', style: 'cozy',
+    desc: `Heal 25. ${T.cozy}.`, fx: (b) => b.heal(25, { cozy: true }) },
+  glitchGum: { name: 'Glitch Gum', icon: 'bubbles', color: '#4f8a55', rarity: 'rare', style: 'glitch',
+    desc: `Apply 10 ${T.glitch}.`, fx: (b) => b.applyEnemy('poison', 10) },
+  riceCakeTower: { name: 'Rice Cake Tower', icon: 'rice', color: '#4a6fa5', rarity: 'rare', style: 'guard',
+    desc: `${T.block} 25.`, fx: (b) => b.gainBlock(25) },
+  almondBrittle: { name: 'Almond Brittle', icon: 'star', color: '#7a5ab3', rarity: 'rare', style: 'memory',
+    desc: `Reveal every card on this board. +1 ${T.energy}.`, fx: (b) => { b.reveal(99, false, true); b.gainEnergy(1); } },
+  shavedIce: { name: 'Rainbow Shaved Ice', icon: 'star', color: '#d2493f', rarity: 'rare', style: 'combo',
+    desc: `+5 ${T.combo}. This turn, missing doesn't reset your ${T.combo}.`, fx: (b) => { b.combo += 5; b.flags.comboLock = true; } },
+  ghostPepper: { name: 'Ghost Pepper', icon: 'chili', color: '#c2417a', rarity: 'rare', style: 'exposed',
+    desc: `Apply 6 ${T.exposed}.`, fx: (b) => b.applyEnemy('vuln', 6) },
+  // ----- hybrid snacks: count for both styles -----
+  milkTea: { name: 'Warm Milk Tea', icon: 'mug', color: '#5b6fc9', rarity: 'uncommon', style: 'dreamy', style2: 'cozy',
+    desc: `Heal 5. Apply 2 ${T.sleepy}. ${T.cozy}.`, fx: (b) => { b.heal(5, { cozy: true }); b.applyEnemy('weak', 2); } },
+  kimchi: { name: 'Kimchi', icon: 'chili', color: '#4f8a55', rarity: 'uncommon', style: 'glitch', style2: 'exposed',
+    desc: `Apply 3 ${T.glitch} and 2 ${T.exposed}.`, fx: (b) => { b.applyEnemy('poison', 3); b.applyEnemy('vuln', 2); } },
+  energyMochi: { name: 'Energy Mochi', icon: 'rice', color: '#d2493f', rarity: 'common', style: 'combo', style2: 'guard',
+    desc: `+2 ${T.combo}. ${T.block} 6.`, fx: (b) => { b.combo += 2; b.gainBlock(6); } },
+  fishCake: { name: 'Fish Cake Skewer', icon: 'stack', color: '#7a5ab3', rarity: 'common', style: 'memory', style2: 'combo',
+    desc: `Reveal 3 hidden cards. +2 ${T.combo}.`, fx: (b) => { b.reveal(3); b.combo += 2; } },
+  honeyToast: { name: 'Honey Toast', icon: 'bowl', color: '#d9822b', rarity: 'common', style: 'cozy', style2: 'guard',
+    desc: `Heal 4. ${T.block} 6.`, fx: (b) => { b.heal(4); b.gainBlock(6); } },
+  sourWorms: { name: 'Sour Gummy Worms', icon: 'worm', color: '#4f8a55', rarity: 'common', style: 'glitch', style2: 'dreamy',
+    desc: `Apply 1 ${T.sleepy} and 4 ${T.glitch}.`, fx: (b) => { b.applyEnemy('weak', 1); b.applyEnemy('poison', 4); } },
   // ----- any style -----
-  icedCoffee: { name: 'Iced Coffee', icon: 'cup', color: '#8a5a3c', rarity: 'common',
+  onigiri: { name: 'Onigiri', icon: 'rice', color: '#8a8f99', rarity: 'common',
+    desc: `Heal 4. ${T.block} 4.`, fx: (b) => { b.heal(4); b.gainBlock(4); } },
+  yogurtDrink: { name: 'Yogurt Drink', icon: 'can', color: '#e65c7a', rarity: 'uncommon',
+    desc: `+1 ${T.energy}. Heal 4.`, fx: (b) => { b.gainEnergy(1); b.heal(4); } },
+
+  // ----- any style (originals) -----
+  icedCoffee: { name: 'Iced Coffee', icon: 'cup', color: '#8a5a3c', rarity: 'uncommon',
     desc: `+2 ${T.energy}.`, fx: (b) => b.gainEnergy(2) },
   friedChicken: { name: 'Fried Chicken', icon: 'crit', color: '#e8a04a', rarity: 'common',
-    desc: 'Deal 10.', fx: (b) => b.attack(10, { raw: true }) },
+    desc: 'Deal 8.', fx: (b) => b.attack(8, { raw: true }) },
   ginseng: { name: 'Ginseng Drink', icon: 'can', color: '#b9862a', rarity: 'uncommon',
     desc: `Gain 2 ${T.spirit} for this fight.`, fx: (b) => b.applyPlayer('strength', 2) },
   birthdayCake: { name: 'Birthday Cake', icon: 'crown', color: '#ff8fb0', rarity: 'rare', anytime: true,

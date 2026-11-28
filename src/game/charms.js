@@ -11,6 +11,10 @@
 // requires(run, h): optional; the charm stays hidden until this is true.
 
 import { T } from './terms.js';
+import { CARDS } from './cards.js';
+
+// requires: 2+ non-starter cards of a style (hybrids count).
+const styleN = (arch, n) => (r) => r.deck.filter((c) => { const d = CARDS[c.id]; return d.rarity !== 'starter' && (d.arch === arch || d.arch2 === arch); }).length >= n;
 export const CHARMS = {
   // ----- Haru's Gift: pick 1 of 3 at the start of a run -----
   moonPin: { name: 'Moon Pin', icon: '🌙', pool: 'haru', style: 'memory', desc: 'Reveal 2 cards on every new board.' },
@@ -106,6 +110,24 @@ export const CHARMS = {
 
   snackCoupon: { name: 'Snack Coupon', icon: '🎟️', pool: 'drop', desc: 'Snacks drop 20% more often after fights.' },
 
+
+  // ----- more drops (style ones wait for 2+ cards of that style) -----
+  usbWorm: { name: 'USB Worm', icon: '🪱', pool: 'drop', desc: `Apply 1 ${T.glitch} at the start of each of your turns.`, requires: styleN('glitch', 2), needs: '2+ Glitch cards' },
+  doorstop: { name: 'Doorstop', icon: '🚪', pool: 'drop', desc: `Gain 3 ${T.block} at the start of each of your turns.`, requires: styleN('guard', 2), needs: '2+ Guard cards' },
+  metronome: { name: 'Metronome', icon: '🎼', pool: 'drop', desc: `The first time your ${T.combo} reaches 5 each turn, +1 ${T.energy}.`, requires: styleN('combo', 2), needs: '2+ Combo cards' },
+  bookmark: { name: 'Bookmark', icon: '🔖', pool: 'drop', desc: `Matching a pair that had a face-up card gives 2 ${T.block}.`, requires: styleN('memory', 2), needs: '2+ Memory cards' },
+  dreamCatcher: { name: 'Dream Catcher', icon: '🪶', pool: 'drop', desc: `Whenever an enemy falls ${T.asleep}, heal 5.`, requires: styleN('dreamy', 2), needs: '2+ Dreamy cards' },
+  honeyJar: { name: 'Honey Jar', icon: '🍯', pool: 'drop', desc: 'All your healing heals 1 more.', requires: styleN('cozy', 2), needs: '2+ Cozy cards' },
+  paparazzi: { name: 'Paparazzi', icon: '📸', pool: 'drop', desc: `Whenever you apply ${T.exposed}, deal 2 damage.`, requires: styleN('exposed', 2), needs: '2+ Exposed cards' },
+  luckyDice: { name: 'Lucky Dice', icon: '🎲', pool: 'drop', desc: 'Card rewards show 4 cards instead of 3.' },
+  tapioca: { name: 'Tapioca Pearls', icon: '🧋', pool: 'drop', desc: `Clearing a board gives 1 more ${T.energy}.` },
+  fidgetSpinner: { name: 'Fidget Spinner', icon: '🌀', pool: 'drop', desc: 'Every 5th pair you match in a fight deals 8 damage.' },
+  luckyClover: { name: 'Four-Leaf Clover', icon: '🍀', pool: 'drop', desc: 'Rare cards show up more often in card rewards.' },
+  comfySlippers: { name: 'Comfy Slippers', icon: '🥿', pool: 'drop', desc: `+6 max ${T.hp}. Heal 3 after each fight.` },
+  handWarmer: { name: 'Hand Warmer', icon: '🧤', pool: 'drop', desc: `Every time you gain ${T.block}, gain 1 more.` },
+  fortuneCookie: { name: 'Fortune Cookie', icon: '🥠', pool: 'drop', desc: `Gain 10 more ${T.coins} and heal 3 after each fight.` },
+  origamiCrane: { name: 'Origami Crane', icon: '🕊️', pool: 'drop', desc: 'Your first match on each new board heals 4.' },
+
   // ----- shop only -----
   lunchbox: { name: 'Lunchbox', icon: '🍱', pool: 'shop', desc: '+2 snack slots.' },
   memberCard: { name: 'Member Card', icon: '💳', pool: 'shop', desc: 'Everything in shops costs 20% less.' },
@@ -116,12 +138,23 @@ export const CHARMS = {
   neckPillow: { name: 'Neck Pillow', icon: '💤', pool: 'shop', desc: `Naps at ${T.rest}s heal 45% instead of 30%.` },
   shibaPlush: { name: 'Shiba Plush', icon: '🐕', pool: 'shop', desc: `The first time you would be knocked out each fight, survive with 1 ${T.hp}.` },
 
+  loyaltyApp: { name: 'Loyalty App', icon: '📲', pool: 'shop', desc: `Gain 15 more ${T.coins} after each fight.` },
+  umbrella: { name: 'Clear Umbrella', icon: '☂️', pool: 'shop', desc: 'The first hit you take in each fight does no damage.' },
+  moodRing: { name: 'Mood Ring', icon: '💍', pool: 'shop', desc: `Matching a hybrid card gives +1 ${T.combo}.`, requires: (r) => r.deck.some((c) => CARDS[c.id].arch2), needs: 'a hybrid card' },
+  deskLamp: { name: 'Desk Lamp', icon: '🪔', pool: 'shop', desc: 'Every new board reveals 1 more card.' },
+  spareController: { name: 'Spare Controller', icon: '🎮', pool: 'shop', desc: `+1 ${T.energy} and 3 ${T.combo} on your first turn of each fight.` },
+
   // ----- boss rewards -----
   chair: { name: 'Gaming Chair', icon: '🪑', pool: 'boss', desc: `+1 ${T.energy} every turn.` },
   keyboard: { name: 'Clicky Keyboard', icon: '⌨️', pool: 'boss', desc: `Each match adds 2 ${T.combo} instead of 1.` },
   headset: { name: 'Big Headphones', icon: '🎧', pool: 'boss', desc: 'At the start of each turn, reveal 1 card.' },
   secretRecipe: { name: 'Secret Recipe', icon: '📜', pool: 'boss', desc: 'Your snacks work twice.' },
   plush: { name: 'Giant Plushie', icon: '🧸', pool: 'boss', desc: `Heal 12 after each fight. +8 max ${T.hp}.` },
+
+  trophy: { name: 'Champion Trophy', icon: '🏆', pool: 'boss', desc: `Enemies start each fight with 10% less ${T.hp}.` },
+  mirrorBall: { name: 'Mirror Ball', icon: '🪩', pool: 'boss', desc: 'Every 3rd pair you match in a fight is played twice.' },
+  lavaLamp: { name: 'Lava Lamp', icon: '🫧', pool: 'boss', desc: `Up to 10 ${T.block} stays at the start of your turn.` },
+  rgbMouse: { name: 'RGB Mouse', icon: '🖱️', pool: 'boss', desc: `Your first flip each turn costs no ${T.energy}.` },
 
   // ----- event only (regular "?" events) -----
   kittenBell: { name: 'Kitten Bell', icon: '🔔', pool: 'event', desc: `Your first miss in each fight doesn't reset your ${T.combo}.` },

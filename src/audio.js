@@ -1,9 +1,9 @@
 // Music + sound effects. The music is an MP3 that loops; every sound effect
 // is synthesised on the fly with the Web Audio API (no sound files needed).
-// Defaults: music 25%, effects 40%. Settings persist in localStorage.
+// Defaults: music 15%, effects 40%. Settings persist in localStorage.
 
 const KEY = 'sm.audio';
-const DEFAULTS = { music: 0.25, sfx: 0.4, musicOn: true, sfxOn: true, fast: false, track: 'love' };
+const DEFAULTS = { music: 0.15, sfx: 0.4, musicOn: true, sfxOn: true, fast: false, track: 'love' };
 export const settings = { ...DEFAULTS, ...safeLoad() };
 
 function safeLoad() {

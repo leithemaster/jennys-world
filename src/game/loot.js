@@ -68,7 +68,7 @@ export function rollRarity(run, kind) {
   if (kind === 'boss') return 'rare';
   const loot = ensure(run);
   // climb level 6: normal fights show about 10% fewer rares (0.78 on the roll, since pity makes up part of the gap)
-  const rare = ((kind === 'elite' ? 10 : 3) + loot.rarePity) * (kind !== 'elite' && climbOn(run, 6) ? CR.normalRare : 1);
+  const rare = ((kind === 'elite' ? 10 : 3) + loot.rarePity + (run.charms.includes('luckyClover') ? 5 : 0)) * (kind !== 'elite' && climbOn(run, 6) ? CR.normalRare : 1);
   const uncommon = kind === 'elite' ? 40 : 37;
   const r = Math.random() * 100;
   if (r < rare) { loot.rarePity = -5; return 'rare'; }
@@ -100,20 +100,21 @@ export function deckStyle(run) {
   return best && best[1] >= 1 ? { arch: best[0], count: Math.floor(best[1]) } : null;
 }
 
-export function drawStyleCard(run, arch, rarity, exclude = []) {
+export function drawStyleCard(run, arch, rarity, exclude = [], strict = false) {
   const ok = (id) => !exclude.includes(id) && cardAllowed(run, id);
   const ids = (r) => Object.keys(CARDS).filter((id) => (CARDS[id].arch === arch || CARDS[id].arch2 === arch) && !['event', 'gift', 'legendary'].includes(CARDS[id].rarity) && (!r || CARDS[id].rarity === r));
-  return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || drawFrom(run, `card:${arch}:any`, () => ids(), ok);
+  return drawFrom(run, `card:${arch}:${rarity}`, () => ids(rarity), ok) || (strict ? null : drawFrom(run, `card:${arch}:any`, () => ids(), ok));
 }
 
 export function cardReward(run, kind, n = 3) {
   const out = [];
   const style = deckStyle(run);
   // 1 style card once you lean into a style, 2 once you're committed (4+ cards)
-  const styleSlots = style ? (style.count >= 4 ? 2 : 1) : 0;
+  // Boss rewards (all rare) lean harder: 2 style rares, or all 3 once you're committed.
+  const styleSlots = !style ? 0 : kind === 'boss' ? (style.count >= 4 ? n : 2) : style.count >= 4 ? 2 : 1;
   for (let i = 0; i < n; i++) {
     const rarity = rollRarity(run, kind);
-    const id = (i < styleSlots && drawStyleCard(run, style.arch, rarity, out)) || drawCard(run, rarity, out);
+    const id = (i < styleSlots && drawStyleCard(run, style.arch, rarity, out, kind === 'boss')) || drawCard(run, rarity, out);
     if (id) out.push(id);
   }
   return out.map((id) => ({ id }));
@@ -132,7 +133,7 @@ export function drawSnack(run, rarity) {
   const style = deckStyle(run);
   if (!rarity) { const r = Math.random() * 100; rarity = r < 8 ? 'rare' : r < 38 ? 'uncommon' : 'common'; }
   if (style && Math.random() < 0.5) {
-    const id = drawFrom(run, `snack:${style.arch}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].style === style.arch && SNACKS[k].rarity !== 'event'));
+    const id = drawFrom(run, `snack:${style.arch}`, () => Object.keys(SNACKS).filter((k) => (SNACKS[k].style === style.arch || SNACKS[k].style2 === style.arch) && SNACKS[k].rarity !== 'event'));
     if (id) return id;
   }
   return drawFrom(run, `snack:${rarity}`, () => Object.keys(SNACKS).filter((k) => SNACKS[k].rarity === rarity))
